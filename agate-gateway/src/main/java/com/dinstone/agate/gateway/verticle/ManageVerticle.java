@@ -52,230 +52,230 @@ import io.vertx.ext.web.handler.BodyHandler;
  */
 public class ManageVerticle extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ManageVerticle.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ManageVerticle.class);
 
-    private static final int DEFAULT_PORT = 5454;
+	private static final int DEFAULT_PORT = 5454;
 
-    private ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-    private HttpServerOptions serverOptions;
+	private HttpServerOptions serverOptions;
 
-    private ConsulClient consulClient;
+	private ConsulClient consulClient;
 
-    private String clusterId;
+	private String clusterId;
 
-    private String serviceId;
+	private String serviceId;
 
-    public ManageVerticle(ApplicationContext context) {
-        this.applicationContext = context;
-    }
+	public ManageVerticle(ApplicationContext context) {
+		this.applicationContext = context;
+	}
 
-    @Override
-    public void init(Vertx vertx, Context context) {
-        super.init(vertx, context);
+	@Override
+	public void init(Vertx vertx, Context context) {
+		super.init(vertx, context);
 
-        // check config
-        clusterId = config().getString("cluster");
-        if (clusterId == null || clusterId.isEmpty()) {
-            throw new IllegalArgumentException("cluster is empty");
-        }
+		// check config
+		clusterId = config().getString("cluster");
+		if (clusterId == null || clusterId.isEmpty()) {
+			throw new IllegalArgumentException("cluster is empty");
+		}
 
-        // init server options
-        serverOptions = new HttpServerOptions().setIdleTimeout(180);
-        JsonObject mconfig = config().getJsonObject("manage");
-        if (mconfig == null) {
-            mconfig = new JsonObject();
-        }
-        try {
-            if (mconfig.getString("host") == null) {
-                List<InetAddress> pas = NetworkUtil.getPrivateAddresses();
-                if (pas != null && pas.size() > 0) {
-                    serverOptions.setHost(pas.get(0).getHostAddress());
-                }
-            } else {
-                serverOptions.setHost(mconfig.getString("host"));
-            }
-        } catch (Exception e) {
-            LOG.warn("unkown host, use default ip 0.0.0.0", e);
-        }
-        serverOptions.setPort(mconfig.getInteger("port", DEFAULT_PORT));
+		// init server options
+		serverOptions = new HttpServerOptions().setIdleTimeout(180);
+		JsonObject mconfig = config().getJsonObject("manage");
+		if (mconfig == null) {
+			mconfig = new JsonObject();
+		}
+		try {
+			if (mconfig.getString("host") == null) {
+				List<InetAddress> pas = NetworkUtil.getPrivateAddresses();
+				if (pas != null && pas.size() > 0) {
+					serverOptions.setHost(pas.get(0).getHostAddress());
+				}
+			} else {
+				serverOptions.setHost(mconfig.getString("host"));
+			}
+		} catch (Exception e) {
+			LOG.warn("unkown host, use default ip 0.0.0.0", e);
+		}
+		serverOptions.setPort(mconfig.getInteger("port", DEFAULT_PORT));
 
-        // init service id
-        serviceId = clusterId + ":" + serverOptions.getHost() + ":" + serverOptions.getPort();
+		// init service id
+		serviceId = clusterId + ":" + serverOptions.getHost() + ":" + serverOptions.getPort();
 
-        consulClient = ConsulClient.create(vertx, applicationContext.getConsulClientOptions());
-    }
+		consulClient = ConsulClient.create(vertx, applicationContext.getConsulClientOptions());
+	}
 
-    @Override
-    public void start(Promise<Void> startPromise) throws Exception {
-        Future.<HttpServer>future(promise -> launch(promise)).compose(server -> regist(server))
-                .setHandler(startPromise);
-    }
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		Future.<HttpServer>future(promise -> launch(promise)).compose(server -> regist(server))
+				.setHandler(startPromise);
+	}
 
-    @Override
-    public void stop(Promise<Void> stopPromise) throws Exception {
-        consulClient.deregisterService(serviceId, stopPromise);
-    }
+	@Override
+	public void stop(Promise<Void> stopPromise) throws Exception {
+		consulClient.deregisterService(serviceId, stopPromise);
+	}
 
-    /**
-     * create and start http server
-     * 
-     * @param promise
-     */
-    private void launch(Promise<HttpServer> promise) {
-        vertx.createHttpServer(serverOptions).connectionHandler(new Handler<HttpConnection>() {
-            @Override
-            public void handle(HttpConnection hc) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Connection manage/{}/{} opened ", hc.localAddress(), hc.remoteAddress());
-                }
-                hc.exceptionHandler(new Handler<Throwable>() {
+	/**
+	 * create and start http server
+	 * 
+	 * @param promise
+	 */
+	private void launch(Promise<HttpServer> promise) {
+		vertx.createHttpServer(serverOptions).connectionHandler(new Handler<HttpConnection>() {
+			@Override
+			public void handle(HttpConnection hc) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Connection manage/{}/{} opened ", hc.localAddress(), hc.remoteAddress());
+				}
+				hc.exceptionHandler(new Handler<Throwable>() {
 
-                    @Override
-                    public void handle(Throwable error) {
-                        LOG.warn("Connection manage/{}/{} throws: {}", hc.localAddress(), hc.remoteAddress(), error);
-                    }
-                });
-                hc.closeHandler(new Handler<Void>() {
+					@Override
+					public void handle(Throwable error) {
+						LOG.warn("Connection manage/{}/{} throws: {}", hc.localAddress(), hc.remoteAddress(), error);
+					}
+				});
+				hc.closeHandler(new Handler<Void>() {
 
-                    @Override
-                    public void handle(Void event) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Connection manage/{}/{} closed", hc.localAddress(), hc.remoteAddress());
-                        }
-                    }
-                });
-            }
-        }).requestHandler(createRouter()).listen(ar -> {
-            if (ar.succeeded()) {
-                LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                promise.complete(ar.result());
-            } else {
-                LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                promise.fail(ar.cause());
-            }
-        });
-    }
+					@Override
+					public void handle(Void event) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Connection manage/{}/{} closed", hc.localAddress(), hc.remoteAddress());
+						}
+					}
+				});
+			}
+		}).requestHandler(createRouter()).listen(ar -> {
+			if (ar.succeeded()) {
+				LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+				promise.complete(ar.result());
+			} else {
+				LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+				promise.fail(ar.cause());
+			}
+		});
+	}
 
-    /**
-     * regist service
-     * 
-     * @param server
-     * @return
-     */
-    private Future<Void> regist(HttpServer server) {
-        return Future.future(promise -> {
-            String url = "http://" + serverOptions.getHost() + ":" + serverOptions.getPort() + "/health";
-            CheckOptions checkOptions = new CheckOptions().setId(serviceId).setName("gateway health check").setHttp(url)
-                    .setInterval("30s").setDeregisterAfter("2m");
-            ServiceOptions serviceOptions = new ServiceOptions().setId(serviceId).setName("agate-gateway")
-                    .setAddress(serverOptions.getHost()).setPort(serverOptions.getPort())
-                    .setTags(Arrays.asList(clusterId)).setCheckOptions(checkOptions);
-            consulClient.registerService(serviceOptions, ar -> {
-                if (ar.succeeded()) {
-                    LOG.info("gateway regist  success {}", serviceId);
-                    promise.complete();
-                } else {
-                    LOG.error("gateway regist failed {}", serviceId);
-                    promise.fail(ar.cause());
-                }
-            });
-        });
-    }
+	/**
+	 * regist service
+	 * 
+	 * @param server
+	 * @return
+	 */
+	private Future<Void> regist(HttpServer server) {
+		return Future.future(promise -> {
+			String url = "http://" + serverOptions.getHost() + ":" + serverOptions.getPort() + "/health";
+			CheckOptions checkOptions = new CheckOptions().setId(serviceId).setName("gateway health check").setHttp(url)
+					.setInterval("30s").setDeregisterAfter("2m");
+			ServiceOptions serviceOptions = new ServiceOptions().setId(serviceId).setName("agate-gateway")
+					.setAddress(serverOptions.getHost()).setPort(serverOptions.getPort())
+					.setTags(Arrays.asList(clusterId)).setCheckOptions(checkOptions);
+			consulClient.registerService(serviceOptions, ar -> {
+				if (ar.succeeded()) {
+					LOG.info("gateway regist  success {}", serviceId);
+					promise.complete();
+				} else {
+					LOG.error("gateway regist failed {}", serviceId);
+					promise.fail(ar.cause());
+				}
+			});
+		});
+	}
 
-    private Router createRouter() {
-        Router mainRouter = Router.router(vertx);
-        mainRouter.route().failureHandler(failureHandler()).handler(BodyHandler.create(false));
-        mainRouter.route("/health").handler(rc -> {
-            rc.end("OK");
-        });
+	private Router createRouter() {
+		Router mainRouter = Router.router(vertx);
+		mainRouter.route().failureHandler(failureHandler()).handler(BodyHandler.create(false));
+		mainRouter.route("/health").handler(rc -> {
+			rc.end("OK");
+		});
 
-        //
-        // APP start and close
-        //
-        mainRouter.post("/app/start").consumes("application/json").handler(this::appStart);
-        mainRouter.delete("/app/close").consumes("application/json").handler(this::appClose);
+		//
+		// APP start and close
+		//
+		mainRouter.post("/app/start").consumes("application/json").handler(this::appStart);
+		mainRouter.delete("/app/close").consumes("application/json").handler(this::appClose);
 
-        //
-        // API deploy and remove
-        //
-        mainRouter.post("/api/deploy").handler(this::apiDeploy);
-        mainRouter.delete("/api/remove").handler(this::apiRemove);
+		//
+		// API deploy and remove
+		//
+		mainRouter.post("/api/deploy").consumes("application/json").handler(this::apiDeploy);
+		mainRouter.delete("/api/remove").consumes("application/json").handler(this::apiRemove);
 
-        return mainRouter;
-    }
+		return mainRouter;
+	}
 
-    private Handler<RoutingContext> failureHandler() {
-        return rc -> {
-            LOG.error("failure handle for {}, {}:{}", rc.request().path(), rc.statusCode(), rc.failure());
-            if (rc.failure() != null) {
-                if (rc.statusCode() == 200) {
-                    rc.response().setStatusCode(500).end(rc.failure().getMessage());
-                } else {
-                    rc.response().setStatusCode(rc.statusCode()).end(rc.failure().getMessage());
-                }
-            } else {
-                rc.response().setStatusCode(rc.statusCode()).end();
-            }
-        };
-    }
+	private Handler<RoutingContext> failureHandler() {
+		return rc -> {
+			LOG.error("failure handle for {}, {}:{}", rc.request().path(), rc.statusCode(), rc.failure());
+			if (rc.failure() != null) {
+				if (rc.statusCode() == 200) {
+					rc.response().setStatusCode(500).end(rc.failure().getMessage());
+				} else {
+					rc.response().setStatusCode(rc.statusCode()).end(rc.failure().getMessage());
+				}
+			} else {
+				rc.response().setStatusCode(rc.statusCode()).end();
+			}
+		};
+	}
 
-    private void appStart(RoutingContext rc) {
-        try {
-            vertx.eventBus().request(AddressConstant.APP_START, rc.getBodyAsJson(), ar -> {
-                if (ar.succeeded()) {
-                    ResponseUtil.success(rc);
-                } else {
-                    ResponseUtil.failed(rc, ar.cause());
-                }
-            });
-        } catch (Exception e) {
-            ResponseUtil.failed(rc, e);
-        }
-    }
+	private void appStart(RoutingContext rc) {
+		try {
+			vertx.eventBus().request(AddressConstant.APP_START, rc.getBodyAsJson(), ar -> {
+				if (ar.succeeded()) {
+					ResponseUtil.success(rc);
+				} else {
+					ResponseUtil.failed(rc, ar.cause());
+				}
+			});
+		} catch (Exception e) {
+			ResponseUtil.failed(rc, e);
+		}
+	}
 
-    private void appClose(RoutingContext rc) {
-        try {
-            vertx.eventBus().request(AddressConstant.APP_CLOSE, rc.getBodyAsJson(), ar -> {
-                if (ar.succeeded()) {
-                    ResponseUtil.success(rc);
-                } else {
-                    ResponseUtil.failed(rc, ar.cause());
-                }
-            });
-        } catch (Exception e) {
-            ResponseUtil.failed(rc, e);
-        }
-    }
+	private void appClose(RoutingContext rc) {
+		try {
+			vertx.eventBus().request(AddressConstant.APP_CLOSE, rc.getBodyAsJson(), ar -> {
+				if (ar.succeeded()) {
+					ResponseUtil.success(rc);
+				} else {
+					ResponseUtil.failed(rc, ar.cause());
+				}
+			});
+		} catch (Exception e) {
+			ResponseUtil.failed(rc, e);
+		}
+	}
 
-    private void apiDeploy(RoutingContext rc) {
-        try {
-            JsonObject message = rc.getBodyAsJson();
-            vertx.eventBus().request(AddressConstant.API_DEPLOY, message, ar -> {
-                if (ar.succeeded()) {
-                    ResponseUtil.success(rc);
-                } else {
-                    ResponseUtil.failed(rc, ar.cause());
-                }
-            });
-        } catch (Exception e) {
-            ResponseUtil.failed(rc, e);
-        }
-    }
+	private void apiDeploy(RoutingContext rc) {
+		try {
+			JsonObject message = rc.getBodyAsJson();
+			vertx.eventBus().request(AddressConstant.API_DEPLOY, message, ar -> {
+				if (ar.succeeded()) {
+					ResponseUtil.success(rc);
+				} else {
+					ResponseUtil.failed(rc, ar.cause());
+				}
+			});
+		} catch (Exception e) {
+			ResponseUtil.failed(rc, e);
+		}
+	}
 
-    private void apiRemove(RoutingContext rc) {
-        try {
-            JsonObject message = rc.getBodyAsJson();
-            vertx.eventBus().request(AddressConstant.API_REMOVE, message, ar -> {
-                if (ar.succeeded()) {
-                    ResponseUtil.success(rc);
-                } else {
-                    ResponseUtil.failed(rc, ar.cause());
-                }
-            });
-        } catch (Exception e) {
-            ResponseUtil.failed(rc, e);
-        }
-    }
+	private void apiRemove(RoutingContext rc) {
+		try {
+			JsonObject message = rc.getBodyAsJson();
+			vertx.eventBus().request(AddressConstant.API_REMOVE, message, ar -> {
+				if (ar.succeeded()) {
+					ResponseUtil.success(rc);
+				} else {
+					ResponseUtil.failed(rc, ar.cause());
+				}
+			});
+		} catch (Exception e) {
+			ResponseUtil.failed(rc, e);
+		}
+	}
 
 }

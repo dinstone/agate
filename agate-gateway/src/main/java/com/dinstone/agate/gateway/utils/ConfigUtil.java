@@ -15,12 +15,11 @@
  */
 package com.dinstone.agate.gateway.utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.Scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,49 +28,46 @@ import io.vertx.core.json.JsonObject;
 
 public class ConfigUtil {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConfigUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ConfigUtil.class);
 
-    /**
-     * load config resource from classpath or file system.
-     * 
-     * @param resourceLocation
-     * @return
-     */
-    public static JsonObject loadConfig(String resourceLocation) {
-        BufferedReader reader = null;
-        try {
-            InputStream resourceStream = getResourceStream(resourceLocation);
-            if (resourceStream == null) {
-                resourceStream = new FileInputStream(resourceLocation);
-            }
+	/**
+	 * load config resource from classpath or file system.
+	 * 
+	 * @param resourceLocation
+	 * @return
+	 */
+	public static JsonObject loadConfig(String resourceLocation) {
+		InputStream resourceStream = getResourceStream(resourceLocation);
+		if (resourceStream == null) {
+			try {
+				resourceStream = new FileInputStream(resourceLocation);
+			} catch (FileNotFoundException e) {
+				LOG.error("file not found from " + resourceLocation, e);
+				throw new RuntimeException("failed to load config : " + resourceLocation, e);
+			}
+		}
 
-            reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(resourceStream), "utf-8"));
-            String line = null;
-            StringBuilder sb = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
+		try (Scanner scanner = new Scanner(resourceStream, "UTF-8").useDelimiter("\\A")) {
+			return new JsonObject(scanner.next());
+		} catch (Exception e) {
+			LOG.error("failed to load config : " + resourceLocation, e);
+			throw new RuntimeException("failed to load config : " + resourceLocation, e);
+		} finally {
+			if (resourceStream != null) {
+				try {
+					resourceStream.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
 
-            return new JsonObject(sb.toString());
-        } catch (IOException e) {
-            LOG.error("failed to load config : " + resourceLocation, e);
-            throw new RuntimeException("failed to load config : " + resourceLocation, e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
-
-    private static InputStream getResourceStream(String resource) {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        if (classLoader == null) {
-            classLoader = ConfigUtil.class.getClassLoader();
-        }
-        return classLoader.getResourceAsStream(resource);
-    }
+	private static InputStream getResourceStream(String resource) {
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		if (classLoader == null) {
+			classLoader = ConfigUtil.class.getClassLoader();
+		}
+		return classLoader.getResourceAsStream(resource);
+	}
 
 }

@@ -15,8 +15,11 @@
  */
 package com.dinstone.agate.gateway.verticle;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,11 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.consul.ConsulClientOptions;
+import io.vertx.ext.consul.KeyValue;
+import io.vertx.ext.consul.KeyValueList;
+import io.vertx.ext.consul.Watch;
+import io.vertx.ext.consul.WatchResult;
 
 /**
  * execute the deploy command of APP and API.
@@ -48,187 +56,277 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class DeployVerticle extends AbstractVerticle {
-    private static final Logger LOG = LoggerFactory.getLogger(DeployVerticle.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DeployVerticle.class);
 
-    private Deployment deployment;
+	private String clusterId;
 
-    private String clusterId;
+	private Deployment deployment;
 
-    public DeployVerticle(ApplicationContext applicationContext) {
-        this.deployment = applicationContext.getDeployment();
-        this.clusterId = applicationContext.getClusterId();
-    }
+	private ConsulClientOptions consulClientOptions;
 
-    @Override
-    public void init(Vertx vertx, Context context) {
-        super.init(vertx, context);
-    }
+	private Map<String, Watch<KeyValueList>> apiWatchMap = new ConcurrentHashMap<>();
 
-    @Override
-    public void start(Promise<Void> startPromise) throws Exception {
-        vertx.eventBus().consumer(AddressConstant.APP_START, this::startApp);
-        vertx.eventBus().consumer(AddressConstant.APP_CLOSE, this::closeApp);
-        vertx.eventBus().consumer(AddressConstant.API_DEPLOY, this::deployApi);
-        vertx.eventBus().consumer(AddressConstant.API_REMOVE, this::removeApi);
+	public DeployVerticle(ApplicationContext applicationContext) {
+		this.clusterId = applicationContext.getClusterId();
+		this.deployment = applicationContext.getDeployment();
+		this.consulClientOptions = applicationContext.getConsulClientOptions();
+	}
 
-        startPromise.complete();
-    }
+	@Override
+	public void init(Vertx vertx, Context context) {
+		super.init(vertx, context);
+	}
 
-    private void startApp(Message<JsonObject> message) {
-        AppOptions appParam = new AppOptions(message.body());
-        String error = checkAppParam(appParam);
-        if (error != null) {
-            message.fail(400, error);
-            return;
-        }
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		vertx.eventBus().consumer(AddressConstant.APP_START, this::startApp);
+		vertx.eventBus().consumer(AddressConstant.APP_CLOSE, this::closeApp);
+		vertx.eventBus().consumer(AddressConstant.API_DEPLOY, this::deployApi);
+		vertx.eventBus().consumer(AddressConstant.API_REMOVE, this::removeApi);
 
-        String appName = appParam.getAppName();
-        // check app is start
-        if (deployment.get(appName) != null) {
-            message.reply(null);
-            return;
-        }
-        deployment.put(new AppDeploy(appName));
+		startPromise.complete();
+	}
 
-        int instances = config().getInteger("instances", Runtime.getRuntime().availableProcessors());
-        DeploymentOptions options = new DeploymentOptions().setConfig(message.body()).setInstances(instances);
-        vertx.deployVerticle(AgateVerticleFactory.appendPrefix(ServerVerticle.class), options, ar -> {
-            if (ar.succeeded()) {
-                deployment.get(appName).setDeployId(ar.result());
+	private void startApp(Message<JsonObject> message) {
+		AppOptions appParam = new AppOptions(message.body());
+		String error = checkAppParam(appParam);
+		if (error != null) {
+			message.fail(400, error);
+			return;
+		}
 
-                message.reply(null);
-            } else {
-                deployment.remove(appName);
+		String appName = appParam.getAppName();
+		// check app is start
+		if (deployment.get(appName) != null) {
+			message.reply(null);
+			return;
+		}
+		deployment.put(new AppDeploy(appName));
 
-                message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
-            }
-        });
-    }
+		int instances = config().getInteger("instances", Runtime.getRuntime().availableProcessors());
+		DeploymentOptions options = new DeploymentOptions().setConfig(message.body()).setInstances(instances);
+		vertx.deployVerticle(AgateVerticleFactory.appendPrefix(ServerVerticle.class), options, ar -> {
+			if (ar.succeeded()) {
+				deployment.get(appName).setDeployId(ar.result());
+				registApiWatch(appName);
 
-    private void closeApp(Message<JsonObject> message) {
-        AppOptions appParam = new AppOptions(message.body());
-        String error = checkAppParam(appParam);
-        if (error != null) {
-            message.fail(400, error);
-            return;
-        }
+				message.reply(null);
+			} else {
+				deployment.remove(appName);
 
-        String appName = appParam.getAppName();
-        AppDeploy appDeploy = deployment.get(appName);
-        if (appDeploy == null || appDeploy.getDeployId() == null) {
-            message.reply(null);
-            return;
-        }
+				message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
+			}
+		});
+	}
 
-        vertx.undeploy(appDeploy.getDeployId(), ar -> {
-            if (ar.succeeded()) {
-                deployment.remove(appName);
+	private void registApiWatch(String appName) {
+		Watch<KeyValueList> apiWatch = Watch.keyPrefix("agate/apis/" + appName, vertx, consulClientOptions);
+		apiWatch.setHandler(ar -> {
+			try {
+				watchEventHandle(ar);
+			} catch (Exception e) {
+				LOG.warn("handle api watch event error", e);
+			}
+		}).start();
+		apiWatchMap.put(appName, apiWatch);
+	}
 
-                message.reply(null);
-            } else {
-                message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
-            }
-        });
-    }
+	private void watchEventHandle(WatchResult<KeyValueList> ar) {
+		if (!ar.succeeded()) {
+			LOG.warn("api watch event error", ar.cause());
+			return;
+		}
 
-    @SuppressWarnings("rawtypes")
-    private void deployApi(Message<JsonObject> message) {
-        ApiOptions api = new ApiOptions(message.body());
-        String error = checkApiParam(api);
-        if (error != null) {
-            message.fail(400, error);
-            return;
-        }
+		Map<String, KeyValue> pkvMap = new HashMap<String, KeyValue>();
+		if (ar.prevResult() != null && ar.prevResult().getList() != null) {
+			ar.prevResult().getList().forEach(kv -> pkvMap.put(kv.getKey(), kv));
+		}
 
-        AppDeploy appDeploy = deployment.get(api.getAppName());
-        if (appDeploy == null) {
-            message.fail(503, "APP is not start");
-            return;
-        }
-        if (appDeploy.containApi(api.getApiName())) {
-            message.reply(null);
-            return;
-        }
+		Map<String, KeyValue> nkvMap = new HashMap<String, KeyValue>();
+		if (ar.nextResult() != null && ar.nextResult().getList() != null) {
+			ar.nextResult().getList().forEach(kv -> nkvMap.put(kv.getKey(), kv));
+		}
 
-        List<Future> futures = new LinkedList<Future>();
-        for (Deployer deployer : appDeploy.getApiDeployers()) {
-            futures.add(deployer.deployApi(api));
-        }
-        CompositeFuture.all(futures).setHandler(ar -> {
-            if (ar.succeeded()) {
-                LOG.info("deploy api success {}", api.getApiName());
+		// create: next have and prev not;
+		// update: next have and prev have, modify index not equal
+		List<KeyValue> cList = new LinkedList<KeyValue>();
+		List<KeyValue> uList = new LinkedList<KeyValue>();
+		nkvMap.forEach((k, nkv) -> {
+			KeyValue pkv = pkvMap.get(k);
+			if (pkv == null) {
+				cList.add(nkv);
+			} else if (pkv.getModifyIndex() != nkv.getModifyIndex()) {
+				uList.add(nkv);
+			}
+		});
 
-                ApiDeploy apiDeploy = new ApiDeploy();
-                apiDeploy.setName(api.getApiName());
-                apiDeploy.setPrefix(api.getPrefix());
-                apiDeploy.setPath(api.getPath());
-                appDeploy.registApi(apiDeploy);
+		// delete: prev have and next not;
+		List<KeyValue> dList = new LinkedList<KeyValue>();
+		pkvMap.forEach((k, pkv) -> {
+			if (!nkvMap.containsKey(k)) {
+				dList.add(pkv);
+			}
+		});
 
-                message.reply(null);
-            } else {
-                message.fail(500, ar.cause().getMessage());
-            }
-        });
-    }
+		uList.forEach(kv -> {
+			try {
+				JsonObject message = new JsonObject(kv.getValue());
+				vertx.eventBus().send(AddressConstant.API_REMOVE, message);
+				vertx.eventBus().send(AddressConstant.API_DEPLOY, message);
+			} catch (Exception e) {
+				LOG.warn("api message is error", e);
+			}
+		});
+		dList.forEach(kv -> {
+			try {
+				JsonObject message = new JsonObject(kv.getValue());
+				vertx.eventBus().send(AddressConstant.API_REMOVE, message);
+			} catch (Exception e) {
+				LOG.warn("api message is error", e);
+			}
+		});
+		cList.forEach(kv -> {
+			try {
+				JsonObject message = new JsonObject(kv.getValue());
+				vertx.eventBus().send(AddressConstant.API_DEPLOY, message);
+			} catch (Exception e) {
+				LOG.warn("api message is error", e);
+			}
+		});
+	}
 
-    @SuppressWarnings("rawtypes")
-    private void removeApi(Message<JsonObject> message) {
-        ApiOptions api = new ApiOptions(message.body());
-        String error = checkApiParam(api);
-        if (error != null) {
-            message.fail(400, error);
-            return;
-        }
+	private void removeApiWatch(String appName) {
+		Watch<KeyValueList> apiWatch = apiWatchMap.remove(appName);
+		if (apiWatch != null) {
+			apiWatch.stop();
+		}
+	}
 
-        AppDeploy appDeploy = deployment.get(api.getAppName());
-        if (appDeploy == null || !appDeploy.containApi(api.getApiName())) {
-            message.reply(null);
-            return;
-        }
+	private void closeApp(Message<JsonObject> message) {
+		AppOptions appParam = new AppOptions(message.body());
+		String error = checkAppParam(appParam);
+		if (error != null) {
+			message.fail(400, error);
+			return;
+		}
 
-        List<Future> futures = new LinkedList<Future>();
-        for (Deployer deployer : appDeploy.getApiDeployers()) {
-            futures.add(deployer.removeApi(api));
-        }
-        CompositeFuture.all(futures).setHandler(ar -> {
-            if (ar.succeeded()) {
-                LOG.info("remove api success {}", api.getApiName());
+		String appName = appParam.getAppName();
+		AppDeploy appDeploy = deployment.get(appName);
+		if (appDeploy == null || appDeploy.getDeployId() == null) {
+			message.reply(null);
+			return;
+		}
 
-                appDeploy.removeApi(api.getApiName());
-                message.reply(null);
-            } else {
-                message.fail(500, ar.cause().getMessage());
-            }
-        });
-    }
+		vertx.undeploy(appDeploy.getDeployId(), ar -> {
+			if (ar.succeeded()) {
+				deployment.remove(appName);
+				removeApiWatch(appName);
 
-    private String checkAppParam(AppOptions appParam) {
-        if (appParam == null) {
-            return "APP parameter is null";
-        }
-        if (!this.clusterId.equals(appParam.getCluster())) {
-            return "APP cluster is not same with " + clusterId;
-        }
-        if (appParam.getAppName() == null || appParam.getAppName().isEmpty()) {
-            return "APP name is empty";
-        }
-        return null;
-    }
+				message.reply(null);
+			} else {
+				message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
+			}
+		});
+	}
 
-    private String checkApiParam(ApiOptions apiParam) {
-        if (apiParam == null) {
-            return "API parameter is null";
-        }
-        if (!this.clusterId.equals(apiParam.getCluster())) {
-            return "APP cluster is not same with " + clusterId;
-        }
-        if (apiParam.getAppName() == null || apiParam.getAppName().isEmpty()) {
-            return "APP name is empty";
-        }
-        if (apiParam.getApiName() == null || apiParam.getApiName().isEmpty()) {
-            return "API name is empty";
-        }
-        return null;
-    }
+	@SuppressWarnings("rawtypes")
+	private void deployApi(Message<JsonObject> message) {
+		ApiOptions api = new ApiOptions(message.body());
+		String error = checkApiParam(api);
+		if (error != null) {
+			message.fail(400, error);
+			return;
+		}
+
+		AppDeploy appDeploy = deployment.get(api.getAppName());
+		if (appDeploy == null) {
+			message.fail(503, "APP is not start");
+			return;
+		}
+		if (appDeploy.containApi(api.getApiName())) {
+			message.reply(null);
+			return;
+		}
+
+		List<Future> futures = new LinkedList<Future>();
+		for (Deployer deployer : appDeploy.getApiDeployers()) {
+			futures.add(deployer.deployApi(api));
+		}
+		CompositeFuture.all(futures).setHandler(ar -> {
+			if (ar.succeeded()) {
+				LOG.info("deploy api success {}", api.getApiName());
+
+				ApiDeploy apiDeploy = new ApiDeploy();
+				apiDeploy.setName(api.getApiName());
+				apiDeploy.setPrefix(api.getPrefix());
+				apiDeploy.setPath(api.getPath());
+				appDeploy.registApi(apiDeploy);
+
+				message.reply(null);
+			} else {
+				message.fail(500, ar.cause().getMessage());
+			}
+		});
+	}
+
+	@SuppressWarnings("rawtypes")
+	private void removeApi(Message<JsonObject> message) {
+		ApiOptions api = new ApiOptions(message.body());
+		String error = checkApiParam(api);
+		if (error != null) {
+			message.fail(400, error);
+			return;
+		}
+
+		AppDeploy appDeploy = deployment.get(api.getAppName());
+		if (appDeploy == null || !appDeploy.containApi(api.getApiName())) {
+			message.reply(null);
+			return;
+		}
+
+		List<Future> futures = new LinkedList<Future>();
+		for (Deployer deployer : appDeploy.getApiDeployers()) {
+			futures.add(deployer.removeApi(api));
+		}
+		CompositeFuture.all(futures).setHandler(ar -> {
+			if (ar.succeeded()) {
+				LOG.info("remove api success {}", api.getApiName());
+
+				appDeploy.removeApi(api.getApiName());
+				message.reply(null);
+			} else {
+				message.fail(500, ar.cause().getMessage());
+			}
+		});
+	}
+
+	private String checkAppParam(AppOptions appParam) {
+		if (appParam == null) {
+			return "APP parameter is null";
+		}
+		if (!this.clusterId.equals(appParam.getCluster())) {
+			return "APP cluster is not same with " + clusterId;
+		}
+		if (appParam.getAppName() == null || appParam.getAppName().isEmpty()) {
+			return "APP name is empty";
+		}
+		return null;
+	}
+
+	private String checkApiParam(ApiOptions apiParam) {
+		if (apiParam == null) {
+			return "API parameter is null";
+		}
+		if (!this.clusterId.equals(apiParam.getCluster())) {
+			return "APP cluster is not same with " + clusterId;
+		}
+		if (apiParam.getAppName() == null || apiParam.getAppName().isEmpty()) {
+			return "APP name is empty";
+		}
+		if (apiParam.getApiName() == null || apiParam.getApiName().isEmpty()) {
+			return "API name is empty";
+		}
+		return null;
+	}
 
 }

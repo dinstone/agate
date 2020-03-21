@@ -15,50 +15,81 @@
  */
 package com.dinstone.agate.gateway;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.dinstone.agate.gateway.options.AppOptions;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 
 public class EventbusTest {
 
-    public static void main(String[] args) {
-        Vertx vertx = Vertx.vertx();
+	private static final Logger LOG = LoggerFactory.getLogger(EventbusTest.class);
 
-        vertx.eventBus().registerDefaultCodec(AppOptions.class, new MessageCodec<AppOptions, AppOptions>() {
+	public static void main(String[] args) {
 
-            @Override
-            public void encodeToWire(Buffer buffer, AppOptions s) {
-                // TODO Auto-generated method stub
-            }
+		JsonObject json = getJsonFromFile("src/main/resources/config.json");
 
-            @Override
-            public AppOptions decodeFromWire(int pos, Buffer buffer) {
-                // TODO Auto-generated method stub
-                return null;
-            }
+		Vertx vertx = Vertx.vertx();
 
-            @Override
-            public AppOptions transform(AppOptions s) {
-                // TODO Auto-generated method stub
-                return null;
-            }
+		vertx.eventBus().registerDefaultCodec(AppOptions.class, new MessageCodec<AppOptions, AppOptions>() {
 
-            @Override
-            public String name() {
-                return "app";
-            }
+			@Override
+			public void encodeToWire(Buffer buffer, AppOptions s) {
+				// TODO Auto-generated method stub
+			}
 
-            @Override
-            public byte systemCodecID() {
-                return -1;
-            }
+			@Override
+			public AppOptions decodeFromWire(int pos, Buffer buffer) {
+				// TODO Auto-generated method stub
+				return null;
+			}
 
-        });
-        vertx.eventBus().send("test", new AppOptions());
+			@Override
+			public AppOptions transform(AppOptions s) {
+				// TODO Auto-generated method stub
+				return null;
+			}
 
-        System.out.println("ok");
-    }
+			@Override
+			public String name() {
+				return "app";
+			}
+
+			@Override
+			public byte systemCodecID() {
+				return -1;
+			}
+
+		});
+		vertx.eventBus().send("test", new AppOptions());
+
+		System.out.println("ok");
+	}
+
+	static JsonObject getJsonFromFile(String jsonFile) {
+		if (jsonFile != null) {
+			try (Scanner scanner = new Scanner(new File(jsonFile), "UTF-8").useDelimiter("\\A")) {
+				String sconf = scanner.next();
+				try {
+					return new JsonObject(sconf);
+				} catch (DecodeException e) {
+					LOG.error("Configuration file " + sconf + " does not contain a valid JSON object");
+				}
+			} catch (FileNotFoundException e) {
+				LOG.error("unkown know file " + jsonFile, e);
+			}
+		}
+
+		return null;
+	}
 
 }
