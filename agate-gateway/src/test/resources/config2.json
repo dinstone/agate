@@ -1,0 +1,30 @@
+{
+	"cluster": "default",
+	"vertx": {
+		"workerPoolSize": 4,
+		"eventLoopPoolSize": 4,
+		"blockedThreadCheckInterval": 1000000000
+	},
+	"verticle": {
+		"manage.instances": 2,
+		"system.instances": 2
+	},
+	"manage": {
+		"port": 5555
+	},
+	"broker": {
+		"group": "",
+		"scheduledSize": 4
+	},
+	"redis": {
+		"host": "127.0.0.1",
+		"port": 6379,
+		"maxTotal": 8,
+		"minIdle": 1,
+		"timeout": 2000,
+		"maxWaitMillis": 3000,
+		"numTestsPerEvictionRun": -1,
+		"minEvictableIdleTimeMillis": 60000,
+		"timeBetweenEvictionRunsMillis": 30000
+	}
+}
