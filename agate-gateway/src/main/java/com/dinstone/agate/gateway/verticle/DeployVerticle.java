@@ -66,10 +66,10 @@ public class DeployVerticle extends AbstractVerticle {
 
 	private Map<String, Watch<KeyValueList>> apiWatchMap = new ConcurrentHashMap<>();
 
-	public DeployVerticle(ApplicationContext applicationContext) {
-		this.clusterId = applicationContext.getClusterId();
-		this.deployment = applicationContext.getDeployment();
-		this.consulClientOptions = applicationContext.getConsulClientOptions();
+	public DeployVerticle(ApplicationContext appContext) {
+		this.clusterId = appContext.getClusterId();
+		this.deployment = appContext.getDeployment();
+		this.consulClientOptions = new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0);
 	}
 
 	@Override

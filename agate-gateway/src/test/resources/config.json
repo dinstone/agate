@@ -13,9 +13,9 @@
 		"host": "localhost",
 		"port": 5454
 	},
-	"broker": {
-		"group": "",
-		"scheduledSize": 4
+	"consul": {
+		"host": "127.0.0.1",
+		"port": 8500
 	},
 	"redis": {
 		"host": "127.0.0.1",

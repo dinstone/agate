@@ -25,58 +25,62 @@ import io.vertx.ext.consul.ConsulClientOptions;
 
 public class ApplicationContext {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
 
-    private static final String DEFAULT_CLUSTER = "default";
+	private static final String DEFAULT_CLUSTER = "default";
 
-    private JsonObject config;
+	private JsonObject config;
 
-    private String clusterId;
+	private String clusterId;
 
-    private Deployment deployment;
+	private Deployment deployment;
 
-    private ConsulClientOptions consulClientOptions;
+	private ConsulClientOptions consulOptions;
 
-    public ApplicationContext(JsonObject config) throws Exception {
-        this.config = config;
+	public ApplicationContext(JsonObject config) throws Exception {
+		this.config = config;
 
-        init();
-    }
+		init();
+	}
 
-    private void init() throws Exception {
-        LOG.debug("init application context start");
+	private void init() throws Exception {
+		LOG.debug("init application context start");
 
-        // cluster id
-        clusterId = config.getString("cluster", DEFAULT_CLUSTER);
+		// cluster id
+		clusterId = config.getString("cluster", DEFAULT_CLUSTER);
 
-        // consul options
-        consulClientOptions = new ConsulClientOptions();
-        consulClientOptions.setHost("localhost").setPort(8500).setTimeout(2000);
+		// consul options
+		JsonObject consulJson = config.getJsonObject("consul");
+		if (consulJson != null) {
+			consulOptions = new ConsulClientOptions(consulJson);
+		} else {
+			consulOptions = new ConsulClientOptions();
+		}
 
-        // deployment
-        deployment = new Deployment(clusterId);
+		// deployment
+		deployment = new Deployment(clusterId);
 
-        LOG.debug("init application context ended");
-    }
+		LOG.debug("init application context ended");
+	}
 
-    public void destroy() {
-        deployment.destroy();
-    }
+	public void destroy() {
+		deployment.destroy();
+	}
 
-    public JsonObject getConfig() {
-        return config;
-    }
+	public JsonObject getConfig() {
+		return config;
+	}
 
-    public Deployment getDeployment() {
-        return deployment;
-    }
+	public Deployment getDeployment() {
+		return deployment;
+	}
 
-    public String getClusterId() {
-        return clusterId;
-    }
+	public String getClusterId() {
+		return clusterId;
+	}
 
-    public ConsulClientOptions getConsulClientOptions() {
-        return consulClientOptions;
-    }
+	public ConsulClientOptions getConsulOptions() {
+		return consulOptions;
+	}
 
 }

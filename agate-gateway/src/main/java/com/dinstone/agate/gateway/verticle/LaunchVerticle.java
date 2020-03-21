@@ -33,6 +33,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.consul.ConsulClientOptions;
 import io.vertx.ext.consul.KeyValue;
 import io.vertx.ext.consul.KeyValueList;
 import io.vertx.ext.consul.Watch;
@@ -48,7 +49,7 @@ public class LaunchVerticle extends AbstractVerticle {
 
 	private static final Logger LOG = LoggerFactory.getLogger(LaunchVerticle.class);
 
-	private ApplicationContext applicationContext;
+	private ApplicationContext appContext;
 	private Watch<KeyValueList> appWatch;
 
 	@Override
@@ -56,18 +57,18 @@ public class LaunchVerticle extends AbstractVerticle {
 		if (appWatch != null) {
 			appWatch.stop();
 		}
-		if (applicationContext != null) {
-			applicationContext.destroy();
+		if (appContext != null) {
+			appContext.destroy();
 		}
 	}
 
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
 		// init application context
-		applicationContext = new ApplicationContext(config());
+		appContext = new ApplicationContext(config());
 
 		// regist verticle factory
-		vertx.registerVerticleFactory(new AgateVerticleFactory(applicationContext));
+		vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
 
 		// system verticle
 		DeploymentOptions svdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
@@ -92,8 +93,8 @@ public class LaunchVerticle extends AbstractVerticle {
 	 */
 	private Future<Void> load() {
 		return Future.future(p -> {
-			appWatch = Watch.keyPrefix("agate/apps/" + applicationContext.getClusterId(), vertx,
-					applicationContext.getConsulClientOptions()).setHandler(ar -> {
+			appWatch = Watch.keyPrefix("agate/apps/" + appContext.getClusterId(), vertx,
+					new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
 						try {
 							watchEventHandle(ar);
 						} catch (Exception e) {
@@ -112,12 +113,20 @@ public class LaunchVerticle extends AbstractVerticle {
 
 		Map<String, KeyValue> pkvMap = new HashMap<String, KeyValue>();
 		if (ar.prevResult() != null && ar.prevResult().getList() != null) {
-			ar.prevResult().getList().forEach(kv -> pkvMap.put(kv.getKey(), kv));
+			ar.prevResult().getList().forEach(kv -> {
+				if (kv.getValue() != null && kv.getValue().length() > 0) {
+					pkvMap.put(kv.getKey(), kv);
+				}
+			});
 		}
 
 		Map<String, KeyValue> nkvMap = new HashMap<String, KeyValue>();
 		if (ar.nextResult() != null && ar.nextResult().getList() != null) {
-			ar.nextResult().getList().forEach(kv -> nkvMap.put(kv.getKey(), kv));
+			ar.nextResult().getList().forEach(kv -> {
+				if (kv.getValue() != null && kv.getValue().length() > 0) {
+					nkvMap.put(kv.getKey(), kv);
+				}
+			});
 		}
 
 		// create: next have and prev not;

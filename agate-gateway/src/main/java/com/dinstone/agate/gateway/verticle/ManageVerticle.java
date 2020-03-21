@@ -103,7 +103,7 @@ public class ManageVerticle extends AbstractVerticle {
 		// init service id
 		serviceId = clusterId + ":" + serverOptions.getHost() + ":" + serverOptions.getPort();
 
-		consulClient = ConsulClient.create(vertx, applicationContext.getConsulClientOptions());
+		consulClient = ConsulClient.create(vertx, applicationContext.getConsulOptions());
 	}
 
 	@Override
@@ -170,7 +170,7 @@ public class ManageVerticle extends AbstractVerticle {
 					.setInterval("30s").setDeregisterAfter("2m");
 			ServiceOptions serviceOptions = new ServiceOptions().setId(serviceId).setName("agate-gateway")
 					.setAddress(serverOptions.getHost()).setPort(serverOptions.getPort())
-					.setTags(Arrays.asList(clusterId)).setCheckOptions(checkOptions);
+					.setTags(Arrays.asList("agate", "gateway", clusterId)).setCheckOptions(checkOptions);
 			consulClient.registerService(serviceOptions, ar -> {
 				if (ar.succeeded()) {
 					LOG.info("gateway regist  success {}", serviceId);
