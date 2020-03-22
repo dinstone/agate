@@ -23,19 +23,18 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
-import com.dinstone.agate.gateway.handler.RouteHandler;
+import com.dinstone.agate.gateway.handler.RateLimitHandler;
+import com.dinstone.agate.gateway.handler.RouteProxyHandler;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.AppOptions;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpConnection;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
@@ -51,195 +50,176 @@ import io.vertx.ext.web.sstore.LocalSessionStore;
  */
 public class ServerVerticle extends AbstractVerticle implements Deployer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
 
-    private Map<String, Route> apiRouteMap = new ConcurrentHashMap<>();
+	private Map<String, Route> apiRouteMap = new ConcurrentHashMap<>();
 
-    private ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-    private HttpServerOptions serverOptions;
+	private HttpServerOptions serverOptions;
 
-    private HttpClientOptions clientOptions;
+	private HttpClientOptions clientOptions;
 
-    private HttpClient httpClient;
+	private HttpClient httpClient;
 
-    private Router mainRouter;
+	private Router mainRouter;
 
-    private String appName;
+	private String appName;
 
-    public ServerVerticle(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+	public ServerVerticle(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 
-    @Override
-    public void init(Vertx vertx, Context context) {
-        super.init(vertx, context);
+	@Override
+	public void init(Vertx vertx, Context context) {
+		super.init(vertx, context);
 
-        AppOptions appOptions = new AppOptions(config());
-        appName = appOptions.getAppName();
+		AppOptions appOptions = new AppOptions(config());
+		appName = appOptions.getAppName();
 
-        serverOptions = appOptions.getServerOptions();
-        if (serverOptions == null) {
-            serverOptions = new HttpServerOptions();
-        }
+		serverOptions = appOptions.getServerOptions();
+		if (serverOptions == null) {
+			serverOptions = new HttpServerOptions();
+		}
 
-        clientOptions = appOptions.getClientOptions();
-        if (clientOptions == null) {
-            clientOptions = new HttpClientOptions();
-        }
-    }
+		clientOptions = appOptions.getClientOptions();
+		if (clientOptions == null) {
+			clientOptions = new HttpClientOptions();
+		}
+	}
 
-    @Override
-    public void start(Promise<Void> startPromise) throws Exception {
-        httpClient = vertx.createHttpClient(clientOptions);
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		httpClient = vertx.createHttpClient(clientOptions);
 
-        mainRouter = createHttpServerRouter();
-        vertx.createHttpServer(serverOptions).connectionHandler(new Handler<HttpConnection>() {
-            @Override
-            public void handle(HttpConnection hc) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Connection {}/{}/{} opened ", appName, hc.localAddress(), hc.remoteAddress());
-                }
-                hc.exceptionHandler(new Handler<Throwable>() {
+		mainRouter = createHttpServerRouter();
+		vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
+			if (ar.succeeded()) {
+				// register api deployer
+				registApiDeployer();
 
-                    @Override
-                    public void handle(Throwable error) {
-                        LOG.warn("Connection {}/{}/{} throws : {}", appName, hc.localAddress(), hc.remoteAddress(),
-                                error);
-                    }
-                });
-                hc.closeHandler(new Handler<Void>() {
+				LOG.info("server verticle start success, {}/{}:{}", appName, serverOptions.getHost(),
+						serverOptions.getPort());
+				startPromise.complete();
+			} else {
+				LOG.error("server verticle start failed, {}/{}:{}", appName, serverOptions.getHost(),
+						serverOptions.getPort());
+				startPromise.fail(ar.cause());
+			}
+		});
 
-                    @Override
-                    public void handle(Void event) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Connection {}/{}/{} closed", appName, hc.localAddress(), hc.remoteAddress());
-                        }
-                    }
-                });
-            }
-        }).requestHandler(mainRouter).listen(ar -> {
-            if (ar.succeeded()) {
-                // register api deployer
-                registApiDeployer();
+	}
 
-                LOG.info("server verticle start success, {}/{}:{}", appName, serverOptions.getHost(),
-                        serverOptions.getPort());
-                startPromise.complete();
-            } else {
-                LOG.error("server verticle start failed, {}/{}:{}", appName, serverOptions.getHost(),
-                        serverOptions.getPort());
-                startPromise.fail(ar.cause());
-            }
-        });
+	@Override
+	public void stop() throws Exception {
+		removeApiDeployer();
 
-    }
+		LOG.info("server verticle stop success, {}/{}:{}", appName, serverOptions.getHost(), serverOptions.getPort());
+	}
 
-    @Override
-    public void stop() throws Exception {
-        removeApiDeployer();
+	@Override
+	public Future<Void> deployApi(ApiOptions api) {
+		Promise<Void> promise = Promise.promise();
 
-        LOG.info("server verticle stop success, {}/{}:{}", appName, serverOptions.getHost(), serverOptions.getPort());
-    }
+		context.runOnContext(ar -> {
+			try {
+				if (apiRouteMap.containsKey(api.getApiName())) {
+					promise.complete();
+					return;
+				}
 
-    @Override
-    public Future<Void> deployApi(ApiOptions api) {
-        Promise<Void> promise = Promise.promise();
+				// create sub router for api
+				Router subRouter = Router.router(vertx);
 
-        context.runOnContext(ar -> {
-            try {
-                if (apiRouteMap.containsKey(api.getApiName())) {
-                    promise.complete();
-                    return;
-                }
+				// create api route
+				Route route = null;
+				if (pathIsRegex(api.getPath())) {
+					route = subRouter.routeWithRegex(api.getPath());
+				} else {
+					route = subRouter.route(api.getPath());
+				}
+				// method
+				String method = api.getMethod();
+				if (method != null && method.length() > 0) {
+					route.method(HttpMethod.valueOf(method.toUpperCase()));
+				}
+				// consumes
+				if (api.getConsumes() != null) {
+					for (String consume : api.getConsumes()) {
+						route.consumes(consume);
+					}
+				}
+				// produces
+				if (api.getProduces() != null) {
+					for (String produce : api.getProduces()) {
+						route.produces(produce);
+					}
+				}
+				// rate limit hanlder
+				if (api.getRateLimit() != null) {
+					route.handler(new RateLimitHandler(api));
+				}
+				// route proxy handler
+				route.handler(new RouteProxyHandler(api, false, httpClient));
+				// mount sub router to main
+				Route mountRoute = mountRoute(api.getPrefix(), subRouter);
 
-                // create sub router for api
-                Router subRouter = Router.router(vertx);
+				// cache api route
+				apiRouteMap.put(api.getApiName(), mountRoute);
 
-                // create api route
-                Route route = null;
-                if (pathIsRegex(api.getPath())) {
-                    route = subRouter.routeWithRegex(api.getPath());
-                } else {
-                    route = subRouter.route(api.getPath());
-                }
-                // method
-                String method = api.getMethod();
-                if (method != null && method.length() > 0) {
-                    route.method(HttpMethod.valueOf(method.toUpperCase()));
-                }
-                // consumes
-                if (api.getConsumes() != null) {
-                    for (String consume : api.getConsumes()) {
-                        route.consumes(consume);
-                    }
-                }
-                // produces
-                if (api.getProduces() != null) {
-                    for (String produce : api.getProduces()) {
-                        route.produces(produce);
-                    }
-                }
-                // handler
-                route.handler(new RouteHandler(api, false, httpClient));
-                // mount sub router to main
-                Route mountRoute = mountRoute(api.getPrefix(), subRouter);
+				promise.complete();
+			} catch (Exception e) {
+				promise.fail(e);
+			}
+		});
 
-                // cache api route
-                apiRouteMap.put(api.getApiName(), mountRoute);
+		return promise.future();
+	}
 
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        });
+	public boolean pathIsRegex(String routePath) {
+		return routePath.indexOf("(") > 0 || routePath.indexOf("?<") > 0;
+	}
 
-        return promise.future();
-    }
+	private Route mountRoute(String path, Router subRouter) {
+		return mainRouter.route(path).subRouter(subRouter);
+	}
 
-    public boolean pathIsRegex(String routePath) {
-        return routePath.indexOf("(") > 0 || routePath.indexOf("?<") > 0;
-    }
+	@Override
+	public Future<Void> removeApi(ApiOptions api) {
+		Promise<Void> promise = Promise.promise();
 
-    private Route mountRoute(String path, Router subRouter) {
-        return mainRouter.route(path).subRouter(subRouter);
-    }
+		context.runOnContext(ar -> {
+			try {
+				Route route = apiRouteMap.remove(api.getApiName());
+				if (route != null) {
+					route.disable().remove();
+				}
+				promise.complete();
+			} catch (Exception e) {
+				promise.fail(e);
+			}
+		});
 
-    @Override
-    public Future<Void> removeApi(ApiOptions api) {
-        Promise<Void> promise = Promise.promise();
+		return promise.future();
+	}
 
-        context.runOnContext(ar -> {
-            try {
-                Route route = apiRouteMap.remove(api.getApiName());
-                if (route != null) {
-                    route.disable().remove();
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        });
+	private void registApiDeployer() {
+		applicationContext.getDeployment().get(appName).regist(this);
+	}
 
-        return promise.future();
-    }
+	private void removeApiDeployer() {
+		applicationContext.getDeployment().get(appName).remove(this);
+	}
 
-    private void registApiDeployer() {
-        applicationContext.getDeployment().get(appName).regist(this);
-    }
+	private SessionHandler sessionHandler() {
+		return SessionHandler
+				.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000));
+	}
 
-    private void removeApiDeployer() {
-        applicationContext.getDeployment().get(appName).remove(this);
-    }
-
-    private SessionHandler sessionHandler() {
-        return SessionHandler.create(LocalSessionStore.create(vertx));
-    }
-
-    private Router createHttpServerRouter() {
-        Router mainRouter = Router.router(vertx);
-        mainRouter.route().handler(sessionHandler());
-        return mainRouter;
-    }
+	private Router createHttpServerRouter() {
+		Router mainRouter = Router.router(vertx);
+		mainRouter.route().handler(sessionHandler());
+		return mainRouter;
+	}
 
 }
