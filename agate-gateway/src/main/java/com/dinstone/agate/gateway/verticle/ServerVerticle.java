@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
+import com.dinstone.agate.gateway.handler.AccessLogHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.RouteProxyHandler;
 import com.dinstone.agate.gateway.options.ApiOptions;
@@ -212,13 +213,13 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 	}
 
 	private SessionHandler sessionHandler() {
-		return SessionHandler
-				.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000));
+		return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
+				.setNagHttps(false);
 	}
 
 	private Router createHttpServerRouter() {
 		Router mainRouter = Router.router(vertx);
-		mainRouter.route().handler(sessionHandler());
+		mainRouter.route().handler(new AccessLogHandler()).handler(sessionHandler());
 		return mainRouter;
 	}
 

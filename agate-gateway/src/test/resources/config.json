@@ -1,6 +1,8 @@
 {
 	"cluster": "default",
 	"vertx": {
+		"workerPoolSize": 4,
+		"eventLoopPoolSize": 4,
 		"blockedThreadCheckInterval": 1000000000
 	},
 	"verticle": {
