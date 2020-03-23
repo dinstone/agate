@@ -105,15 +105,15 @@ public class LaunchVerticle extends AbstractVerticle {
 		});
 	}
 
-	private void watchEventHandle(WatchResult<KeyValueList> ar) {
-		if (!ar.succeeded()) {
-			LOG.warn("app watch event error", ar.cause());
+	private void watchEventHandle(WatchResult<KeyValueList> wr) {
+		if (!wr.succeeded()) {
+			LOG.warn("app watch event error", wr.cause());
 			return;
 		}
 
 		Map<String, KeyValue> pkvMap = new HashMap<String, KeyValue>();
-		if (ar.prevResult() != null && ar.prevResult().getList() != null) {
-			ar.prevResult().getList().forEach(kv -> {
+		if (wr.prevResult() != null && wr.prevResult().getList() != null) {
+			wr.prevResult().getList().forEach(kv -> {
 				if (kv.getValue() != null && kv.getValue().length() > 0) {
 					pkvMap.put(kv.getKey(), kv);
 				}
@@ -121,8 +121,8 @@ public class LaunchVerticle extends AbstractVerticle {
 		}
 
 		Map<String, KeyValue> nkvMap = new HashMap<String, KeyValue>();
-		if (ar.nextResult() != null && ar.nextResult().getList() != null) {
-			ar.nextResult().getList().forEach(kv -> {
+		if (wr.nextResult() != null && wr.nextResult().getList() != null) {
+			wr.nextResult().getList().forEach(kv -> {
 				if (kv.getValue() != null && kv.getValue().length() > 0) {
 					nkvMap.put(kv.getKey(), kv);
 				}
@@ -153,8 +153,11 @@ public class LaunchVerticle extends AbstractVerticle {
 		uList.forEach(kv -> {
 			try {
 				JsonObject message = new JsonObject(kv.getValue());
-				vertx.eventBus().send(AddressConstant.APP_CLOSE, message);
-				vertx.eventBus().send(AddressConstant.APP_START, message);
+				vertx.eventBus().request(AddressConstant.APP_CLOSE, message, ar -> {
+					if (ar.succeeded()) {
+						vertx.eventBus().send(AddressConstant.APP_START, message);
+					}
+				});
 			} catch (Exception e) {
 				LOG.warn("app message is error", e);
 			}

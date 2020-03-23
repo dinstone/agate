@@ -131,20 +131,20 @@ public class DeployVerticle extends AbstractVerticle {
 		apiWatchMap.put(appName, apiWatch);
 	}
 
-	private void watchEventHandle(WatchResult<KeyValueList> ar) {
-		if (!ar.succeeded()) {
-			LOG.warn("api watch event error", ar.cause());
+	private void watchEventHandle(WatchResult<KeyValueList> wr) {
+		if (!wr.succeeded()) {
+			LOG.warn("api watch event error", wr.cause());
 			return;
 		}
 
 		Map<String, KeyValue> pkvMap = new HashMap<String, KeyValue>();
-		if (ar.prevResult() != null && ar.prevResult().getList() != null) {
-			ar.prevResult().getList().forEach(kv -> pkvMap.put(kv.getKey(), kv));
+		if (wr.prevResult() != null && wr.prevResult().getList() != null) {
+			wr.prevResult().getList().forEach(kv -> pkvMap.put(kv.getKey(), kv));
 		}
 
 		Map<String, KeyValue> nkvMap = new HashMap<String, KeyValue>();
-		if (ar.nextResult() != null && ar.nextResult().getList() != null) {
-			ar.nextResult().getList().forEach(kv -> nkvMap.put(kv.getKey(), kv));
+		if (wr.nextResult() != null && wr.nextResult().getList() != null) {
+			wr.nextResult().getList().forEach(kv -> nkvMap.put(kv.getKey(), kv));
 		}
 
 		// create: next have and prev not;
@@ -171,8 +171,11 @@ public class DeployVerticle extends AbstractVerticle {
 		uList.forEach(kv -> {
 			try {
 				JsonObject message = new JsonObject(kv.getValue());
-				vertx.eventBus().send(AddressConstant.API_REMOVE, message);
-				vertx.eventBus().send(AddressConstant.API_DEPLOY, message);
+				vertx.eventBus().request(AddressConstant.API_REMOVE, message, ar -> {
+					if (ar.succeeded()) {
+						vertx.eventBus().send(AddressConstant.API_DEPLOY, message);
+					}
+				});
 			} catch (Exception e) {
 				LOG.warn("api message is error", e);
 			}
