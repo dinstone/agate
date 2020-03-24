@@ -25,11 +25,13 @@ import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
 import com.dinstone.agate.gateway.handler.DefaultFailureHandler;
-import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
+import com.dinstone.agate.gateway.handler.RateLimitHandler;
+import com.dinstone.agate.gateway.handler.ResultReplyHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.AppOptions;
+import com.dinstone.agate.gateway.options.FrontendOptions;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
@@ -131,43 +133,45 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 					return;
 				}
 
+				FrontendOptions feo = api.getFrontend();
 				// create sub router for api
 				Router subRouter = Router.router(vertx);
-
 				// create api route
 				Route route = null;
-				if (HttpUtil.pathIsRegex(api.getPath())) {
-					route = subRouter.routeWithRegex(api.getPath());
+				if (HttpUtil.pathIsRegex(feo.getPath())) {
+					route = subRouter.routeWithRegex(feo.getPath());
 				} else {
-					route = subRouter.route(api.getPath());
+					route = subRouter.route(feo.getPath());
 				}
 				// method
-				String method = api.getMethod();
+				String method = feo.getMethod();
 				if (method != null && method.length() > 0) {
 					route.method(HttpMethod.valueOf(method.toUpperCase()));
 				}
 				// consumes
-				if (api.getConsumes() != null) {
-					for (String consume : api.getConsumes()) {
+				if (feo.getConsumes() != null) {
+					for (String consume : feo.getConsumes()) {
 						route.consumes(consume);
 					}
 				}
 				// produces
-				if (api.getProduces() != null) {
-					for (String produce : api.getProduces()) {
+				if (feo.getProduces() != null) {
+					for (String produce : feo.getProduces()) {
 						route.produces(produce);
 					}
 				}
-				// rate limit hanlder
+				// before handler : rate limit handler
 				if (api.getRateLimit() != null) {
 					route.handler(new RateLimitHandler(api));
 				}
-				// route proxy handler
-				route.handler(new ProxyInvokeHandler(api, false, httpClient));
+				// route handler
+				route.handler(new ProxyInvokeHandler(api, httpClient));
+				// after handler : result reply handler
+				route.handler(new ResultReplyHandler(api));
 				// failure handler
 				route.failureHandler(new DefaultFailureHandler(api));
 				// cache api route
-				apiRouteMap.put(api.getApiName(), mountRoute(api.getPrefix(), subRouter));
+				apiRouteMap.put(api.getApiName(), mountRoute(feo.getPrefix(), subRouter));
 
 				promise.complete();
 			} catch (Exception e) {
@@ -186,6 +190,9 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 	 * @return
 	 */
 	private Route mountRoute(String path, Router subRouter) {
+		if (!path.endsWith("*")) {
+			path = path + "*";
+		}
 		return mainRouter.route(path).subRouter(subRouter);
 	}
 

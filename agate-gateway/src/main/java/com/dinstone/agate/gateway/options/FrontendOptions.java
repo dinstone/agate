@@ -15,6 +15,132 @@
  */
 package com.dinstone.agate.gateway.options;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 public class FrontendOptions {
 
+	private String prefix;
+
+	private String path;
+
+	private String method;
+
+	private String[] consumes;
+
+	private String[] produces;
+
+	public FrontendOptions(JsonObject json) {
+		fromJson(json);
+	}
+
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getMethod() {
+		return method;
+	}
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	public String[] getConsumes() {
+		return consumes;
+	}
+
+	public void setConsumes(String[] consumes) {
+		this.consumes = consumes;
+	}
+
+	public String[] getProduces() {
+		return produces;
+	}
+
+	public void setProduces(String[] produces) {
+		this.produces = produces;
+	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+
+		if (prefix != null) {
+			json.put("prefix", prefix);
+		}
+		if (path != null) {
+			json.put("path", path);
+		}
+		if (method != null) {
+			json.put("method", method);
+		}
+		if (consumes != null) {
+			json.put("consumes", Arrays.asList(consumes));
+		}
+		if (produces != null) {
+			json.put("produces", Arrays.asList(produces));
+		}
+
+		return json;
+	}
+
+	public void fromJson(JsonObject json) {
+		for (java.util.Map.Entry<String, Object> member : json) {
+			switch (member.getKey()) {
+			case "prefix":
+				if (member.getValue() instanceof String) {
+					this.setPrefix((String) member.getValue());
+				}
+				break;
+			case "path":
+				if (member.getValue() instanceof String) {
+					this.setPath((String) member.getValue());
+				}
+				break;
+			case "method":
+				if (member.getValue() instanceof String) {
+					this.setMethod((String) member.getValue());
+				}
+				break;
+			case "consumes":
+				if (member.getValue() instanceof JsonArray) {
+					List<String> cl = new ArrayList<>();
+					((JsonArray) member.getValue()).forEach(m -> {
+						if (m instanceof String) {
+							cl.add((String) m);
+						}
+					});
+					this.setConsumes(cl.toArray(new String[0]));
+				}
+				break;
+			case "produces":
+				if (member.getValue() instanceof JsonArray) {
+					List<String> cl = new ArrayList<>();
+					((JsonArray) member.getValue()).forEach(m -> {
+						if (m instanceof String) {
+							cl.add((String) m);
+						}
+					});
+					this.setProduces(cl.toArray(new String[0]));
+				}
+				break;
+			}
+		}
+	}
 }

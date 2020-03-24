@@ -23,88 +23,104 @@ import io.vertx.core.json.JsonObject;
 
 public class BackendOptions {
 
-    private String method;
+	private int timeout;
 
-    private List<String> urls;
+	private String method;
 
-    private List<ParamOptions> params;
+	private List<String> urls;
 
-    public BackendOptions(JsonObject json) {
-        fromJson(json);
-    }
+	private List<ParamOptions> params;
 
-    public String getMethod() {
-        return method;
-    }
+	public BackendOptions(JsonObject json) {
+		fromJson(json);
+	}
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
+	public int getTimeout() {
+		return timeout;
+	}
 
-    public List<String> getUrls() {
-        return urls;
-    }
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
 
-    public void setUrls(List<String> urls) {
-        this.urls = urls;
-    }
+	public String getMethod() {
+		return method;
+	}
 
-    public List<ParamOptions> getParams() {
-        return params;
-    }
+	public void setMethod(String method) {
+		this.method = method;
+	}
 
-    public void setParams(List<ParamOptions> params) {
-        this.params = params;
-    }
+	public List<String> getUrls() {
+		return urls;
+	}
 
-    public void fromJson(JsonObject json) {
-        for (java.util.Map.Entry<String, Object> member : json) {
-            switch (member.getKey()) {
-            case "method":
-                if (member.getValue() instanceof String) {
-                    this.setMethod((String) member.getValue());
-                }
-                break;
-            case "urls":
-                if (member.getValue() instanceof JsonArray) {
-                    List<String> cl = new ArrayList<>();
-                    ((JsonArray) member.getValue()).forEach(m -> {
-                        if (m instanceof String) {
-                            cl.add((String) m);
-                        }
-                    });
-                    this.setUrls(cl);
-                }
-                break;
-            case "params":
-                if (member.getValue() instanceof JsonArray) {
-                    List<ParamOptions> cl = new ArrayList<>();
-                    ((JsonArray) member.getValue()).forEach(m -> {
-                        if (m instanceof JsonObject) {
-                            cl.add(new ParamOptions((JsonObject) m));
-                        }
-                    });
-                    this.setParams(cl);
-                }
-                break;
-            }
-        }
-    }
+	public void setUrls(List<String> urls) {
+		this.urls = urls;
+	}
 
-    public JsonObject toJson() {
-        JsonObject json = new JsonObject();
+	public List<ParamOptions> getParams() {
+		return params;
+	}
 
-        if (method != null) {
-            json.put("method", method);
-        }
-        if (urls != null) {
-            json.put("urls", urls);
-        }
-        if (params != null) {
-            json.put("params", params);
-        }
+	public void setParams(List<ParamOptions> params) {
+		this.params = params;
+	}
 
-        return json;
-    }
+	public void fromJson(JsonObject json) {
+		for (java.util.Map.Entry<String, Object> member : json) {
+			switch (member.getKey()) {
+			case "timeout":
+				if (member.getValue() instanceof Number) {
+					this.setTimeout(((Number) member.getValue()).intValue());
+				}
+				break;
+			case "method":
+				if (member.getValue() instanceof String) {
+					this.setMethod((String) member.getValue());
+				}
+				break;
+			case "urls":
+				if (member.getValue() instanceof JsonArray) {
+					List<String> cl = new ArrayList<>();
+					((JsonArray) member.getValue()).forEach(m -> {
+						if (m instanceof String) {
+							cl.add((String) m);
+						}
+					});
+					this.setUrls(cl);
+				}
+				break;
+			case "params":
+				if (member.getValue() instanceof JsonArray) {
+					List<ParamOptions> cl = new ArrayList<>();
+					((JsonArray) member.getValue()).forEach(m -> {
+						if (m instanceof JsonObject) {
+							cl.add(new ParamOptions((JsonObject) m));
+						}
+					});
+					this.setParams(cl);
+				}
+				break;
+			}
+		}
+	}
+
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
+
+		json.put("timeout", timeout);
+		if (method != null) {
+			json.put("method", method);
+		}
+		if (urls != null) {
+			json.put("urls", urls);
+		}
+		if (params != null) {
+			json.put("params", params);
+		}
+
+		return json;
+	}
 
 }

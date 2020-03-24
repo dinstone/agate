@@ -1,11 +1,15 @@
 package com.dinstone.agate.gateway.handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.FailureHandler;
 
 import io.vertx.ext.web.RoutingContext;
 
 public class DefaultFailureHandler implements FailureHandler {
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultFailureHandler.class);
 
 	public DefaultFailureHandler(ApiOptions api) {
 	}
@@ -22,6 +26,11 @@ public class DefaultFailureHandler implements FailureHandler {
 		if (statusMessage != null) {
 			rc.response().setStatusMessage(statusMessage);
 		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("request {} error: {}", rc.request().uri(), statusMessage);
+		}
+
 		if (!rc.response().ended()) {
 			rc.response().end();
 		}

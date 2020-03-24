@@ -37,10 +37,8 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
 
@@ -62,7 +60,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private int count;
 
-	public ProxyInvokeHandler(ApiOptions apiOptions, boolean b, HttpClient httpClient) {
+	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient) {
 		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
 
@@ -75,26 +73,16 @@ public class ProxyInvokeHandler implements RouteHandler {
 			route(rc);
 		} catch (Exception e) {
 			LOG.error("route backend service error", e);
-			rc.response().setStatusCode(500).end("route backend service error");
+			rc.fail(500, new RuntimeException("route backend service error", e));
 		}
 	}
 
 	private void route(RoutingContext rc) {
-		HttpServerRequest feRequest = rc.request();
-		HttpServerResponse feResponse = rc.response();
-
-		//
-		feResponse.endHandler(v -> {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("frontend status {} {}", feRequest.path(), feResponse.getStatusCode());
-			}
-		});
-
 		Map<String, String> pathParams = new HashMap<>();
 		MultiMap queryParams = new CaseInsensitiveHeaders();
 		MultiMap headerParams = new CaseInsensitiveHeaders();
 
-		// load param from request
+		// parse params from request
 		List<ParamOptions> params = backendOptions.getParams();
 		if (params != null) {
 			for (ParamOptions param : params) {
@@ -111,15 +99,18 @@ public class ProxyInvokeHandler implements RouteHandler {
 			}
 		}
 
+		HttpServerRequest feRequest = rc.request();
 		// locate url
-		String requestUrl = locateUrl(feRequest);
-		// replace param for url
-		for (Entry<String, String> e : pathParams.entrySet()) {
-			requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
-		}
+		String requestUrl = loadbalanceUrl(feRequest);
 
+		// replace param for url
+		if (!pathParams.isEmpty()) {
+			for (Entry<String, String> e : pathParams.entrySet()) {
+				requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
+			}
+		}
 		// set query params
-		if (queryParams.size() > 0) {
+		if (!queryParams.isEmpty()) {
 			QueryCoder queryCoder = new QueryCoder(requestUrl);
 			for (Entry<String, String> e : queryParams) {
 				queryCoder.addParam(e.getKey(), e.getValue());
@@ -136,52 +127,37 @@ public class ProxyInvokeHandler implements RouteHandler {
 				beRequest.headers().set(e.getKey(), e.getValue());
 			}
 		}
-
+		// timeout
+		if (backendOptions.getTimeout() > 0) {
+			beRequest.setTimeout(backendOptions.getTimeout());
+		}
 		// exception handler
 		beRequest.exceptionHandler(t -> {
-			try {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("request backend service error", t);
-				}
-				if (t instanceof ConnectException || t instanceof TimeoutException) {
-					feResponse.setStatusCode(504).end("backend service unavailable");
-				} else {
-					feResponse.setStatusCode(500).end("request backend service error");
-				}
-			} catch (Exception e) {
-				LOG.warn("unkown error", e);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("request backend service error", t);
+			}
+			if (t instanceof ConnectException || t instanceof TimeoutException) {
+				rc.fail(503, new RuntimeException("backend service unavailable", t));
+			} else {
+				rc.fail(500, new RuntimeException("request backend service error", t));
 			}
 		});
-
 		// response handler
 		beRequest.setHandler(ar -> {
 			if (ar.succeeded()) {
-				HttpClientResponse beResponse = ar.result();
-
-				feResponse.setStatusCode(beResponse.statusCode());
-				feResponse.headers().addAll(beResponse.headers());
-
-				Pump respPump = Pump.pump(beResponse, feResponse).start();
-				beResponse.exceptionHandler(e -> {
-					LOG.error("backend response is error", e);
-					respPump.stop();
-					feResponse.end();
-				}).endHandler(v -> {
-					feResponse.end();
-				});
+				rc.put("backend.response", ar.result()).next();
 			} else {
 				LOG.error("backend response is error", ar.cause());
-				feResponse.setStatusCode(500).end("request backend service error");
+				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
 			}
 		});
-
 		// transport body and send request
 		if (HttpUtil.hasBody(beRequest.method())) {
-			beRequest.setChunked(true);
-			Pump reqPump = Pump.pump(feRequest, beRequest).start();
+//			beRequest.setChunked(true);
+			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
 			feRequest.exceptionHandler(e -> {
 				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
-				reqPump.stop();
+				fe2bePump.stop();
 				beRequest.end();
 			}).endHandler(v -> {
 				if (LOG.isDebugEnabled()) {
@@ -206,7 +182,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 		return null;
 	}
 
-	private String locateUrl(HttpServerRequest inRequest) {
+	private String loadbalanceUrl(HttpServerRequest inRequest) {
 		List<String> urls = backendOptions.getUrls();
 		if (count++ < 0) {
 			count = 0;

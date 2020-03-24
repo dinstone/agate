@@ -261,8 +261,8 @@ public class DeployVerticle extends AbstractVerticle {
 
 				ApiDeploy apiDeploy = new ApiDeploy();
 				apiDeploy.setName(api.getApiName());
-				apiDeploy.setPrefix(api.getPrefix());
-				apiDeploy.setPath(api.getPath());
+				apiDeploy.setPrefix(api.getFrontend().getPrefix());
+				apiDeploy.setPath(api.getFrontend().getPath());
 				appDeploy.registApi(apiDeploy);
 
 				message.reply(null);
