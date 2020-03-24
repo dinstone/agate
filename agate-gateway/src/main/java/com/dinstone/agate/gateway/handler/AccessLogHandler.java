@@ -41,19 +41,19 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 	private void log(RoutingContext context, long timestamp, String remoteClient, HttpVersion version,
 			HttpMethod method, String uri) {
 
-		String versionFormatted;
+		String versionCode;
 		switch (version) {
 		case HTTP_1_0:
-			versionFormatted = "HTTP/1.0";
+			versionCode = "HTTP/1.0";
 			break;
 		case HTTP_1_1:
-			versionFormatted = "HTTP/1.1";
+			versionCode = "HTTP/1.1";
 			break;
 		case HTTP_2:
-			versionFormatted = "HTTP/2.0";
+			versionCode = "HTTP/2.0";
 			break;
 		default:
-			versionFormatted = "-";
+			versionCode = "-";
 		}
 
 		int status = context.response().getStatusCode();
@@ -74,11 +74,11 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 			userAgent = userAgent == null ? "-" : userAgent;
 
 			message = String.format("%s - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" - %d", remoteClient, accessTime, method,
-					uri, versionFormatted, status, contentLength, referrer, userAgent, costTime);
+					uri, versionCode, status, contentLength, referrer, userAgent, costTime);
 			break;
 		case SHORT:
-			message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri,
-					versionFormatted, status, contentLength, costTime);
+			message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri, versionCode,
+					status, contentLength, costTime);
 			break;
 		case TINY:
 			message = String.format("[%s] %s %s %d %d - %d", accessTime, method, uri, status, contentLength, costTime);
@@ -101,15 +101,15 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 	public void handle(RoutingContext context) {
 		// common logging data
 		long timestamp = System.currentTimeMillis();
-		String remoteClient = getClientAddress(context.request().remoteAddress());
-		HttpMethod method = context.request().method();
-		String uri = context.request().uri();
-		HttpVersion version = context.request().version();
 
-		context.addBodyEndHandler(v -> log(context, timestamp, remoteClient, version, method, uri));
+		String uri = context.request().uri();
+		HttpMethod method = context.request().method();
+		HttpVersion version = context.request().version();
+		String remote = getClientAddress(context.request().remoteAddress());
+
+		context.addBodyEndHandler(v -> log(context, timestamp, remote, version, method, uri));
 
 		context.next();
-
 	}
 
 }

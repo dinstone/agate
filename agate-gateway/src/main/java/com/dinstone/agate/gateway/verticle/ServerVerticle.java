@@ -24,8 +24,10 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
+import com.dinstone.agate.gateway.handler.DefaultFailureHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
-import com.dinstone.agate.gateway.handler.RouteProxyHandler;
+import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
+import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.AppOptions;
 
@@ -134,7 +136,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
 				// create api route
 				Route route = null;
-				if (pathIsRegex(api.getPath())) {
+				if (HttpUtil.pathIsRegex(api.getPath())) {
 					route = subRouter.routeWithRegex(api.getPath());
 				} else {
 					route = subRouter.route(api.getPath());
@@ -161,12 +163,11 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 					route.handler(new RateLimitHandler(api));
 				}
 				// route proxy handler
-				route.handler(new RouteProxyHandler(api, false, httpClient));
-				// mount sub router to main
-				Route mountRoute = mountRoute(api.getPrefix(), subRouter);
-
+				route.handler(new ProxyInvokeHandler(api, false, httpClient));
+				// failure handler
+				route.failureHandler(new DefaultFailureHandler(api));
 				// cache api route
-				apiRouteMap.put(api.getApiName(), mountRoute);
+				apiRouteMap.put(api.getApiName(), mountRoute(api.getPrefix(), subRouter));
 
 				promise.complete();
 			} catch (Exception e) {
@@ -177,10 +178,13 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 		return promise.future();
 	}
 
-	public boolean pathIsRegex(String routePath) {
-		return routePath.indexOf("(") > 0 || routePath.indexOf("?<") > 0;
-	}
-
+	/**
+	 * mount sub router to main router
+	 * 
+	 * @param path
+	 * @param subRouter
+	 * @return
+	 */
 	private Route mountRoute(String path, Router subRouter) {
 		return mainRouter.route(path).subRouter(subRouter);
 	}

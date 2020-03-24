@@ -25,13 +25,14 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.BackendOptions;
 import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
+import com.dinstone.agate.gateway.spi.RouteHandler;
 
-import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
@@ -43,9 +44,15 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
 
-public class RouteProxyHandler implements Handler<RoutingContext> {
+/**
+ * http route and proxy.
+ * 
+ * @author dinstone
+ *
+ */
+public class ProxyInvokeHandler implements RouteHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RouteProxyHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ProxyInvokeHandler.class);
 
 	private BackendOptions backendOptions;
 
@@ -55,11 +62,11 @@ public class RouteProxyHandler implements Handler<RoutingContext> {
 
 	private int count;
 
-	public RouteProxyHandler(ApiOptions api, boolean b, HttpClient httpClient) {
-		this.apiOptions = api;
+	public ProxyInvokeHandler(ApiOptions apiOptions, boolean b, HttpClient httpClient) {
+		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
 
-		backendOptions = api.getBackend();
+		backendOptions = apiOptions.getBackend();
 	}
 
 	@Override
@@ -169,7 +176,7 @@ public class RouteProxyHandler implements Handler<RoutingContext> {
 		});
 
 		// transport body and send request
-		if (hasBody(beRequest.method())) {
+		if (HttpUtil.hasBody(beRequest.method())) {
 			beRequest.setChunked(true);
 			Pump reqPump = Pump.pump(feRequest, beRequest).start();
 			feRequest.exceptionHandler(e -> {
@@ -197,11 +204,6 @@ public class RouteProxyHandler implements Handler<RoutingContext> {
 		}
 
 		return null;
-	}
-
-	private boolean hasBody(HttpMethod method) {
-		return method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE
-				|| method == HttpMethod.PATCH || method == HttpMethod.TRACE;
 	}
 
 	private String locateUrl(HttpServerRequest inRequest) {

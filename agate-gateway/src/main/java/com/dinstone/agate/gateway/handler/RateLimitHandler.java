@@ -4,17 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.spi.BeforeHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
-import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
 /**
+ * rate limit handler.
  * 
  * @author dinstone
  *
  */
-public class RateLimitHandler implements Handler<RoutingContext> {
+public class RateLimitHandler implements BeforeHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
@@ -42,7 +43,7 @@ public class RateLimitHandler implements Handler<RoutingContext> {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("{} rate limit than {}/s", api.getApiName(), limiter.getRate());
 			}
-			rc.response().setStatusCode(502).end("rate limit");
+			rc.fail(502, new RuntimeException("rate limit"));
 		}
 	}
 
