@@ -5,4 +5,5 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 - Vert.x 4.0
 - Consul 1.7
 
-
+# System Architecture
+![System Architecture](https://github.com/dinstone/agate/wiki/imgs/arch00.png)

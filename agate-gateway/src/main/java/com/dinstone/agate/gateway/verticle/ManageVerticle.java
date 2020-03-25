@@ -202,6 +202,11 @@ public class ManageVerticle extends AbstractVerticle {
 		mainRouter.post("/api/deploy").consumes("application/json").handler(this::apiDeploy);
 		mainRouter.delete("/api/remove").consumes("application/json").handler(this::apiRemove);
 
+		//
+		// metrics
+		//
+		mainRouter.get("/apm/metrics").handler(this::metrics);
+
 		return mainRouter;
 	}
 
@@ -269,6 +274,25 @@ public class ManageVerticle extends AbstractVerticle {
 			vertx.eventBus().request(AddressConstant.API_REMOVE, message, ar -> {
 				if (ar.succeeded()) {
 					ResponseUtil.success(rc);
+				} else {
+					ResponseUtil.failed(rc, ar.cause());
+				}
+			});
+		} catch (Exception e) {
+			ResponseUtil.failed(rc, e);
+		}
+	}
+
+	private void metrics(RoutingContext rc) {
+		try {
+			String message = rc.request().getParam("mn");
+			if (message == null) {
+				ResponseUtil.failed(rc, "mn is null");
+				return;
+			}
+			vertx.eventBus().request(AddressConstant.APM_METRICS, message, ar -> {
+				if (ar.succeeded()) {
+					ResponseUtil.success(rc, ar.result().body());
 				} else {
 					ResponseUtil.failed(rc, ar.cause());
 				}

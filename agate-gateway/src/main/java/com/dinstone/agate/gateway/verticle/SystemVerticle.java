@@ -15,10 +15,21 @@
  */
 package com.dinstone.agate.gateway.verticle;
 
+import com.dinstone.agate.gateway.context.AddressConstant;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.micrometer.MetricsService;
+import io.vertx.micrometer.backends.BackendRegistries;
 
 /**
  * collect system runtime parameters.
@@ -28,14 +39,26 @@ import io.vertx.core.Promise;
  */
 public class SystemVerticle extends AbstractVerticle {
 
-    public SystemVerticle(ApplicationContext context) {
-        // TODO Auto-generated constructor stub
-    }
+	private MetricsService metricsService;
 
-    @Override
-    public void start(Promise<Void> startPromise) throws Exception {
+	public SystemVerticle(ApplicationContext context) {
+	}
 
-        startPromise.complete();
-    }
+	@Override
+	public void init(Vertx vertx, Context context) {
+		super.init(vertx, context);
+
+		metricsService = MetricsService.create(vertx);
+	}
+
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		vertx.eventBus().consumer(AddressConstant.APM_METRICS, message -> {
+			String baseName = (String) message.body();
+			message.reply(metricsService.getMetricsSnapshot(baseName));
+		});
+
+		startPromise.complete();
+	}
 
 }

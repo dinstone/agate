@@ -17,10 +17,12 @@ package com.dinstone.agate.gateway.context;
 
 public interface AddressConstant {
 
-    String APP_START = "app:start";
-    String APP_CLOSE = "app:close";
+	String APP_START = "app:start";
+	String APP_CLOSE = "app:close";
 
-    String API_DEPLOY = "api:deploy";
-    String API_REMOVE = "api:remove";
+	String API_DEPLOY = "api:deploy";
+	String API_REMOVE = "api:remove";
+
+	String APM_METRICS = "apm.metrics";
 
 }

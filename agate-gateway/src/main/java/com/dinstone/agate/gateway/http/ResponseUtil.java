@@ -23,32 +23,35 @@ import io.vertx.ext.web.RoutingContext;
 
 public class ResponseUtil {
 
-    public static void success(RoutingContext ctx) {
-        success(ctx, null);
-    }
+	private static final String CONTENT_TYPE_KEY = "Content-Type";
+	private static final String CONTENT_TYPE_VALUE = "application/json";
 
-    public static void success(RoutingContext ctx, Object result) {
-        Map<String, Object> res = new LinkedHashMap<>();
-        res.put("status", "1");
-        res.put("message", "success");
-        if (result != null) {
-            res.put("result", result);
-        }
-        ctx.response().end(Json.encode(res));
-    }
+	public static void success(RoutingContext ctx) {
+		success(ctx, null);
+	}
 
-    public static void failed(RoutingContext ctx, String message) {
-        Map<String, Object> res = new LinkedHashMap<>();
-        res.put("status", "-1");
-        res.put("message", message);
-        ctx.response().end(Json.encode(res));
-    }
+	public static void success(RoutingContext ctx, Object result) {
+		Map<String, Object> res = new LinkedHashMap<>();
+		res.put("status", "1");
+		res.put("message", "success");
+		if (result != null) {
+			res.put("result", result);
+		}
+		ctx.response().putHeader(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE).end(Json.encode(res));
+	}
 
-    public static void failed(RoutingContext ctx, Throwable throwable) {
-        Map<String, Object> res = new LinkedHashMap<>();
-        res.put("status", "-1");
-        res.put("message", throwable == null ? "" : throwable.getMessage());
-        ctx.response().end(Json.encode(res));
-    }
+	public static void failed(RoutingContext ctx, String message) {
+		Map<String, Object> res = new LinkedHashMap<>();
+		res.put("status", "-1");
+		res.put("message", message);
+		ctx.response().putHeader(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE).end(Json.encode(res));
+	}
+
+	public static void failed(RoutingContext ctx, Throwable throwable) {
+		Map<String, Object> res = new LinkedHashMap<>();
+		res.put("status", "-1");
+		res.put("message", throwable == null ? "" : throwable.getMessage());
+		ctx.response().putHeader(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE).end(Json.encode(res));
+	}
 
 }
