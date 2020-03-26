@@ -1,5 +1,5 @@
 /*
- * Copyright (C) ${year} dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.spi.RouteHandler;
 
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
@@ -79,8 +78,8 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private void route(RoutingContext rc) {
 		Map<String, String> pathParams = new HashMap<>();
-		MultiMap queryParams = new CaseInsensitiveHeaders();
-		MultiMap headerParams = new CaseInsensitiveHeaders();
+		MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
+		MultiMap headerParams = MultiMap.caseInsensitiveMultiMap();
 
 		// parse params from request
 		List<ParamOptions> params = backendOptions.getParams();

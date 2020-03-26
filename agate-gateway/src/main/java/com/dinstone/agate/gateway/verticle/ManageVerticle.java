@@ -1,5 +1,5 @@
 /*
- * Copyright (C) ${year} dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.AddressConstant;
 import com.dinstone.agate.gateway.context.ApplicationContext;
-import com.dinstone.agate.gateway.http.ResponseUtil;
+import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.utils.NetworkUtil;
 
 import io.vertx.core.AbstractVerticle;
@@ -229,13 +229,13 @@ public class ManageVerticle extends AbstractVerticle {
 		try {
 			vertx.eventBus().request(AddressConstant.APP_START, rc.getBodyAsJson(), ar -> {
 				if (ar.succeeded()) {
-					ResponseUtil.success(rc);
+					RestfulUtil.success(rc);
 				} else {
-					ResponseUtil.failed(rc, ar.cause());
+					RestfulUtil.failed(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			ResponseUtil.failed(rc, e);
+			RestfulUtil.failed(rc, e);
 		}
 	}
 
@@ -243,13 +243,13 @@ public class ManageVerticle extends AbstractVerticle {
 		try {
 			vertx.eventBus().request(AddressConstant.APP_CLOSE, rc.getBodyAsJson(), ar -> {
 				if (ar.succeeded()) {
-					ResponseUtil.success(rc);
+					RestfulUtil.success(rc);
 				} else {
-					ResponseUtil.failed(rc, ar.cause());
+					RestfulUtil.failed(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			ResponseUtil.failed(rc, e);
+			RestfulUtil.failed(rc, e);
 		}
 	}
 
@@ -258,13 +258,13 @@ public class ManageVerticle extends AbstractVerticle {
 			JsonObject message = rc.getBodyAsJson();
 			vertx.eventBus().request(AddressConstant.API_DEPLOY, message, ar -> {
 				if (ar.succeeded()) {
-					ResponseUtil.success(rc);
+					RestfulUtil.success(rc);
 				} else {
-					ResponseUtil.failed(rc, ar.cause());
+					RestfulUtil.failed(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			ResponseUtil.failed(rc, e);
+			RestfulUtil.failed(rc, e);
 		}
 	}
 
@@ -273,13 +273,13 @@ public class ManageVerticle extends AbstractVerticle {
 			JsonObject message = rc.getBodyAsJson();
 			vertx.eventBus().request(AddressConstant.API_REMOVE, message, ar -> {
 				if (ar.succeeded()) {
-					ResponseUtil.success(rc);
+					RestfulUtil.success(rc);
 				} else {
-					ResponseUtil.failed(rc, ar.cause());
+					RestfulUtil.failed(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			ResponseUtil.failed(rc, e);
+			RestfulUtil.failed(rc, e);
 		}
 	}
 
@@ -287,18 +287,18 @@ public class ManageVerticle extends AbstractVerticle {
 		try {
 			String message = rc.request().getParam("mn");
 			if (message == null) {
-				ResponseUtil.failed(rc, "mn is null");
+				RestfulUtil.failed(rc, "mn is null");
 				return;
 			}
 			vertx.eventBus().request(AddressConstant.APM_METRICS, message, ar -> {
 				if (ar.succeeded()) {
-					ResponseUtil.success(rc, ar.result().body());
+					RestfulUtil.success(rc, ar.result().body());
 				} else {
-					ResponseUtil.failed(rc, ar.cause());
+					RestfulUtil.failed(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			ResponseUtil.failed(rc, e);
+			RestfulUtil.failed(rc, e);
 		}
 	}
 

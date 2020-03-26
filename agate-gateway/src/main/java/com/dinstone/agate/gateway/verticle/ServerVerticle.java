@@ -1,5 +1,5 @@
 /*
- * Copyright (C) ${year} dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
-import com.dinstone.agate.gateway.handler.DefaultFailureHandler;
+import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.ResultReplyHandler;
@@ -169,7 +169,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 				// after handler : result reply handler
 				route.handler(new ResultReplyHandler(api));
 				// failure handler
-				route.failureHandler(new DefaultFailureHandler(api));
+				route.failureHandler(new RestfulFailureHandler(api));
 				// cache api route
 				apiRouteMap.put(api.getApiName(), mountRoute(feo.getPrefix(), subRouter));
 
