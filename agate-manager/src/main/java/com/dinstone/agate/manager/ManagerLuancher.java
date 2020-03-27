@@ -1,24 +1,9 @@
-/*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.dinstone.agate.gateway;
+package com.dinstone.agate.manager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.utils.ConfigUtil;
+import com.dinstone.agate.manager.utils.ConfigUtil;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Launcher;
@@ -28,9 +13,9 @@ import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxJmxMetricsOptions;
 
-public class GatewayLauncher extends Launcher {
+public class ManagerLuancher extends Launcher {
 
-	private static final Logger LOG = LoggerFactory.getLogger(GatewayLauncher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ManagerLuancher.class);
 
 	private static final String DEFAULT_GATEWAY_CONFIG = "config.json";
 
@@ -45,7 +30,7 @@ public class GatewayLauncher extends Launcher {
 			System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
 		}
 
-		new GatewayLauncher().dispatch(args);
+		new ManagerLuancher().dispatch(args);
 	}
 
 	@Override
@@ -66,9 +51,6 @@ public class GatewayLauncher extends Launcher {
 
 		// native transport
 		vertxOptions.setPreferNativeTransport(true);
-
-		// cluster is disabled
-		vertxOptions.getEventBusOptions().setClustered(false);
 
 		JsonObject vertxConfig = config.getJsonObject("vertx", new JsonObject());
 		int blockedThreadCheckInterval = vertxConfig.getInteger("blockedThreadCheckInterval", -1);

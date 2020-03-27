@@ -182,9 +182,9 @@ public class LaunchVerticle extends AbstractVerticle {
 	}
 
 	private Future<String> deploy(String verticleName, DeploymentOptions deployOptions) {
-		Promise<String> promise = Promise.promise();
-		vertx.deployVerticle(verticleName, deployOptions, promise);
-		return promise.future();
+		return Future.future(promise -> {
+			vertx.deployVerticle(verticleName, deployOptions, promise);
+		});
 	}
 
 }

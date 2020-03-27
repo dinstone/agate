@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Grape Admin Chart</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="img/favicon.ico">
+<link id="bs-css" href="bcs/css/bootstrap.min.css" rel="stylesheet">
+<link href="css/charisma.app.css" rel="stylesheet">
+<script src="bcs/js/jquery.min.js"></script>
+<script src="bcs/js/bootstrap.min.js"></script>
+<script src="js/jquery.cookie.js"></script>
+<script src="js/jquery.history.js"></script>
+<script src="js/autosize.min.js"></script>
+<script src="js/charisma.app.js"></script>
+<script src="js/highcharts.min.js"></script>
+<script type="text/javascript">
+	function createChart(chartId, titleName) {
+		var options = {
+			chart : {
+				type : 'spline',
+				animation : Highcharts.svg, // don't animate in old IE
+				marginRight : 10
+			},
+			title : {
+				text : 'Tube Status Chart'
+			},
+			subtitle : {
+				text : 'Tube: ' + titleName
+			},
+			xAxis : {
+				type : 'datetime',
+				tickPixelInterval : 150
+			},
+			yAxis : {
+				title : {
+					text : 'Size'
+				},
+				plotLines : [ {
+					value : 0,
+					width : 1,
+					color : '#808080'
+				} ]
+			},
+			tooltip : {
+				formatter : function() {
+					return '<b>'
+							+ this.series.name
+							+ ' Size</b><br/>'
+							+ Highcharts
+									.dateFormat('%Y-%m-%d %H:%M:%S', this.x)
+							+ '<br/>' + this.y;
+				}
+			},
+			legend : {
+				align : 'right',
+				verticalAlign : 'top'
+			},
+			exporting : {
+				enabled : false
+			},
+			plotOptions : {
+				spline : {
+					dataLabels : {
+						enabled : true
+					},
+					enableMouseTracking : true
+				}
+			},
+			series : [ {
+				name : 'Delay',
+				color : 'red',
+				data : (function() {
+					// generate an array of random data
+					var data = [], time = (new Date()).getTime(), i;
+					for (i = -19; i <= 0; i += 1) {
+						data.push({
+							x : time + i * 1000,
+							y : 0
+						});
+					}
+					return data;
+				}())
+			}, {
+				name : 'Ready',
+				color : 'green',
+				data : (function() {
+					// generate an array of random data
+					var data = [], time = (new Date()).getTime(), i;
+					for (i = -19; i <= 0; i += 1) {
+						data.push({
+							x : time + i * 1000,
+							y : 0
+						});
+					}
+					return data;
+				}())
+			}, {
+				name : 'Retain',
+				color : 'blue',
+				data : (function() {
+					// generate an array of random data
+					var data = [], time = (new Date()).getTime(), i;
+					for (i = -19; i <= 0; i += 1) {
+						data.push({
+							x : time + i * 1000,
+							y : 0
+						});
+					}
+					return data;
+				}())
+			} ]
+		};
+		return Highcharts.chart(chartId, options);
+	}
+
+	function upateChart(stats, chart) {
+		if (chart && stats) {
+			$("#totalSize").html(stats.totalJobSize);
+			$("#finishSize").html(stats.finishJobSize);
+			$("#failedSize").html(stats.failedQueueSize);
+
+			var x = stats.dateTime;
+			var series = chart.series;
+			series[0].addPoint([ x, stats.delayQueueSize ], true, true);
+			series[1].addPoint([ x, stats.readyQueueSize ], true, true);
+			series[2].addPoint([ x, stats.retainQueueSize ], true, true);
+		}
+	}
+
+	function URL(url) {
+		this.url = url;
+		this.param = function(key) {
+			var reg = new RegExp("(\\?|&)" + key + "=([^&]*)(&|$)");
+			var r = url.substr(1).match(reg);
+			if (r != null)
+				return unescape(r[2]);
+			return null;
+		};
+
+		return this;
+	}
+
+	$(document).ready(function() {
+		Highcharts.setOptions({
+			global : {
+				useUTC : false
+			}
+		});
+
+		var tube = new URL(document.URL).param('tube') || '';
+		if (tube) {
+			$("#tubeName").html(tube);
+			var statsChart = createChart("statsChart", tube);
+			window.setInterval(function() {
+				$.getJSON("/api/tube/stats/" + tube, function(data, status) {
+					if (data && data.code > 0) {
+						if (data.result) {
+							upateChart(data.result, statsChart);
+						}
+					}
+				});
+			}, 3000);
+		}
+		
+		// bind logout
+		$("#logout").click(function() {
+			$.getJSON("/api/authen/logout", function(data, status) {
+				$(location).attr('href', "/login.html");
+			});
+		});
+	});
+</script>
+</head>
+<body>
+	<div class="navbar navbar-default" role="navigation">
+		<div class="navbar-inner">
+			<button type="button" class="navbar-toggle pull-left animated flip">
+				<span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/"><img alt="Charisma Logo" src="img/logo20.png" class="hidden-xs" /><span>Grape</span></a>
+			<!-- user dropdown starts -->
+			<div class="btn-group pull-right">
+				<button class="btn btn-default dropdown-toggle"
+					data-toggle="dropdown">
+					<i class="glyphicon glyphicon-user"></i><span
+						class="hidden-sm hidden-xs"> admin</span> <span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a href="#">Profile</a></li>
+					<li class="divider"></li>
+					<li><a href="#" id="logout">Logout</a></li>
+				</ul>
+			</div>
+			<!-- user dropdown ends -->
+			<!-- theme selector starts -->
+			<div class="btn-group pull-right theme-container animated tada">
+				<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					<i class="glyphicon glyphicon-tint"></i><span class="hidden-sm hidden-xs"> Change Theme / Skin</span> <span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu" id="themes">
+					<li><a data-value="classic" href="#"><i class="whitespace"></i> Classic</a></li>
+					<li><a data-value="slate" href="#"><i class="whitespace"></i> Slate</a></li>
+				</ul>
+			</div>
+			<!-- theme selector ends -->
+		</div>
+	</div>
+	<div class="ch-container">
+		<div class="row">
+			<div id="content" class="col-lg-12 col-sm-10">
+				<div>
+					<ul class="breadcrumb">
+						<li><a href="index.html">Home</a></li>
+						<li><a href="#">Dashboard</a></li>
+					</ul>
+				</div>
+				<div class=" row">
+					<div class="col-md-3 col-sm-3 col-xs-6">
+						<a data-toggle="tooltip" title="" class="well top-block" href="#"> <i class="glyphicon glyphicon-user blue"></i>
+							<div>Tube Name</div>
+							<div id="tubeName"></div>
+						</a>
+					</div>
+					<div class="col-md-3 col-sm-3 col-xs-6">
+						<a data-toggle="tooltip" title="" class="well top-block" href="#"> <i class="glyphicon glyphicon-envelope green"></i>
+							<div>Total Size</div>
+							<div id="totalSize">0</div>
+						</a>
+					</div>
+					<div class="col-md-3 col-sm-3 col-xs-6">
+						<a data-toggle="tooltip" title="" class="well top-block" href="#"> <i class="glyphicon glyphicon-envelope yellow"></i>
+							<div>Finish Size</div>
+							<div id="finishSize">0</div>
+						</a>
+					</div>
+					<div class="col-md-3 col-sm-3 col-xs-6">
+						<a data-toggle="tooltip" title="" class="well top-block" href="#"> <i class="glyphicon glyphicon-envelope red"></i>
+							<div>Failed Size</div>
+							<div id="failedSize">0</div>
+						</a>
+					</div>
+				</div>
+				<div class="row">
+					<div class="box col-md-12">
+						<div class="box-inner">
+							<div class="box-header well">
+								<h2>
+									<i class="glyphicon glyphicon-th"></i> Tube Status Chart
+								</h2>
+							</div>
+							<div class="box-content" id="tubelist">
+								<div id="statsChart" style="width: 100%; height: 400px;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- content ends -->
+			<!--/#content.col-md-0-->
+		</div>
+		<!--/fluid-row-->
+		<hr>
+		<footer class="row">
+		<p class="col-md-9 col-sm-9 col-xs-12 copyright">&copy; 2019 Grape Admin</p>
+		<p class="col-md-3 col-sm-3 col-xs-12 powered-by">
+			Powered by: <a href="http://usman.it/free-responsive-admin-template">Charisma</a>
+		</p>
+		</footer>
+	</div>
+	<!--/.fluid-container-->
+</body>
+</html>

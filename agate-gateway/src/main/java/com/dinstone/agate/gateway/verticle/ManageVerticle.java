@@ -33,7 +33,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpConnection;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
@@ -123,30 +122,7 @@ public class ManageVerticle extends AbstractVerticle {
 	 * @param promise
 	 */
 	private void launch(Promise<HttpServer> promise) {
-		vertx.createHttpServer(serverOptions).connectionHandler(new Handler<HttpConnection>() {
-			@Override
-			public void handle(HttpConnection hc) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Connection manage/{}/{} opened ", hc.localAddress(), hc.remoteAddress());
-				}
-				hc.exceptionHandler(new Handler<Throwable>() {
-
-					@Override
-					public void handle(Throwable error) {
-						LOG.warn("Connection manage/{}/{} throws: {}", hc.localAddress(), hc.remoteAddress(), error);
-					}
-				});
-				hc.closeHandler(new Handler<Void>() {
-
-					@Override
-					public void handle(Void event) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Connection manage/{}/{} closed", hc.localAddress(), hc.remoteAddress());
-						}
-					}
-				});
-			}
-		}).requestHandler(createRouter()).listen(ar -> {
+		vertx.createHttpServer(serverOptions).requestHandler(createRouter()).listen(ar -> {
 			if (ar.succeeded()) {
 				LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
 				promise.complete(ar.result());
@@ -213,14 +189,12 @@ public class ManageVerticle extends AbstractVerticle {
 	private Handler<RoutingContext> failureHandler() {
 		return rc -> {
 			LOG.error("failure handle for {}, {}:{}", rc.request().path(), rc.statusCode(), rc.failure());
-			if (rc.failure() != null) {
-				if (rc.statusCode() == 200) {
-					rc.response().setStatusCode(500).end(rc.failure().getMessage());
-				} else {
-					rc.response().setStatusCode(rc.statusCode()).end(rc.failure().getMessage());
-				}
-			} else {
-				rc.response().setStatusCode(rc.statusCode()).end();
+			int statusCode = rc.statusCode();
+			if (statusCode == -1) {
+				statusCode = 500;
+			}
+			if (!rc.response().ended()) {
+				RestfulUtil.exception(rc, statusCode, rc.failure());
 			}
 		};
 	}

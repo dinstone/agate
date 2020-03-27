@@ -18,18 +18,11 @@ package com.dinstone.agate.gateway.verticle;
 import com.dinstone.agate.gateway.context.AddressConstant;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
-import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
-import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
-import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
-import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.micrometer.MetricsService;
-import io.vertx.micrometer.backends.BackendRegistries;
 
 /**
  * collect system runtime parameters.
