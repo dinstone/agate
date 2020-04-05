@@ -2,7 +2,7 @@ $(document).ready(
 		function() {
 			var scripts = document.scripts;
 			var url = scripts[scripts.length - 1].src;
-			var ctx = new URL(url).param('ctx') || '';
+			var ctx = new URL(url).param('ctx') || '/';
 
 			// themes, change CSS with JS
 			var defaultTheme = 'classic';
@@ -36,16 +36,17 @@ $(document).ready(
 				e.preventDefault();
 				currentTheme = $(this).attr('data-value');
 				$.cookie('app.theme', currentTheme, {
-					expires : 365
+					expires : 365,
+					path: '/'
 				});
 				switchTheme(currentTheme);
 			});
 
 			function switchTheme(themeName) {
 				if (themeName == 'classic') {
-					$('#bs-css').attr('href', 'bcs/css/bootstrap.min.css');
+					$('#bs-css').attr('href', ctx + 'bcs/css/bootstrap.min.css');
 				} else {
-					$('#bs-css').attr('href', 'bcs/css/bootstrap-' + themeName + '.min.css');
+					$('#bs-css').attr('href', ctx + 'bcs/css/bootstrap-' + themeName + '.min.css');
 				}
 
 				$('#themes i').removeClass('glyphicon glyphicon-ok whitespace').addClass('whitespace');
@@ -93,6 +94,9 @@ $(document).ready(
 						break;
 					case (403):
 						msg = "your are forbidden, please link admin.";
+						break;
+					case (404):
+						msg = "can not fond API: " + this.url;
 						break;
 					case (408):
 						msg = "request timeout, please try again later.";

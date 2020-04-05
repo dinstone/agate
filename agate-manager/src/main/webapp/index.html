@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Grape Admin Login</title>
+<title>Agate Manager</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="img/favicon.ico">
@@ -16,7 +16,7 @@
 <script src="js/highcharts.min.js"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
-		$("form").submit(function(event) {
+		/* $("form").submit(function(event) {
 			event.preventDefault();
 			if (!$("#username").val()) {
 				$("#tip").html("Username is empty");
@@ -29,15 +29,15 @@
 			var params = {};
 			params.username = $("#username").val();
 			params.password = $("#password").val();
-			var data = JSON.stringify(params);
-			$.post("/api/authen/login", data, function(data, status) {
-				if (data && data.code > 0) {
+			var parmData = JSON.stringify(params);
+			$.post("/api/authen/login", params, function(data, status) {
+				if (data && data.status > 0) {
 					$(location).attr('href', "/index.html");
 				} else {
 					$("#tip").html(data.message);
 				}
 			}, "json");
-		});
+		}); */
 	});
 </script>
 </head>
@@ -46,7 +46,7 @@
 
 		<div class="row">
 			<div class="col-md-12 center login-header">
-				<h2>Welcome to Grape</h2>
+				<h2>Welcome to Agate Manager</h2>
 			</div>
 			<!--/span-->
 		</div>
@@ -54,28 +54,7 @@
 
 		<div class="row">
 			<div class="well col-md-5 center login-box">
-				<div id="tip" class="alert alert-info">Please login with your
-					Username and Password.</div>
-				<form class="form-horizontal" action="#">
-					<fieldset>
-						<div class="input-group input-group-lg">
-							<span class="input-group-addon"><i
-								class="glyphicon glyphicon-user red"></i></span> <input id="username"
-								type="text" class="form-control" placeholder="Username">
-						</div>
-						<div class="clearfix"></div>
-						<br>
-						<div class="input-group input-group-lg">
-							<span class="input-group-addon"><i
-								class="glyphicon glyphicon-lock red"></i></span> <input id="password"
-								type="password" class="form-control" placeholder="Password">
-						</div>
-						<div class="clearfix"></div>
-						<p class="center col-md-5">
-							<button type="submit" class="btn btn-primary">Login</button>
-						</p>
-					</fieldset>
-				</form>
+				<a href="/view/app/list" class="btn btn-info">APP Manager</a>
 			</div>
 			<!--/span-->
 		</div>

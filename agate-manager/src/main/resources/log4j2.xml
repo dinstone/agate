@@ -30,7 +30,8 @@
 			<AppenderRef ref="access-appender" />
 		</Logger>
 
-		<Root level="info">
+		<Root level="debug">
+			<AppenderRef ref="console-appender" />
 			<AppenderRef ref="all-appender" />
 			<AppenderRef ref="error-appender" />
 		</Root>
