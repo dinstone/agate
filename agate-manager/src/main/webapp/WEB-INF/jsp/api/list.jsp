@@ -61,12 +61,12 @@
 								<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 									<thead>
 										<tr>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Name</th>
-											<th class="sorting" role="columnheader" tabindex="1" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Path</th>
-											<th class="sorting" role="columnheader" tabindex="2" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Remark</th>
-											<th class="sorting" role="columnheader" tabindex="3" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th class="sorting" role="columnheader" tabindex="4" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default"
-												href="${contextPath}/view/api/create?appId=${app.id}"> <i class="glyphicon glyphicon-edit icon-white"></i> Create API
+											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
+											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/api/create?appId=${app.id}"> <i class="glyphicon glyphicon-edit icon-white"></i>
+													Create API
 											</a></th>
 										</tr>
 									</thead>

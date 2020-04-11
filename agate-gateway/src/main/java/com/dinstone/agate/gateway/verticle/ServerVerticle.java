@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
-import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
+import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ResultReplyHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
@@ -42,6 +42,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.net.NetServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.SessionHandler;
@@ -85,6 +86,10 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 		serverOptions = appOptions.getServerOptions();
 		if (serverOptions == null) {
 			serverOptions = new HttpServerOptions();
+		}
+		String host = serverOptions.getHost();
+		if (host == null || host.isEmpty() || "*".equals(host)) {
+			serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
 		}
 
 		clientOptions = appOptions.getClientOptions();

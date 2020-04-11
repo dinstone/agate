@@ -108,11 +108,19 @@ public class ProxyInvokeHandler implements RouteHandler {
 				requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
 			}
 		}
+
 		// set query params
 		if (!queryParams.isEmpty()) {
 			QueryCoder queryCoder = new QueryCoder(requestUrl);
 			for (Entry<String, String> e : queryParams) {
 				queryCoder.addParam(e.getKey(), e.getValue());
+			}
+			requestUrl = queryCoder.uri();
+		} else if (feRequest.query() != null) {
+			// copy query frontend params to backend params
+			QueryCoder queryCoder = new QueryCoder(requestUrl);
+			for (Entry<String, String> kve : rc.queryParams().entries()) {
+				queryCoder.addParam(kve.getKey(), kve.getValue());
 			}
 			requestUrl = queryCoder.uri();
 		}
@@ -173,7 +181,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 		if (ParamType.PATH == param.getFeParamType()) {
 			return rc.pathParam(param.getFeParamName());
 		} else if (ParamType.QUERY == param.getFeParamType()) {
-			return rc.request().getParam(param.getFeParamName());
+			return rc.queryParams().get(param.getFeParamName());
 		} else if (ParamType.HEADER == param.getFeParamType()) {
 			return rc.request().getHeader(param.getFeParamName());
 		}
@@ -193,7 +201,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private HttpMethod method(HttpMethod httpMethod) {
 		String method = backendOptions.getMethod();
-		if (method != null) {
+		if (method != null && !method.isEmpty()) {
 			return HttpMethod.valueOf(method.toUpperCase());
 		}
 		return httpMethod;

@@ -27,7 +27,7 @@ public class AppOptions {
 
     private String appName;
 
-    private String remarks;
+    private String remark;
 
     private String prefix;
 
@@ -55,8 +55,8 @@ public class AppOptions {
         if (prefix != null) {
             json.put("prefix", prefix);
         }
-        if (remarks != null) {
-            json.put("remarks", remarks);
+        if (remark != null) {
+            json.put("remark", remark);
         }
         if (serverOptions != null) {
             json.put("serverOptions", serverOptions.toJson());
@@ -86,9 +86,9 @@ public class AppOptions {
                     this.setPrefix((String) member.getValue());
                 }
                 break;
-            case "remarks":
+            case "remark":
                 if (member.getValue() instanceof String) {
-                    this.setRemarks((String) member.getValue());
+                    this.setRemark((String) member.getValue());
                 }
                 break;
             case "serverOptions":
@@ -121,12 +121,12 @@ public class AppOptions {
         this.appName = appName;
     }
 
-    public String getRemarks() {
-        return remarks;
+    public String getRemark() {
+        return remark;
     }
 
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public String getPrefix() {

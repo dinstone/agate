@@ -1,9 +1,11 @@
 package com.dinstone.agate.manager.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import com.dinstone.agate.manager.model.BackendConfig;
 import com.dinstone.agate.manager.model.FrontendConfig;
 import com.dinstone.agate.manager.model.ParamConfig;
 import com.dinstone.agate.manager.utils.JacksonCodec;
+import com.orbitz.consul.KeyValueClient;
 
 @Component
 public class ManageService {
@@ -29,6 +32,9 @@ public class ManageService {
 
 	@Autowired
 	private ApiDao apiDao;
+
+	@Autowired
+	private KeyValueClient keyValueClient;
 
 	public void createApp(AppEntity entity) throws BusinessException {
 		// app param check
@@ -120,6 +126,18 @@ public class ManageService {
 			throw new BusinessException(40108, "APP id is invalid");
 		}
 
+		// close APIs
+		List<ApiEntity> ael = apiDao.list(id);
+		if (ael != null) {
+			for (ApiEntity entity : ael) {
+				closeApi(entity.getApiId());
+			}
+		}
+
+		// close APP
+		closeApp(id);
+
+		// delete APIs and APP
 		apiDao.deleteByAppId(id);
 		appDao.delete(id);
 	}
@@ -129,12 +147,40 @@ public class ManageService {
 			throw new BusinessException(40108, "APP id is invalid");
 		}
 		AppEntity app = appDao.find(id);
-		if (app == null) {
-			return;
+		if (app != null && app.getStatus() == STATUS_CLOSE) {
+			app.setStatus(STATUS_START);
+			app.setUpdateTime(new Date());
+			appDao.updateStatus(app);
+
+			String key = "agate/apps/" + app.getCluster() + "/" + app.getName();
+			String value = convertAppOptions(app);
+			keyValueClient.putValue(key, value);
 		}
-		app.setStatus(STATUS_START);
-		app.setUpdateTime(new Date());
-		appDao.updateStatus(app);
+	}
+
+	private String convertAppOptions(AppEntity appEntity) {
+		Map<String, Object> appOptions = new HashMap<>();
+		appOptions.put("cluster", appEntity.getCluster());
+		appOptions.put("appName", appEntity.getName());
+		appOptions.put("prefix", appEntity.getPrefix());
+		appOptions.put("remark", appEntity.getRemark());
+
+		Map<String, Object> serverOptions = null;
+		if (appEntity.getServerConfig() != null && !appEntity.getServerConfig().isEmpty()) {
+			serverOptions = JacksonCodec.decodeValue(appEntity.getServerConfig(), Map.class);
+		} else {
+			serverOptions = new HashMap<>();
+		}
+		serverOptions.put("host", appEntity.getHost());
+		serverOptions.put("port", appEntity.getPort());
+		appOptions.put("serverOptions", serverOptions);
+
+		if (appEntity.getClientConfig() != null && !appEntity.getClientConfig().isEmpty()) {
+			Map<String, Object> clientOptions = JacksonCodec.decodeValue(appEntity.getClientConfig(), Map.class);
+			appOptions.put("clientOptions", clientOptions);
+		}
+
+		return JacksonCodec.encode(appOptions);
 	}
 
 	public void closeApp(Integer id) throws BusinessException {
@@ -142,12 +188,14 @@ public class ManageService {
 			throw new BusinessException(40108, "APP id is invalid");
 		}
 		AppEntity app = appDao.find(id);
-		if (app == null) {
-			return;
+		if (app != null && app.getStatus() == STATUS_START) {
+			app.setStatus(STATUS_CLOSE);
+			app.setUpdateTime(new Date());
+			appDao.updateStatus(app);
+
+			String key = "agate/apps/" + app.getCluster() + "/" + app.getName();
+			keyValueClient.deleteKey(key);
 		}
-		app.setStatus(STATUS_CLOSE);
-		app.setUpdateTime(new Date());
-		appDao.updateStatus(app);
 	}
 
 	public List<ApiConfig> apiList(Integer appId) {
@@ -282,7 +330,12 @@ public class ManageService {
 		if (apiEntity == null) {
 			throw new BusinessException(40207, "can't find API");
 		}
-
+		AppEntity appEntity = appDao.find(apiEntity.getAppId());
+		if (appEntity == null) {
+			throw new BusinessException(40208, "can't find APP");
+		}
+		
+		frontendConfig.setPrefix(appEntity.getPrefix());
 		ApiEntity ae = covert(apiConfig);
 		apiEntity.setRemark(ae.getRemark());
 		apiEntity.setFrontend(ae.getFrontend());
@@ -292,31 +345,55 @@ public class ManageService {
 		apiDao.update(apiEntity);
 	}
 
-	public ApiConfig getApiById(Integer id) {
-		ApiEntity ae = apiDao.find(id);
+	public ApiConfig getApiById(Integer apiId) {
+		ApiEntity ae = apiDao.find(apiId);
 		if (ae != null) {
 			return covert(ae);
 		}
 		return null;
 	}
 
-	public void deleteApi(Integer id) {
-		apiDao.delete(id);
+	public void deleteApi(Integer apiId) {
+		closeApi(apiId);
+		apiDao.delete(apiId);
 	}
 
 	public void startApi(Integer id) {
-		ApiEntity ae = apiDao.find(id);
-		if (ae != null) {
-			ae.setStatus(STATUS_START);
-			apiDao.updateStatus(ae);
+		ApiEntity api = apiDao.find(id);
+		if (api != null && api.getStatus() == STATUS_CLOSE) {
+			api.setStatus(STATUS_START);
+			apiDao.updateStatus(api);
+
+			AppEntity app = appDao.find(api.getAppId());
+
+			String key = "agate/apis/" + app.getName() + "/" + api.getName();
+			String value = convertApiOption(app, api);
+			keyValueClient.putValue(key, value);
 		}
 	}
 
-	public void closeApi(Integer id) {
-		ApiEntity ae = apiDao.find(id);
-		if (ae != null) {
-			ae.setStatus(STATUS_CLOSE);
-			apiDao.updateStatus(ae);
+	private String convertApiOption(AppEntity appEntity, ApiEntity apiEntity) {
+		Map<String, Object> apiOptions = new HashMap<>();
+		apiOptions.put("cluster", appEntity.getCluster());
+		apiOptions.put("appName", appEntity.getName());
+		apiOptions.put("apiName", apiEntity.getName());
+
+		apiOptions.put("frontend", JacksonCodec.decodeValue(apiEntity.getFrontend(), Map.class));
+		apiOptions.put("backend", JacksonCodec.decodeValue(apiEntity.getBackend(), Map.class));
+
+		return JacksonCodec.encode(apiOptions);
+	}
+
+	public void closeApi(Integer apiId) {
+		ApiEntity api = apiDao.find(apiId);
+		if (api != null && api.getStatus() == STATUS_START) {
+			api.setStatus(STATUS_CLOSE);
+			apiDao.updateStatus(api);
+
+			AppEntity app = appDao.find(api.getAppId());
+
+			String key = "agate/apis/" + app.getName() + "/" + api.getName();
+			keyValueClient.deleteKey(key);
 		}
 	}
 

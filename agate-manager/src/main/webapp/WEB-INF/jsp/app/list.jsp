@@ -72,12 +72,12 @@
 								<table class="table" id="DataTables_Table_0" aria-describedby="DataTables_Table_0_info">
 									<thead>
 										<tr>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Name</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Cluster</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Service</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Remark</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default"
+											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Cluster</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Service</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
+											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default"
 												href="${contextPath}/view/app/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create APP
 											</a></th>
 										</tr>

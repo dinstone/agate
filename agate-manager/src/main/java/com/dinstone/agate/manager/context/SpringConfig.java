@@ -1,18 +1,16 @@
 package com.dinstone.agate.manager.context;
 
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.zaxxer.hikari.HikariDataSource;
+import com.google.common.net.HostAndPort;
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.Consul.Builder;
+import com.orbitz.consul.KeyValueClient;
 
-//@Configuration
+@Configuration
 //@PropertySource(value = { "classpath:jdbc.properties" })
 //@ComponentScan(basePackages = { "com.dinstone.agate.manager.service", "com.dinstone.agate.manager.dao" })
 public class SpringConfig {
@@ -21,17 +19,15 @@ public class SpringConfig {
 	private Environment environment;
 
 	@Bean
-	public DataSource dataSource() {
-		HikariDataSource dataSource = new HikariDataSource();
-		dataSource.setDriverClassName(environment.getProperty("driver"));
-		dataSource.setJdbcUrl(environment.getProperty("url"));
-		dataSource.setUsername(environment.getProperty("username"));
-		dataSource.setPassword(environment.getProperty("password"));
-		return dataSource;
-	}
+	KeyValueClient consulClient() {
+		String host = environment.getProperty("consul.host");
+		String port = environment.getProperty("consul.port");
 
-	@Bean
-	public JdbcTemplate jdbcTemplate(DataSource dataSource) {
-		return new JdbcTemplate(dataSource);
+		Builder builder = Consul.builder();
+		if (host != null && port != null) {
+			HostAndPort hostAndPort = HostAndPort.fromParts(host, Integer.parseInt(port));
+			builder.withHostAndPort(hostAndPort);
+		}
+		return builder.build().keyValueClient();
 	}
 }

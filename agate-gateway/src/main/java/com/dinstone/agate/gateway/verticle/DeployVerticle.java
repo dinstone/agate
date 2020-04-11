@@ -112,6 +112,8 @@ public class DeployVerticle extends AbstractVerticle {
 
 				message.reply(null);
 			} else {
+				LOG.warn("depley App[{}] failure", appName, ar.cause());
+
 				deployment.remove(appName);
 
 				message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
