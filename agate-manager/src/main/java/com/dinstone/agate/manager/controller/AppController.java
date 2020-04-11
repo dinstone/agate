@@ -12,38 +12,38 @@ import com.dinstone.agate.manager.service.BusinessException;
 import com.dinstone.agate.manager.service.ManageService;
 
 @Controller
-@RequestMapping("/view")
-public class ViewController {
+@RequestMapping("/view/app")
+public class AppController {
 
 	@Autowired
 	private ManageService manageService;
 
-	@RequestMapping("/app/list")
+	@RequestMapping("/list")
 	public ModelAndView appList() {
 		ModelAndView mav = new ModelAndView("app/list");
 		List<AppEntity> apps = manageService.appList();
 		return mav.addObject("apps", apps);
 	}
 
-	@RequestMapping("/app/create")
+	@RequestMapping("/create")
 	public ModelAndView appCreate() {
 		ModelAndView mav = new ModelAndView("app/edit");
 		return mav.addObject("action", "create");
 	}
 
-	@RequestMapping("/app/update")
+	@RequestMapping("/update")
 	public ModelAndView appUpdate(Integer id) {
 		try {
-			AppEntity appEntity = manageService.getAppByID(id);
+			AppEntity appEntity = manageService.getAppById(id);
 			ModelAndView mav = new ModelAndView("app/edit");
 			mav.addObject("app", appEntity);
 			return mav.addObject("action", "update");
-		} catch (BusinessException e) {
+		} catch (Exception e) {
 			return new ModelAndView("app/list");
 		}
 	}
 
-	@RequestMapping("/app/save")
+	@RequestMapping("/save")
 	public ModelAndView appSave(AppEntity app, String action) {
 		try {
 			if ("create".equals(action)) {
@@ -59,20 +59,20 @@ public class ViewController {
 		return new ModelAndView("forward:/view/app/list");
 	}
 
-	@RequestMapping("/app/detail")
+	@RequestMapping("/detail")
 	public ModelAndView appDetail(Integer id) {
 		ModelAndView mav = new ModelAndView("app/detail");
 		try {
-			AppEntity appEntity = manageService.getAppByID(id);
+			AppEntity appEntity = manageService.getAppById(id);
 			mav.addObject("app", appEntity);
 			mav.addObject("action", "detail");
-		} catch (BusinessException e) {
+		} catch (Exception e) {
 			mav.addObject("error", e.getMessage());
 		}
 		return mav;
 	}
 
-	@RequestMapping("/app/delete")
+	@RequestMapping("/delete")
 	public ModelAndView appDelete(Integer id) {
 		try {
 			manageService.deleteApp(id);
@@ -81,7 +81,7 @@ public class ViewController {
 		return new ModelAndView("forward:/view/app/list");
 	}
 
-	@RequestMapping("/app/start")
+	@RequestMapping("/start")
 	public ModelAndView appStart(Integer id) {
 		try {
 			manageService.startApp(id);
@@ -90,7 +90,7 @@ public class ViewController {
 		return new ModelAndView("forward:/view/app/list");
 	}
 
-	@RequestMapping("/app/close")
+	@RequestMapping("/close")
 	public ModelAndView appClose(Integer id) {
 		try {
 			manageService.closeApp(id);

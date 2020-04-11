@@ -18,11 +18,11 @@ public class AppEntity {
 
 	private Integer port;
 
-	private int status;
-
 	private String serverConfig;
 
 	private String clientConfig;
+
+	private int status;
 
 	private Date createTime;
 

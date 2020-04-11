@@ -55,8 +55,8 @@
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a class="btn btn-default" href="/view/app/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create APP
-						</a></li>
+						<li><a href="${contextPath}/">Home</a></li>
+						<li>APPs</li>
 					</ul>
 				</div>
 				<div class="row">
@@ -66,21 +66,20 @@
 								<h2>
 									<i class="glyphicon glyphicon-th"></i> APP List
 								</h2>
-								<div class="box-icon">
-									<a href="#" class="btn btn-minimize btn-round btn-default"><i class="glyphicon glyphicon-chevron-up"></i></a>
-								</div>
 							</div>
 							<div class="box-content" id="tubelist">
 								<!-- <div id="container" style="width: 600px; height: 400px;"></div> -->
-								<table class="table table-striped table-bordered bootstrap-datatable datatable responsive dataTable" id="DataTables_Table_0" aria-describedby="DataTables_Table_0_info">
+								<table class="table" id="DataTables_Table_0" aria-describedby="DataTables_Table_0_info">
 									<thead>
-										<tr role="row">
+										<tr>
 											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Name</th>
 											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Cluster</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Prefix</th>
+											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Service</th>
 											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Remark</th>
 											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;">Action</th>
+											<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default"
+												href="${contextPath}/view/app/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create APP
+											</a></th>
 										</tr>
 									</thead>
 									<tbody id="appList">
@@ -92,19 +91,17 @@
 												<td>${app.remark}</td>
 												<c:if test="${app.status > 0}">
 													<td>Started</td>
-													<td>
-														<a class="btn btn-default" href="${contextPath}/view/app/close?id=${app.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> 
-														<a class="btn btn-default" href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a>
-														<a class="btn btn-default" href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a>
-													</td>
+													<td><a class="btn btn-default" href="${contextPath}/view/app/close?id=${app.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/api/list?appId=${app.id}"><i class="glyphicon glyphicon-list-alt"></i><span> APIs</span></a></td>
 												</c:if>
 												<c:if test="${app.status == 0}">
 													<td>Closed</td>
-													<td>
-														<a class="btn btn-default" href="${contextPath}/view/app/start?id=${app.id}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> 
-														<a class="btn btn-default" href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a>
-														<a class="btn btn-default" href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a>
-													</td>
+													<td><a class="btn btn-default" href="${contextPath}/view/app/start?id=${app.id}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a> <a class="btn btn-default"
+														href="${contextPath}/view/api/list?appId=${app.id}"><i class="glyphicon glyphicon-list-alt"></i><span> APIs</span></a></td>
 												</c:if>
 											</tr>
 										</c:forEach>
