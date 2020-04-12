@@ -21,3 +21,25 @@ CREATE UNIQUE INDEX i_cluster_port ON t_app (
     cluster,
     port
 );
+
+CREATE TABLE t_api (
+    apiid      INTEGER  PRIMARY KEY AUTOINCREMENT,
+    appId      INTEGER  NOT NULL,
+    name       STRING   NOT NULL,
+    remark     STRING,
+    status     INT      NOT NULL,
+    frontend   STRING   NOT NULL,
+    backend    STRING   NOT NULL,
+    createTime DATETIME NOT NULL,
+    updateTime DATETIME NOT NULL
+);
+
+CREATE TABLE t_user (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    username STRING  NOT NULL
+                     UNIQUE,
+    password STRING  NOT NULL,
+    enabled  BOOLEAN NOT NULL
+                     DEFAULT (1) 
+);
+

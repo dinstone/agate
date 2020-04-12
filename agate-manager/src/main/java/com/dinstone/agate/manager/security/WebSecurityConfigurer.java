@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @EnableWebSecurity
@@ -21,7 +21,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").hasAnyAuthority("ADMIN");
+		http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
 
 		http.formLogin().loginPage("/login.html").loginProcessingUrl("/login")// login process
 				// .defaultSuccessUrl("/admin/index.html", true)
@@ -42,9 +42,14 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 		return super.authenticationManager();
 	}
 
+	/**
+	 * this PasswordEncoder only for test
+	 * 
+	 * @return
+	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+		return NoOpPasswordEncoder.getInstance();
 	}
 
 	@Bean
