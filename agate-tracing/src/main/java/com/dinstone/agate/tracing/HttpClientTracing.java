@@ -66,17 +66,35 @@ public class HttpClientTracing {
 
 	public HttpClientTracing failure(Throwable error) {
 		if (error == null) {
-			error = new RuntimeException("client tracing unkown error");
+			throw new IllegalArgumentException("client tracing error is null");
 		}
 		return finish(null, error);
 	}
 
 	public HttpClientTracing success(HttpClientResponse clientResponse) {
+		if (clientResponse == null) {
+			throw new IllegalArgumentException("client tracing response is null");
+		}
 		return finish(clientResponse, null);
 	}
 
 	public HttpClientTracing finish(HttpClientResponse clientResponse, Throwable error) {
-		clientHandler.handleReceive(new HttpClientResponseWrapper(clientResponse), error, span);
+		HttpClientResponseWrapper response = null;
+		if (clientResponse != null) {
+			response = new HttpClientResponseWrapper(clientResponse);
+		}
+		clientHandler.handleReceive(response, error, span);
+		return this;
+	}
+
+	/**
+	 * add span's name, must be end of the tracing start.
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public HttpClientTracing name(String name) {
+		span.name(name);
 		return this;
 	}
 

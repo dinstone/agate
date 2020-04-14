@@ -141,6 +141,8 @@ public class ProxyInvokeHandler implements RouteHandler {
 		// client tracing
 		HttpClientTracing tracing = new HttpClientTracing(httpTracing);
 		try (Scope scope = tracing.start(beRequest).scope()) {
+			// tracing.tag("http.url", beRequest.absoluteURI());
+
 			// timeout
 			if (backendOptions.getTimeout() > 0) {
 				beRequest.setTimeout(backendOptions.getTimeout());

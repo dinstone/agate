@@ -23,7 +23,7 @@ public class BraveTracingHandler implements BeforeHandler {
 	public void handle(RoutingContext context) {
 		HttpServerTracing tracing = new HttpServerTracing(httpTracing);
 		try (Scope scope = tracing.start(context.request()).scope()) {
-			tracing.tag("app.name", apiOptions.getAppName()).tag("api.name", apiOptions.getApiName());
+			tracing.name(apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
 			context.addHeadersEndHandler(v -> {
 				if (context.failed()) {
 					tracing.failure(context.failure());

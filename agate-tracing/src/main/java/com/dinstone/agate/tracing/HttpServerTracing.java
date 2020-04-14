@@ -57,18 +57,36 @@ public class HttpServerTracing {
 	}
 
 	public HttpServerTracing success(HttpServerResponse serverResponse) {
+		if (serverResponse == null) {
+			throw new IllegalArgumentException("server tracing response is null");
+		}
 		return finish(serverResponse, null);
 	}
 
 	public HttpServerTracing failure(Throwable error) {
 		if (error == null) {
-			error = new RuntimeException("server tracing unkown error");
+			throw new IllegalArgumentException("server tracing error is null");
 		}
 		return finish(null, error);
 	}
 
 	public HttpServerTracing finish(HttpServerResponse serverResponse, Throwable error) {
-		serverHandler.handleSend(new HttpServerResponseWrapper(serverResponse), error, span);
+		HttpServerResponseWrapper response = null;
+		if (serverResponse != null) {
+			response = new HttpServerResponseWrapper(serverResponse);
+		}
+		serverHandler.handleSend(response, error, span);
+		return this;
+	}
+
+	/**
+	 * add span's name, must be end of the tracing start.
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public HttpServerTracing name(String name) {
+		span.name(name);
 		return this;
 	}
 
