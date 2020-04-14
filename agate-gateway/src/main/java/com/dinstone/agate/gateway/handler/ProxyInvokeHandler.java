@@ -32,7 +32,10 @@ import com.dinstone.agate.gateway.options.BackendOptions;
 import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.spi.RouteHandler;
+import com.dinstone.agate.tracing.HttpClientTracing;
 
+import brave.http.HttpTracing;
+import brave.propagation.CurrentTraceContext.Scope;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
@@ -57,11 +60,14 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private ApiOptions apiOptions;
 
+	private HttpTracing httpTracing;
+
 	private int count;
 
-	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient) {
+	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient, HttpTracing httpTracing) {
 		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
+		this.httpTracing = httpTracing;
 
 		backendOptions = apiOptions.getBackend();
 	}
@@ -69,19 +75,19 @@ public class ProxyInvokeHandler implements RouteHandler {
 	@Override
 	public void handle(RoutingContext rc) {
 		try {
-			route(rc);
+			routing(rc);
 		} catch (Exception e) {
 			LOG.error("route backend service error", e);
 			rc.fail(500, new RuntimeException("route backend service error", e));
 		}
 	}
 
-	private void route(RoutingContext rc) {
+	private void routing(RoutingContext rc) {
 		Map<String, String> pathParams = new HashMap<>();
 		MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
 		MultiMap headerParams = MultiMap.caseInsensitiveMultiMap();
 
-		// parse params from request
+		// parse params from frontend request
 		List<ParamOptions> params = backendOptions.getParams();
 		if (params != null) {
 			for (ParamOptions param : params) {
@@ -101,14 +107,12 @@ public class ProxyInvokeHandler implements RouteHandler {
 		HttpServerRequest feRequest = rc.request();
 		// locate url
 		String requestUrl = loadbalanceUrl(feRequest);
-
 		// replace param for url
 		if (!pathParams.isEmpty()) {
 			for (Entry<String, String> e : pathParams.entrySet()) {
 				requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
 			}
 		}
-
 		// set query params
 		if (!queryParams.isEmpty()) {
 			QueryCoder queryCoder = new QueryCoder(requestUrl);
@@ -134,46 +138,54 @@ public class ProxyInvokeHandler implements RouteHandler {
 				beRequest.headers().set(e.getKey(), e.getValue());
 			}
 		}
-		// timeout
-		if (backendOptions.getTimeout() > 0) {
-			beRequest.setTimeout(backendOptions.getTimeout());
-		}
-		// exception handler
-		beRequest.exceptionHandler(t -> {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("request backend service error", t);
+		// client tracing
+		HttpClientTracing tracing = new HttpClientTracing(httpTracing);
+		try (Scope scope = tracing.start(beRequest).scope()) {
+			// timeout
+			if (backendOptions.getTimeout() > 0) {
+				beRequest.setTimeout(backendOptions.getTimeout());
 			}
-			if (t instanceof ConnectException || t instanceof TimeoutException) {
-				rc.fail(503, new RuntimeException("backend service unavailable", t));
-			} else {
-				rc.fail(500, new RuntimeException("request backend service error", t));
-			}
-		});
-		// response handler
-		beRequest.setHandler(ar -> {
-			if (ar.succeeded()) {
-				rc.put("backend.response", ar.result()).next();
-			} else {
-				LOG.error("backend response is error", ar.cause());
-				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
-			}
-		});
-		// transport body and send request
-		if (HttpUtil.hasBody(beRequest.method())) {
-//			beRequest.setChunked(true);
-			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
-			feRequest.exceptionHandler(e -> {
-				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
-				fe2bePump.stop();
-				beRequest.end();
-			}).endHandler(v -> {
+			// exception handler
+			beRequest.exceptionHandler(error -> {
+				tracing.failure(error);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("body transport finish");
+					LOG.debug("request backend service error", error);
 				}
-				beRequest.end();
+				if (error instanceof ConnectException || error instanceof TimeoutException) {
+					rc.fail(503, new RuntimeException("backend service unavailable", error));
+				} else {
+					rc.fail(500, new RuntimeException("request backend service error", error));
+				}
 			});
-		} else {
-			beRequest.end();
+			// response handler
+			beRequest.setHandler(ar -> {
+				if (ar.succeeded()) {
+					tracing.success(ar.result());
+					rc.put("backend.response", ar.result()).next();
+				} else {
+					tracing.failure(ar.cause());
+					LOG.error("backend response is error", ar.cause());
+					rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
+				}
+			});
+			// transport body and send request
+			if (HttpUtil.hasBody(beRequest.method())) {
+				Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
+				feRequest.exceptionHandler(e -> {
+					LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
+					fe2bePump.stop();
+					beRequest.end();
+				}).endHandler(v -> {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("body transport finish");
+					}
+					beRequest.end();
+				});
+			} else {
+				beRequest.end();
+			}
+		} catch (Throwable error) {
+			tracing.failure(error);
 		}
 	}
 

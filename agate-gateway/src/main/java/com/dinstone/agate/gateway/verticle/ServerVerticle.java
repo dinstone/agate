@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
+import com.dinstone.agate.gateway.handler.BraveTracingHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
@@ -33,6 +34,7 @@ import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.AppOptions;
 import com.dinstone.agate.gateway.options.FrontendOptions;
 
+import brave.http.HttpTracing;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -68,6 +70,8 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
 	private HttpClient httpClient;
 
+	private HttpTracing tracing;
+
 	private Router mainRouter;
 
 	private String appName;
@@ -96,6 +100,8 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 		if (clientOptions == null) {
 			clientOptions = new HttpClientOptions();
 		}
+
+		tracing = HttpTracing.create(applicationContext.getTracing());
 	}
 
 	@Override
@@ -165,12 +171,15 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 						route.produces(produce);
 					}
 				}
+				// before handler: tracing handler
+				route.handler(new BraveTracingHandler(api, tracing));
+
 				// before handler : rate limit handler
 				if (api.getRateLimit() != null) {
 					route.handler(new RateLimitHandler(api));
 				}
 				// route handler
-				route.handler(new ProxyInvokeHandler(api, httpClient));
+				route.handler(new ProxyInvokeHandler(api, httpClient, tracing));
 				// after handler : result reply handler
 				route.handler(new ResultReplyHandler(api));
 				// failure handler

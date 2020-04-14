@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.options.ApiOptions;
-import com.dinstone.agate.gateway.options.BackendOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
 
 import io.vertx.core.http.HttpClientResponse;
@@ -37,16 +36,15 @@ public class ResultReplyHandler implements AfterHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
 
-	private BackendOptions backendOptions;
+//	private BackendOptions backendOptions;
 
 	public ResultReplyHandler(ApiOptions apiOptions) {
-		backendOptions = apiOptions.getBackend();
+//		backendOptions = apiOptions.getBackend();
 	}
 
 	@Override
 	public void handle(RoutingContext rc) {
 		HttpClientResponse beResponse = rc.get("backend.response");
-
 		HttpServerResponse feResponse = rc.response();
 		feResponse.setStatusCode(beResponse.statusCode());
 		feResponse.headers().addAll(beResponse.headers());
