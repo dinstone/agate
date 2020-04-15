@@ -2,11 +2,11 @@ package com.dinstone.agate.tracing;
 
 import brave.http.HttpClientRequest;
 
-public class HttpClientRequestWrap extends HttpClientRequest {
+public class HttpClientRequestWrapper extends HttpClientRequest {
 
 	private io.vertx.core.http.HttpClientRequest delegate;
 
-	public HttpClientRequestWrap(io.vertx.core.http.HttpClientRequest delegate) {
+	public HttpClientRequestWrapper(io.vertx.core.http.HttpClientRequest delegate) {
 		this.delegate = delegate;
 	}
 

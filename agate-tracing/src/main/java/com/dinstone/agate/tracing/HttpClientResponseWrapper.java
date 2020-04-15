@@ -23,7 +23,7 @@ public class HttpClientResponseWrapper extends HttpClientResponse {
 
 	@Override
 	public HttpClientRequest request() {
-		return new HttpClientRequestWrap(delegate.request());
+		return new HttpClientRequestWrapper(delegate.request());
 	}
 
 }

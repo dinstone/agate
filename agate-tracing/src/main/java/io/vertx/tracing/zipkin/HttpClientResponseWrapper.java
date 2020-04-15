@@ -1,6 +1,5 @@
 package io.vertx.tracing.zipkin;
 
-import brave.http.HttpClientRequest;
 import brave.http.HttpClientResponse;
 
 public class HttpClientResponseWrapper extends HttpClientResponse {
@@ -19,11 +18,6 @@ public class HttpClientResponseWrapper extends HttpClientResponse {
 	@Override
 	public Object unwrap() {
 		return delegate;
-	}
-
-	@Override
-	public HttpClientRequest request() {
-		return new HttpClientRequestWrap(delegate.request(), null);
 	}
 
 }

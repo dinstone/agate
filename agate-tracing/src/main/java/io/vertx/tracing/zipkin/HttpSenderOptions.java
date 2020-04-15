@@ -23,9 +23,9 @@ import io.vertx.core.net.TrustOptions;
 //@DataObject
 public class HttpSenderOptions extends HttpClientOptions {
 
-	public static final String DEFAULT_SENDER_ENDPOINT = "http://localhost:9411/api/v2/spans";
+	public static final String DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans";
 
-	private String senderEndpoint;
+	private String endpoint;
 
 	public HttpSenderOptions() {
 		super();
@@ -33,27 +33,27 @@ public class HttpSenderOptions extends HttpClientOptions {
 	}
 
 	private void init() {
-		senderEndpoint = DEFAULT_SENDER_ENDPOINT;
+		endpoint = DEFAULT_ENDPOINT;
 		setMaxPoolSize(1);
 		setTryUseCompression(true);
 	}
 
 	public HttpSenderOptions(JsonObject json) {
 		super(json);
+		if (json.getString("endpoint") != null) {
+			endpoint = json.getString("endpoint");
+		}
 	}
 
-	/**
-	 * @return
-	 */
-	public String getSenderEndpoint() {
-		return senderEndpoint;
+	public String getEndpoint() {
+		return endpoint;
 	}
 
-	public HttpSenderOptions setSenderEndpoint(String endpoint) {
+	public HttpSenderOptions setEndpoint(String endpoint) {
 		if (!(endpoint.startsWith("http://") || endpoint.startsWith("https://"))) {
 			throw new IllegalArgumentException("Sender endpoint must be an absolute URL");
 		}
-		this.senderEndpoint = endpoint;
+		this.endpoint = endpoint;
 		return this;
 	}
 

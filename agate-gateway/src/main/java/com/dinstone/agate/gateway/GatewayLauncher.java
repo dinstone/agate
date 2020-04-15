@@ -15,28 +15,20 @@
  */
 package com.dinstone.agate.gateway;
 
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.utils.ConfigUtil;
 
-import brave.Tracing;
-import brave.sampler.Sampler;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Launcher;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.SLF4JLogDelegateFactory;
+import io.vertx.core.tracing.TracingOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxJmxMetricsOptions;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
-import zipkin2.Span;
-import zipkin2.codec.SpanBytesEncoder;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.okhttp3.OkHttpSender;
 
 public class GatewayLauncher extends Launcher {
 
@@ -71,14 +63,8 @@ public class GatewayLauncher extends Launcher {
 
 	@Override
 	public void beforeStartingVertx(VertxOptions vertxOptions) {
-//		Sender sender = OkHttpSender.create("http://localhost:9411/api/v2/spans");
-//		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).closeTimeout(1000, TimeUnit.MILLISECONDS)
-//				.build(SpanBytesEncoder.JSON_V2);
-//		Tracing tracing = Tracing.newBuilder().sampler(Sampler.ALWAYS_SAMPLE).localServiceName("agate")
-//				.spanReporter(asyncReporter).build();
-//
-//		// tracing
-//		vertxOptions.setTracingOptions(new ZipkinTracingOptions(tracing).setEnabled(true));
+		// tracing
+		vertxOptions.setTracingOptions(tracingOptions());
 
 		// metrics
 		vertxOptions.setMetricsOptions(metricsOptions());
@@ -104,6 +90,20 @@ public class GatewayLauncher extends Launcher {
 		if (workerPoolSize > 0) {
 			vertxOptions.setWorkerPoolSize(workerPoolSize);
 		}
+	}
+
+	private TracingOptions tracingOptions() {
+		ZipkinTracingOptions options;
+		JsonObject tracingConfig = config.getJsonObject("tracing");
+		if (tracingConfig != null) {
+			options = new ZipkinTracingOptions(tracingConfig);
+		} else {
+			options = new ZipkinTracingOptions("agate-gateway");
+		}
+		if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
+			options.setServiceName("agate-gateway");
+		}
+		return options;
 	}
 
 	private MicrometerMetricsOptions metricsOptions() {

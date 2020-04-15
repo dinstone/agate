@@ -8,8 +8,6 @@ import brave.Tracing;
 import brave.http.HttpClientHandler;
 import brave.http.HttpServerHandler;
 import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext.Scope;
-import brave.propagation.TraceContext;
 import io.vertx.core.Context;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -28,17 +26,17 @@ public class ZipkinTracer implements io.vertx.core.spi.tracing.VertxTracer<Span,
 	private static final String ACTIVE_CONTEXT = "vertx.tracing.zipkin.active_context";
 
 	private final Tracing tracing;
-	private final boolean closeTracer;
+	private final boolean closeit;
 	private final HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> serverHandler;
 	private final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> clientHandler;
 
-	public ZipkinTracer(boolean closeTracer, Tracing tracing) {
-		this(closeTracer, HttpTracing.newBuilder(tracing).build());
-	}
+	public ZipkinTracer(boolean closeit, Tracing tracing) {
+		this.closeit = closeit;
+		this.tracing = tracing;
 
-	public ZipkinTracer(boolean closeTracer, HttpTracing httpTracing) {
-		this.closeTracer = closeTracer;
-		this.tracing = httpTracing.tracing();
+		HttpRequestResponseParser parser = new HttpRequestResponseParser();
+		HttpTracing httpTracing = HttpTracing.newBuilder(tracing).clientRequestParser(parser)
+				.clientResponseParser(parser).serverRequestParser(parser).serverResponseParser(parser).build();
 		this.clientHandler = HttpClientHandler.create(httpTracing);
 		this.serverHandler = HttpServerHandler.create(httpTracing);
 	}
@@ -76,18 +74,22 @@ public class ZipkinTracer implements io.vertx.core.spi.tracing.VertxTracer<Span,
 			BiConsumer<String, String> headers, TagExtractor<R> tagExtractor) {
 		if (request instanceof HttpClientRequest) {
 			HttpClientRequest clientRequest = (HttpClientRequest) request;
-			TraceContext parent = context.getLocal(ACTIVE_CONTEXT);
+			HttpClientRequestWrapper requestWrap = new HttpClientRequestWrapper(clientRequest, headers);
 			Span span;
-//			if (parent != null) {
-//				span = clientHandler.handleSendWithParent(new HttpClientRequestWrap(clientRequest, headers), parent);
-//			} else {
-//			}
-			span = clientHandler.handleSend(new HttpClientRequestWrap(clientRequest, headers));
+			if (context.getLocal(ACTIVE_CONTEXT) != null) {
+				span = clientHandler.handleSendWithParent(requestWrap, context.getLocal(ACTIVE_CONTEXT));
+			} else {
+				span = clientHandler.handleSend(requestWrap);
+			}
 			SocketAddress socketAddress = clientRequest.connection().remoteAddress();
 			span.remoteIpAndPort(socketAddress.host(), socketAddress.port());
 
 			return (resp, err) -> {
-				clientHandler.handleReceive(new HttpClientResponseWrapper((HttpClientResponse) resp), err, span);
+				HttpClientResponseWrapper response = null;
+				if (resp != null) {
+					response = new HttpClientResponseWrapper((HttpClientResponse) resp);
+				}
+				clientHandler.handleReceive(response, err, span);
 			};
 		}
 		return null;
@@ -96,14 +98,14 @@ public class ZipkinTracer implements io.vertx.core.spi.tracing.VertxTracer<Span,
 	@Override
 	public <R> void receiveResponse(Context context, R response, BiConsumer<Object, Throwable> payload,
 			Throwable failure, TagExtractor<R> tagExtractor) {
-		if (payload != null && response instanceof HttpClientResponse) {
+		if (payload != null) {
 			payload.accept(response, failure);
 		}
 	}
 
 	@Override
 	public void close() {
-		if (closeTracer) {
+		if (closeit) {
 			tracing.close();
 		}
 	}

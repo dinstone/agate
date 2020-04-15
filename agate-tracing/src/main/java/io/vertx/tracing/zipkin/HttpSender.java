@@ -8,15 +8,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import zipkin2.Call;
 import zipkin2.Callback;
@@ -28,19 +24,24 @@ import zipkin2.reporter.Sender;
  *
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
-public class VertxSender extends Sender {
+public class HttpSender extends Sender {
 
 	private static final CharSequence APPLICATION_JSON = HttpHeaders.createOptimized("application/json");
 
 	private final int messageMaxBytes = 5242880;
 	private final Vertx vertx;
-	private final HttpClient client;
 	private final String endpoint;
+	private final HttpClient client;
 
-	public VertxSender(HttpSenderOptions options) {
-		this.endpoint = options.getSenderEndpoint();
-		this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(null));
+	public HttpSender(HttpSenderOptions options) {
+		this.endpoint = options.getEndpoint();
+		this.vertx = Vertx.vertx(vertxOptions());
 		this.client = vertx.createHttpClient(options);
+	}
+
+	private VertxOptions vertxOptions() {
+		VertxOptions options = new VertxOptions().setEventLoopPoolSize(1);
+		return options.setWorkerPoolSize(1).setInternalBlockingPoolSize(1);
 	}
 
 	@Override
@@ -81,9 +82,8 @@ public class VertxSender extends Sender {
 		return new PostCall(body);
 	}
 
-	private class PostCall extends Call<Void> implements Handler<AsyncResult<Callback<Void>>> {
+	private class PostCall extends Call<Void> {
 
-		private final Promise<Callback<Void>> promise = Promise.promise();
 		private final Buffer body;
 
 		PostCall(Buffer body) {
@@ -91,43 +91,23 @@ public class VertxSender extends Sender {
 		}
 
 		@Override
-		public void handle(AsyncResult<Callback<Void>> ar) {
-			if (ar.succeeded()) {
-				Callback<Void> callback = ar.result();
-				Handler<AsyncResult<HttpClientResponse>> handler = res -> {
-					if (res.succeeded()) {
-						callback.onSuccess(null);
-					} else {
-						callback.onError(res.cause());
-					}
-				};
-				HttpClientRequest post;
-				if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-					post = client.postAbs(endpoint, handler);
-				} else {
-					post = client.post(endpoint, handler);
-				}
-				post.putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON);
-				post.end(body);
-			}
-		}
-
-		@Override
 		public Void execute() throws IOException {
-			CompletableFuture<Void> fut = new CompletableFuture<>();
-			enqueue(new Callback<Void>() {
+			CompletableFuture<Void> future = new CompletableFuture<>();
+			asyncSend(new Callback<Void>() {
+
 				@Override
 				public void onSuccess(Void value) {
-					fut.complete(null);
+					future.complete(null);
 				}
 
 				@Override
 				public void onError(Throwable t) {
-					fut.completeExceptionally(t);
+					future.completeExceptionally(t);
 				}
+
 			});
 			try {
-				return fut.get(20, TimeUnit.SECONDS);
+				return future.get(20, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				throw new InterruptedIOException();
@@ -138,11 +118,25 @@ public class VertxSender extends Sender {
 			}
 		}
 
+		private void asyncSend(Callback<Void> callback) {
+			HttpClientRequest post;
+			if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+				post = client.postAbs(endpoint);
+			} else {
+				post = client.post(endpoint);
+			}
+			post.putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON).setTimeout(20000).setHandler(ar -> {
+				if (ar.succeeded()) {
+					callback.onSuccess(null);
+				} else {
+					callback.onError(ar.cause());
+				}
+			}).end(body);
+		}
+
 		@Override
 		public void enqueue(Callback<Void> callback) {
-			if (!promise.tryComplete(callback)) {
-				throw new IllegalStateException();
-			}
+			asyncSend(callback);
 		}
 
 		@Override
@@ -164,5 +158,10 @@ public class VertxSender extends Sender {
 	public void close() throws IOException {
 		client.close();
 		vertx.close();
+	}
+
+	@Override
+	public String toString() {
+		return "VertxHttpSender{" + endpoint + "}";
 	}
 }

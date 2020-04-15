@@ -4,12 +4,12 @@ import java.util.function.BiConsumer;
 
 import brave.http.HttpClientRequest;
 
-public class HttpClientRequestWrap extends HttpClientRequest {
+public class HttpClientRequestWrapper extends HttpClientRequest {
 
 	private io.vertx.core.http.HttpClientRequest delegate;
 	private BiConsumer<String, String> headers;
 
-	public HttpClientRequestWrap(io.vertx.core.http.HttpClientRequest delegate, BiConsumer<String, String> headers) {
+	public HttpClientRequestWrapper(io.vertx.core.http.HttpClientRequest delegate, BiConsumer<String, String> headers) {
 		this.delegate = delegate;
 		this.headers = headers;
 	}

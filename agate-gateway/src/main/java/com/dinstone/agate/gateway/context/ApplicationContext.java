@@ -15,22 +15,13 @@
  */
 package com.dinstone.agate.gateway.context;
 
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.deploy.Deployment;
 
-import brave.Tracing;
-import brave.sampler.Sampler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClientOptions;
-import zipkin2.Span;
-import zipkin2.codec.SpanBytesEncoder;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.Sender;
-import zipkin2.reporter.okhttp3.OkHttpSender;
 
 public class ApplicationContext {
 
@@ -45,8 +36,6 @@ public class ApplicationContext {
 	private Deployment deployment;
 
 	private ConsulClientOptions consulOptions;
-
-	private Tracing tracing;
 
 	public ApplicationContext(JsonObject config) throws Exception {
 		this.config = config;
@@ -71,13 +60,6 @@ public class ApplicationContext {
 		// deployment
 		deployment = new Deployment(clusterId);
 
-
-		Sender sender = OkHttpSender.create("http://localhost:9411/api/v2/spans");
-		AsyncReporter<Span> asyncReporter = AsyncReporter.builder(sender).closeTimeout(1000, TimeUnit.MILLISECONDS)
-				.build(SpanBytesEncoder.JSON_V2);
-		tracing = Tracing.newBuilder().sampler(Sampler.ALWAYS_SAMPLE).localServiceName("agate-gateway")
-				.spanReporter(asyncReporter).build();
-
 		LOG.debug("init application context ended");
 	}
 
@@ -99,10 +81,6 @@ public class ApplicationContext {
 
 	public ConsulClientOptions getConsulOptions() {
 		return consulOptions;
-	}
-
-	public Tracing getTracing() {
-		return tracing;
 	}
 
 }

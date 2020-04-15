@@ -56,7 +56,7 @@ public class HttpClientTracing {
 	}
 
 	public HttpClientTracing start(HttpClientRequest clientRequest) {
-		span = clientHandler.handleSend(new HttpClientRequestWrap(clientRequest));
+		span = clientHandler.handleSend(new HttpClientRequestWrapper(clientRequest));
 		return this;
 	}
 

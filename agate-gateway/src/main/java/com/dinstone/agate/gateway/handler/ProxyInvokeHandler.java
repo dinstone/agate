@@ -64,10 +64,9 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private int count;
 
-	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient, HttpTracing httpTracing) {
+	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient) {
 		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
-		this.httpTracing = httpTracing;
 
 		backendOptions = apiOptions.getBackend();
 	}
@@ -138,6 +137,49 @@ public class ProxyInvokeHandler implements RouteHandler {
 				beRequest.headers().set(e.getKey(), e.getValue());
 			}
 		}
+		// timeout
+		if (backendOptions.getTimeout() > 0) {
+			beRequest.setTimeout(backendOptions.getTimeout());
+		}
+		// exception handler
+		beRequest.exceptionHandler(error -> {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("request backend service error", error);
+			}
+			if (error instanceof ConnectException || error instanceof TimeoutException) {
+				rc.fail(503, new RuntimeException("backend service unavailable", error));
+			} else {
+				rc.fail(500, new RuntimeException("request backend service error", error));
+			}
+		});
+		// response handler
+		beRequest.setHandler(ar -> {
+			if (ar.succeeded()) {
+				rc.put("backend.response", ar.result()).next();
+			} else {
+				LOG.error("backend response is error", ar.cause());
+				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
+			}
+		});
+		// transport body and send request
+		if (HttpUtil.hasBody(beRequest.method())) {
+			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
+			feRequest.exceptionHandler(e -> {
+				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
+				fe2bePump.stop();
+				beRequest.end();
+			}).endHandler(v -> {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("body transport finish");
+				}
+				beRequest.end();
+			});
+		} else {
+			beRequest.end();
+		}
+	}
+
+	void tracing(RoutingContext rc, HttpServerRequest feRequest, HttpClientRequest beRequest) {
 		// client tracing
 		HttpClientTracing tracing = new HttpClientTracing(httpTracing);
 		try (Scope scope = tracing.start(beRequest).scope()) {
