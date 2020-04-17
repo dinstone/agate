@@ -1,17 +1,16 @@
 package com.dinstone.agate.tracing;
 
 import brave.Span;
-import brave.Tracing;
 import brave.http.HttpClientHandler;
-import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.net.SocketAddress;
 
 /**
  * <pre>
- * HttpClientTracing tracing = new HttpClientTracing(httpTracing);
+ * httpClientTracing tracing = zipkinTracer.httpClientTracing();
  * try (Scope scope = tracing.start(beRequest).scope()) {
  * 	// exception handler
  * 	beRequest.exceptionHandler(error -> {
@@ -32,9 +31,6 @@ import io.vertx.core.http.HttpClientResponse;
  * 			rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
  * 		}
  * 	});
- * } catch (Throwable error) {
- * 	tracing.failure(error);
- * }
  * </pre>
  * 
  * @author dinstone
@@ -42,17 +38,15 @@ import io.vertx.core.http.HttpClientResponse;
  */
 public class HttpClientTracing {
 
-	private HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> clientHandler;
-	private CurrentTraceContext traceContext;
+	private final HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> clientHandler;
+	private final CurrentTraceContext traceContext;
 	private Span span;
 
-	public HttpClientTracing(Tracing tracing) {
-		this(HttpTracing.create(tracing));
-	}
-
-	public HttpClientTracing(HttpTracing httpTracing) {
-		this.clientHandler = HttpClientHandler.create(httpTracing);
-		this.traceContext = httpTracing.tracing().currentTraceContext();
+	HttpClientTracing(HttpClientHandler<brave.http.HttpClientRequest, brave.http.HttpClientResponse> clientHandler,
+			CurrentTraceContext traceContext) {
+		super();
+		this.clientHandler = clientHandler;
+		this.traceContext = traceContext;
 	}
 
 	public HttpClientTracing start(HttpClientRequest clientRequest) {
@@ -82,6 +76,12 @@ public class HttpClientTracing {
 		HttpClientResponseWrapper response = null;
 		if (clientResponse != null) {
 			response = new HttpClientResponseWrapper(clientResponse);
+			try {
+				SocketAddress socketAddress = clientResponse.request().connection().remoteAddress();
+				span.remoteIpAndPort(socketAddress.host(), socketAddress.port());
+			} catch (Exception e) {
+				// ignore
+			}
 		}
 		clientHandler.handleReceive(response, error, span);
 		return this;

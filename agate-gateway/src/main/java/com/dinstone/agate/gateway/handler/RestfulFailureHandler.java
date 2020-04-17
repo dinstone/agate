@@ -32,15 +32,14 @@ public class RestfulFailureHandler implements FailureHandler {
 
 	@Override
 	public void handle(RoutingContext rc) {
-		int statusCode = rc.statusCode();
-		if (statusCode == -1) {
-			statusCode = 500;
-		}
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("request {} error: {}", rc.request().uri(), rc.failure());
 		}
 
+		int statusCode = rc.statusCode();
+		if (statusCode == -1) {
+			statusCode = 500;
+		}
 		if (!rc.response().ended()) {
 			RestfulUtil.exception(rc, statusCode, rc.failure());
 		}

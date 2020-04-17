@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
 import com.dinstone.agate.gateway.options.ApiOptions;
@@ -33,9 +34,8 @@ import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.spi.RouteHandler;
 import com.dinstone.agate.tracing.HttpClientTracing;
+import com.dinstone.agate.tracing.ZipkinTracer;
 
-import brave.http.HttpTracing;
-import brave.propagation.CurrentTraceContext.Scope;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
@@ -54,21 +54,21 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ProxyInvokeHandler.class);
 
-	private BackendOptions backendOptions;
-
 	private HttpClient httpClient;
 
 	private ApiOptions apiOptions;
 
-	private HttpTracing httpTracing;
+	private ZipkinTracer zipkinTracer;
+
+	private BackendOptions backendOptions;
 
 	private int count;
 
-	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient) {
+	public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient, ZipkinTracer zipkinTracer) {
 		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
-
-		backendOptions = apiOptions.getBackend();
+		this.zipkinTracer = zipkinTracer;
+		this.backendOptions = apiOptions.getBackend();
 	}
 
 	@Override
@@ -137,10 +137,31 @@ public class ProxyInvokeHandler implements RouteHandler {
 				beRequest.headers().set(e.getKey(), e.getValue());
 			}
 		}
+		if (zipkinTracer != null) {
+			trace(rc, beRequest);
+		} else {
+			common(rc, beRequest);
+		}
 		// timeout
 		if (backendOptions.getTimeout() > 0) {
 			beRequest.setTimeout(backendOptions.getTimeout());
 		}
+		// transport body and send request
+		if (HttpUtil.hasBody(beRequest.method())) {
+			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
+			feRequest.exceptionHandler(e -> {
+				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
+				fe2bePump.stop();
+				beRequest.end();
+			}).endHandler(v -> {
+				beRequest.end();
+			});
+		} else {
+			beRequest.end();
+		}
+	}
+
+	private void common(RoutingContext rc, HttpClientRequest beRequest) {
 		// exception handler
 		beRequest.exceptionHandler(error -> {
 			if (LOG.isDebugEnabled()) {
@@ -155,82 +176,42 @@ public class ProxyInvokeHandler implements RouteHandler {
 		// response handler
 		beRequest.setHandler(ar -> {
 			if (ar.succeeded()) {
-				rc.put("backend.response", ar.result()).next();
+				rc.put(ContextConstants.BACKEND_RESPONSE, ar.result()).next();
 			} else {
 				LOG.error("backend response is error", ar.cause());
 				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
 			}
 		});
-		// transport body and send request
-		if (HttpUtil.hasBody(beRequest.method())) {
-			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
-			feRequest.exceptionHandler(e -> {
-				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
-				fe2bePump.stop();
-				beRequest.end();
-			}).endHandler(v -> {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("body transport finish");
-				}
-				beRequest.end();
-			});
-		} else {
-			beRequest.end();
-		}
 	}
 
-	void tracing(RoutingContext rc, HttpServerRequest feRequest, HttpClientRequest beRequest) {
-		// client tracing
-		HttpClientTracing tracing = new HttpClientTracing(httpTracing);
-		try (Scope scope = tracing.start(beRequest).scope()) {
-			// tracing.tag("http.url", beRequest.absoluteURI());
-
-			// timeout
-			if (backendOptions.getTimeout() > 0) {
-				beRequest.setTimeout(backendOptions.getTimeout());
-			}
-			// exception handler
-			beRequest.exceptionHandler(error -> {
-				tracing.failure(error);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("request backend service error", error);
-				}
-				if (error instanceof ConnectException || error instanceof TimeoutException) {
-					rc.fail(503, new RuntimeException("backend service unavailable", error));
-				} else {
-					rc.fail(500, new RuntimeException("request backend service error", error));
-				}
-			});
-			// response handler
-			beRequest.setHandler(ar -> {
-				if (ar.succeeded()) {
-					tracing.success(ar.result());
-					rc.put("backend.response", ar.result()).next();
-				} else {
-					tracing.failure(ar.cause());
-					LOG.error("backend response is error", ar.cause());
-					rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
-				}
-			});
-			// transport body and send request
-			if (HttpUtil.hasBody(beRequest.method())) {
-				Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
-				feRequest.exceptionHandler(e -> {
-					LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
-					fe2bePump.stop();
-					beRequest.end();
-				}).endHandler(v -> {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("body transport finish");
-					}
-					beRequest.end();
-				});
-			} else {
-				beRequest.end();
-			}
-		} catch (Throwable error) {
+	void trace(RoutingContext rc, HttpClientRequest beRequest) {
+		// tracing
+		HttpClientTracing tracing = zipkinTracer.httpClientTracing().start(beRequest);
+		tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
+		// exception handler
+		beRequest.exceptionHandler(error -> {
 			tracing.failure(error);
-		}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("request backend service error", error);
+			}
+			if (error instanceof ConnectException || error instanceof TimeoutException) {
+				rc.fail(503, new RuntimeException("backend service unavailable", error));
+			} else {
+				rc.fail(500, new RuntimeException("request backend service error", error));
+			}
+		});
+		// response handler
+		beRequest.setHandler(ar -> {
+			if (ar.succeeded()) {
+				rc.put(ContextConstants.BACKEND_TRACING, tracing);
+				rc.put(ContextConstants.BACKEND_RESPONSE, ar.result());
+				rc.next();
+			} else {
+				tracing.failure(ar.cause());
+				LOG.error("backend response is error", ar.cause());
+				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
+			}
+		});
 	}
 
 	private String findParamValue(RoutingContext rc, ParamOptions param) {

@@ -1,9 +1,7 @@
 package com.dinstone.agate.tracing;
 
 import brave.Span;
-import brave.Tracing;
 import brave.http.HttpServerHandler;
-import brave.http.HttpTracing;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import io.vertx.core.http.HttpServerRequest;
@@ -13,7 +11,7 @@ import io.vertx.core.http.HttpServerResponse;
  * <pre>
  * {@code}
  * public void handle(RoutingContext context) {
- *	HttpServerTracing tracing = new HttpServerTracing(httpTracing);
+ *	httpServerTracing tracing = zipkinTracer.httpServerTracing();
  *	try (Scope scope = tracing.start(context.request()).scope()) {
  *		tracing.tag("app.name", apiOptions.getAppName()).tag("api.name", apiOptions.getApiName());
  *		context.addHeadersEndHandler(v -> {
@@ -34,17 +32,14 @@ import io.vertx.core.http.HttpServerResponse;
  */
 public class HttpServerTracing {
 
-	private HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> serverHandler;
-	private CurrentTraceContext traceContext;
+	private final HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> serverHandler;
+	private final CurrentTraceContext traceContext;
 	private Span span;
 
-	public HttpServerTracing(Tracing tracing) {
-		this(HttpTracing.create(tracing));
-	}
-
-	public HttpServerTracing(HttpTracing httpTracing) {
-		serverHandler = HttpServerHandler.create(httpTracing);
-		traceContext = httpTracing.tracing().currentTraceContext();
+	HttpServerTracing(HttpServerHandler<brave.http.HttpServerRequest, brave.http.HttpServerResponse> serverHandler,
+			CurrentTraceContext traceContext) {
+		this.serverHandler = serverHandler;
+		this.traceContext = traceContext;
 	}
 
 	public HttpServerTracing start(HttpServerRequest serverRequest) {

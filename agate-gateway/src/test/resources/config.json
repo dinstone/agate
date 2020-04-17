@@ -2,7 +2,6 @@
 	"cluster": "default",
 	"tracing": {
 		"serviceName": "agate-gateway",
-		"enabled": true,
 		"probability": 1.0,
 		"senderOptions": {
 			"endpoint": "http://localhost:9411/api/v2/spans"

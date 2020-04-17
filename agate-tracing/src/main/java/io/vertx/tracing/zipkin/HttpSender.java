@@ -29,14 +29,21 @@ public class HttpSender extends Sender {
 	private static final CharSequence APPLICATION_JSON = HttpHeaders.createOptimized("application/json");
 
 	private final int messageMaxBytes = 5242880;
-	private final Vertx vertx;
-	private final String endpoint;
 	private final HttpClient client;
+	private final String endpoint;
+	private Vertx vertx;
 
 	public HttpSender(HttpSenderOptions options) {
-		this.endpoint = options.getEndpoint();
-		this.vertx = Vertx.vertx(vertxOptions());
+		this(options, null);
+	}
+
+	public HttpSender(HttpSenderOptions options, Vertx vertx) {
+		if (vertx == null) {
+			vertx = Vertx.vertx(vertxOptions());
+			this.vertx = vertx;
+		}
 		this.client = vertx.createHttpClient(options);
+		this.endpoint = options.getEndpoint();
 	}
 
 	private VertxOptions vertxOptions() {
@@ -157,7 +164,9 @@ public class HttpSender extends Sender {
 	@Override
 	public void close() throws IOException {
 		client.close();
-		vertx.close();
+		if (vertx != null) {
+			vertx.close();
+		}
 	}
 
 	@Override

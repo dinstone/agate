@@ -18,8 +18,10 @@ package com.dinstone.agate.gateway.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
+import com.dinstone.agate.tracing.HttpClientTracing;
 
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpServerResponse;
@@ -44,7 +46,9 @@ public class ResultReplyHandler implements AfterHandler {
 
 	@Override
 	public void handle(RoutingContext rc) {
-		HttpClientResponse beResponse = rc.get("backend.response");
+		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
+		HttpClientTracing beTracing = rc.get(ContextConstants.BACKEND_TRACING);
+
 		HttpServerResponse feResponse = rc.response();
 		feResponse.setStatusCode(beResponse.statusCode());
 		feResponse.headers().addAll(beResponse.headers());
@@ -52,14 +56,20 @@ public class ResultReplyHandler implements AfterHandler {
 		Pump be2fePump = Pump.pump(beResponse, feResponse).start();
 		beResponse.exceptionHandler(e -> {
 			LOG.error("backend response is error", e);
-			be2fePump.stop();
+			if (beTracing != null) {
+				beTracing.failure(e);
+			}
 
+			be2fePump.stop();
 			rc.fail(503, new RuntimeException("backend response is error", e));
 		}).endHandler(v -> {
 			try {
+				if (beTracing != null) {
+					beTracing.success(beResponse);
+				}
 				feResponse.end();
 			} catch (Exception e) {
-				LOG.error("route backend service error", e);
+				LOG.warn("route backend service error", e);
 			}
 		});
 	}

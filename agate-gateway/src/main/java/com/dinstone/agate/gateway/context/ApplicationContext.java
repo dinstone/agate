@@ -15,13 +15,21 @@
  */
 package com.dinstone.agate.gateway.context;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.deploy.Deployment;
+import com.dinstone.agate.tracing.ZipkinTracer;
 
+import brave.Tracing;
+import brave.sampler.Sampler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClientOptions;
+import io.vertx.tracing.zipkin.HttpSender;
+import io.vertx.tracing.zipkin.ZipkinTracingOptions;
+import zipkin2.reporter.AsyncReporter;
 
 public class ApplicationContext {
 
@@ -34,6 +42,8 @@ public class ApplicationContext {
 	private String clusterId;
 
 	private Deployment deployment;
+
+	private ZipkinTracer zipkinTracer;
 
 	private ConsulClientOptions consulOptions;
 
@@ -57,14 +67,51 @@ public class ApplicationContext {
 			consulOptions = new ConsulClientOptions();
 		}
 
+		Tracing tracing = Tracing.current();
+		if (tracing == null) {
+			JsonObject tracingJson = config.getJsonObject("tracing");
+			ZipkinTracingOptions zipkinOptions = tracingOptions(tracingJson);
+			HttpSender sender = new HttpSender(zipkinOptions.getSenderOptions());
+			tracing = Tracing.newBuilder().localServiceName(zipkinOptions.getServiceName())
+					.spanReporter(AsyncReporter.builder(sender).build())
+					.sampler(Sampler.create(zipkinOptions.getProbability())).build();
+			zipkinTracer = new ZipkinTracer(tracing) {
+				@Override
+				public void destroy() {
+					super.destroy();
+					try {
+						sender.close();
+					} catch (IOException e) {
+						// ignore
+					}
+				}
+			};
+		} else {
+			zipkinTracer = new ZipkinTracer(tracing);
+		}
+
 		// deployment
 		deployment = new Deployment(clusterId);
 
 		LOG.debug("init application context ended");
 	}
 
+	private ZipkinTracingOptions tracingOptions(JsonObject tracingConfig) {
+		ZipkinTracingOptions options;
+		if (tracingConfig != null) {
+			options = new ZipkinTracingOptions(tracingConfig);
+		} else {
+			options = new ZipkinTracingOptions("agate-gateway");
+		}
+		if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
+			options.setServiceName("agate-gateway");
+		}
+		return options;
+	}
+
 	public void destroy() {
 		deployment.destroy();
+		zipkinTracer.destroy();
 	}
 
 	public JsonObject getConfig() {
@@ -77,6 +124,10 @@ public class ApplicationContext {
 
 	public String getClusterId() {
 		return clusterId;
+	}
+
+	public ZipkinTracer getZipkinTracer() {
+		return zipkinTracer;
 	}
 
 	public ConsulClientOptions getConsulOptions() {
