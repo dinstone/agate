@@ -15,7 +15,7 @@ public class HttpClientTest {
 		HttpClientOptions options = new HttpClientOptions().setMaxPoolSize(1).setMaxWaitQueueSize(2);
 		HttpClient client = vertx.createHttpClient(options);
 
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 6; i++) {
 			new Thread() {
 				public void run() {
 					client.getAbs("http://localhost:8081/hr/a", ar -> {
