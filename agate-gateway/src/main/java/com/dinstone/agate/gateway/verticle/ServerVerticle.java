@@ -25,6 +25,7 @@ import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
 import com.dinstone.agate.gateway.handler.BraveTracingHandler;
+import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
@@ -35,6 +36,7 @@ import com.dinstone.agate.gateway.options.AppOptions;
 import com.dinstone.agate.gateway.options.FrontendOptions;
 import com.dinstone.agate.tracing.ZipkinTracer;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -49,6 +51,7 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.vertx.micrometer.backends.BackendRegistries;
 
 /**
  * the server is APP runtime, it proxy API to backend service.
@@ -173,8 +176,14 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 				}
 
 				// before handler: tracing handler
-				route.handler(new BraveTracingHandler(api, zipkinTracer));
-
+				if (zipkinTracer != null) {
+					route.handler(new BraveTracingHandler(api, zipkinTracer));
+				}
+				// before handler: metrics handler
+				MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
+				if (meterRegistry != null) {
+					route.handler(new MeterMetricsHandler(api, meterRegistry));
+				}
 				// before handler : rate limit handler
 				if (api.getRateLimit() != null) {
 					route.handler(new RateLimitHandler(api));
