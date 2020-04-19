@@ -27,14 +27,15 @@ import io.vertx.ext.web.RoutingContext;
 public class RestfulFailureHandler implements FailureHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
 
+	private ApiOptions api;
+
 	public RestfulFailureHandler(ApiOptions api) {
+		this.api = api;
 	}
 
 	@Override
 	public void handle(RoutingContext rc) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("request {} error: {}", rc.request().uri(), rc.failure());
-		}
+		LOG.error("request [{}]-[{}] error: {}", api.getApiName(), rc.request().path(), rc.failure());
 
 		int statusCode = rc.statusCode();
 		if (statusCode == -1) {

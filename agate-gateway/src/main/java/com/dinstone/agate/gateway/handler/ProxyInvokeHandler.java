@@ -15,12 +15,10 @@
  */
 package com.dinstone.agate.gateway.handler;
 
-import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +74,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 		try {
 			routing(rc);
 		} catch (Exception e) {
-			LOG.error("route backend service error", e);
-			rc.fail(500, new RuntimeException("route backend service error", e));
+			rc.fail(500, new RuntimeException("route handle error: " + e.getMessage(), e));
 		}
 	}
 
@@ -162,24 +159,12 @@ public class ProxyInvokeHandler implements RouteHandler {
 	}
 
 	private void common(RoutingContext rc, HttpClientRequest beRequest) {
-		// exception handler
-		beRequest.exceptionHandler(error -> {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("request backend service error", error);
-			}
-			if (error instanceof ConnectException || error instanceof TimeoutException) {
-				rc.fail(503, new RuntimeException("backend service unavailable", error));
-			} else {
-				rc.fail(500, new RuntimeException("request backend service error", error));
-			}
-		});
 		// response handler
 		beRequest.setHandler(ar -> {
 			if (ar.succeeded()) {
 				rc.put(ContextConstants.BACKEND_RESPONSE, ar.result()).next();
 			} else {
-				LOG.error("backend response is error", ar.cause());
-				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
+				rc.fail(503, ar.cause());
 			}
 		});
 	}
@@ -188,18 +173,6 @@ public class ProxyInvokeHandler implements RouteHandler {
 		// tracing
 		HttpClientTracing tracing = zipkinTracer.httpClientTracing().start(beRequest);
 		tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
-		// exception handler
-		beRequest.exceptionHandler(error -> {
-			tracing.failure(error);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("request backend service error", error);
-			}
-			if (error instanceof ConnectException || error instanceof TimeoutException) {
-				rc.fail(503, new RuntimeException("backend service unavailable", error));
-			} else {
-				rc.fail(500, new RuntimeException("request backend service error", error));
-			}
-		});
 		// response handler
 		beRequest.setHandler(ar -> {
 			if (ar.succeeded()) {
@@ -208,8 +181,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 				rc.next();
 			} else {
 				tracing.failure(ar.cause());
-				LOG.error("backend response is error", ar.cause());
-				rc.fail(503, new RuntimeException("backend response is error", ar.cause()));
+				rc.fail(503, ar.cause());
 			}
 		});
 	}

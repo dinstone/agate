@@ -103,6 +103,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 		if (clientOptions == null) {
 			clientOptions = new HttpClientOptions();
 		}
+		clientOptions.setConnectTimeout(3000).setIdleTimeout(10).setMaxPoolSize(5).setMaxWaitQueueSize(5);
 
 		zipkinTracer = applicationContext.getZipkinTracer();
 	}
