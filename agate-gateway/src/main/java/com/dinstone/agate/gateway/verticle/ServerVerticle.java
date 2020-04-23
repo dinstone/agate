@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
-import com.dinstone.agate.gateway.handler.BraveTracingHandler;
+import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
 import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
@@ -178,7 +178,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
 				// before handler: tracing handler
 				if (zipkinTracer != null) {
-					route.handler(new BraveTracingHandler(api, zipkinTracer));
+					route.handler(new ZipkinTracingHandler(api, zipkinTracer));
 				}
 				// before handler: metrics handler
 				MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
@@ -248,6 +248,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 		applicationContext.getDeployment().get(appName).remove(this);
 	}
 
+	@SuppressWarnings("unused")
 	private SessionHandler sessionHandler() {
 		return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
 				.setNagHttps(false);
@@ -255,7 +256,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
 	private Router createHttpServerRouter() {
 		Router mainRouter = Router.router(vertx);
-		mainRouter.route().handler(new AccessLogHandler()).handler(sessionHandler());
+		mainRouter.route().handler(new AccessLogHandler());
 		return mainRouter;
 	}
 

@@ -8,13 +8,13 @@ import com.dinstone.agate.tracing.ZipkinTracer;
 import brave.propagation.CurrentTraceContext.Scope;
 import io.vertx.ext.web.RoutingContext;
 
-public class BraveTracingHandler implements BeforeHandler {
+public class ZipkinTracingHandler implements BeforeHandler {
 
 	private ApiOptions apiOptions;
 
 	private ZipkinTracer zipkinTracer;
 
-	public BraveTracingHandler(ApiOptions apiOptions, ZipkinTracer zipkinTracer) {
+	public ZipkinTracingHandler(ApiOptions apiOptions, ZipkinTracer zipkinTracer) {
 		this.apiOptions = apiOptions;
 		this.zipkinTracer = zipkinTracer;
 	}
