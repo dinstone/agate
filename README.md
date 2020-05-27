@@ -21,3 +21,6 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 
 # System Architecture
 ![System Architecture](https://github.com/dinstone/agate/wiki/imgs/arch00.png)
+
+# System Implement
+goto wiki https://github.com/dinstone/agate/wiki

@@ -54,6 +54,10 @@ public class LaunchVerticle extends AbstractVerticle {
 
 	@Override
 	public void stop() throws Exception {
+		destroy();
+	}
+
+	private void destroy() {
 		if (appWatch != null) {
 			appWatch.stop();
 		}
@@ -72,13 +76,20 @@ public class LaunchVerticle extends AbstractVerticle {
 
 		// system verticle
 		DeploymentOptions svdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
-		Future<String> svfuture = deploy(AgateVerticleFactory.appendPrefix(SystemVerticle.class), svdOptions);
+		Future<String> svFuture = deploy(AgateVerticleFactory.appendPrefix(SystemVerticle.class), svdOptions);
 
 		// deploy verticle
 		DeploymentOptions dvdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
 		Future<String> dvFuture = deploy(AgateVerticleFactory.appendPrefix(DeployVerticle.class), dvdOptions);
 
-		CompositeFuture.all(svfuture, dvFuture).compose(f -> manage()).compose(cf -> load()).setHandler(startPromise);
+		CompositeFuture.all(svFuture, dvFuture).compose(f -> manage()).compose(cf -> load()).setHandler(p -> {
+			if (p.succeeded()) {
+				startPromise.complete();
+			} else {
+				destroy();
+				startPromise.fail(p.cause());
+			}
+		});
 	}
 
 	private Future<String> manage() {
