@@ -50,7 +50,34 @@ public class LaunchVerticle extends AbstractVerticle {
 	private static final Logger LOG = LoggerFactory.getLogger(LaunchVerticle.class);
 
 	private ApplicationContext appContext;
-	private Watch<KeyValueList> appWatch;
+	private Watch<KeyValueList> appsWatch;
+
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		// init application context
+		JsonObject config = config();
+		appContext = new ApplicationContext(config);
+
+		// regist verticle factory
+		vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
+
+		// system verticle
+		DeploymentOptions svdOptions = new DeploymentOptions().setConfig(config).setInstances(1);
+		Future<String> svf = deploy(AgateVerticleFactory.verticleName(SystemVerticle.class), svdOptions);
+
+		// deploy verticle
+		DeploymentOptions dvdOptions = new DeploymentOptions().setConfig(config).setInstances(1);
+		Future<String> dvf = deploy(AgateVerticleFactory.verticleName(DeployVerticle.class), dvdOptions);
+
+		CompositeFuture.all(svf, dvf).compose(f -> manage()).compose(f -> watch()).onComplete(ar -> {
+			if (ar.succeeded()) {
+				startPromise.complete();
+			} else {
+				destroy();
+				startPromise.fail(ar.cause());
+			}
+		});
+	}
 
 	@Override
 	public void stop() throws Exception {
@@ -58,53 +85,33 @@ public class LaunchVerticle extends AbstractVerticle {
 	}
 
 	private void destroy() {
-		if (appWatch != null) {
-			appWatch.stop();
+		if (appsWatch != null) {
+			appsWatch.stop();
 		}
 		if (appContext != null) {
 			appContext.destroy();
 		}
 	}
 
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-		// init application context
-		appContext = new ApplicationContext(config());
-
-		// regist verticle factory
-		vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
-
-		// system verticle
-		DeploymentOptions svdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
-		Future<String> svFuture = deploy(AgateVerticleFactory.appendPrefix(SystemVerticle.class), svdOptions);
-
-		// deploy verticle
-		DeploymentOptions dvdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
-		Future<String> dvFuture = deploy(AgateVerticleFactory.appendPrefix(DeployVerticle.class), dvdOptions);
-
-		CompositeFuture.all(svFuture, dvFuture).compose(f -> manage()).compose(cf -> load()).setHandler(p -> {
-			if (p.succeeded()) {
-				startPromise.complete();
-			} else {
-				destroy();
-				startPromise.fail(p.cause());
-			}
+	private Future<String> deploy(String verticleName, DeploymentOptions deployOptions) {
+		return Future.future(promise -> {
+			vertx.deployVerticle(verticleName, deployOptions, promise);
 		});
 	}
 
 	private Future<String> manage() {
 		DeploymentOptions mvdOptions = new DeploymentOptions().setConfig(config()).setInstances(1);
-		return deploy(AgateVerticleFactory.appendPrefix(ManageVerticle.class), mvdOptions);
+		return deploy(AgateVerticleFactory.verticleName(ManageVerticle.class), mvdOptions);
 	}
 
 	/**
-	 * load api config and deploy
+	 * Watch api config and deploy
 	 * 
 	 * @return
 	 */
-	private Future<Void> load() {
+	private Future<Void> watch() {
 		return Future.future(p -> {
-			appWatch = Watch.keyPrefix("agate/apps/" + appContext.getClusterId(), vertx,
+			appsWatch = Watch.keyPrefix("agate/apps/" + appContext.getClusterId(), vertx,
 					new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
 						try {
 							watchEventHandle(ar);
@@ -188,13 +195,6 @@ public class LaunchVerticle extends AbstractVerticle {
 			} catch (Exception e) {
 				LOG.warn("app message is error", e);
 			}
-		});
-
-	}
-
-	private Future<String> deploy(String verticleName, DeploymentOptions deployOptions) {
-		return Future.future(promise -> {
-			vertx.deployVerticle(verticleName, deployOptions, promise);
 		});
 	}
 

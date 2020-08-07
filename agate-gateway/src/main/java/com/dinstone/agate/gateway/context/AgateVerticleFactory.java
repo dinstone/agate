@@ -35,7 +35,7 @@ public class AgateVerticleFactory implements VerticleFactory {
         this.context = context;
     }
 
-    public static String appendPrefix(Class<?> clazz) {
+    public static String verticleName(Class<?> clazz) {
         return AGATE_PREFIX + ":" + clazz.getName();
     }
 

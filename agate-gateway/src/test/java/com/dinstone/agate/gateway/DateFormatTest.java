@@ -22,8 +22,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
-import io.vertx.ext.web.impl.Utils;
-
 public class DateFormatTest {
 	public static void main(String[] args) {
 		long timestamp = new Date().getTime();

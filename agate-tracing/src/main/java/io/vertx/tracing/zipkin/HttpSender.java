@@ -12,8 +12,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.RequestOptions;
 import zipkin2.Call;
 import zipkin2.Callback;
 import zipkin2.codec.Encoding;
@@ -126,19 +126,15 @@ public class HttpSender extends Sender {
 		}
 
 		private void asyncSend(Callback<Void> callback) {
-			HttpClientRequest post;
-			if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-				post = client.postAbs(endpoint);
-			} else {
-				post = client.post(endpoint);
-			}
-			post.putHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON).setTimeout(20000).setHandler(ar -> {
+			RequestOptions options = new RequestOptions().setAbsoluteURI(endpoint)
+					.addHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON).setTimeout(20000);
+			client.post(options, body, ar -> {
 				if (ar.succeeded()) {
 					callback.onSuccess(null);
 				} else {
 					callback.onError(ar.cause());
 				}
-			}).end(body);
+			});
 		}
 
 		@Override

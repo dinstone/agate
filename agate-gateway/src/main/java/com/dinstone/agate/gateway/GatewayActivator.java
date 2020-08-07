@@ -18,32 +18,34 @@ package com.dinstone.agate.gateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.verticle.LaunchVerticle;
+
 public class GatewayActivator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GatewayActivator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GatewayActivator.class);
 
-    public static void main(String[] args) {
-        // launch application activator
-        GatewayActivator activator = new GatewayActivator();
-        try {
-            long s = System.currentTimeMillis();
-            activator.start();
-            long e = System.currentTimeMillis();
-            LOG.info("application startup in {} ms.", (e - s));
-        } catch (Exception e) {
-            LOG.error("application startup error.", e);
-            activator.stop();
+	public static void main(String[] args) {
+		// launch application activator
+		GatewayActivator activator = new GatewayActivator();
+		try {
+			long s = System.currentTimeMillis();
+			activator.start();
+			long e = System.currentTimeMillis();
+			LOG.info("application startup in {} ms.", (e - s));
+		} catch (Exception e) {
+			LOG.error("application startup error.", e);
+			activator.stop();
 
-            System.exit(-1);
-        }
-    }
+			System.exit(-1);
+		}
+	}
 
-    public void start() throws Exception {
-        GatewayLauncher.main(new String[] { "run", "com.dinstone.agate.gateway.verticle.LaunchVerticle" });
-    }
+	public void start() throws Exception {
+		GatewayLauncher.main(new String[] { "run", LaunchVerticle.class.getName() });
+	}
 
-    public void stop() {
-        GatewayLauncher.main(new String[] { "stop", "com.dinstone.agate.gateway.verticle.LaunchVerticle" });
-    }
+	public void stop() {
+		GatewayLauncher.main(new String[] { "stop", LaunchVerticle.class.getName() });
+	}
 
 }

@@ -29,67 +29,67 @@ import io.vertx.core.spi.VerticleFactory;
 
 public final class VertxUtil {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VertxUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(VertxUtil.class);
 
-    public static Vertx createVertx(VertxOptions vertxOptions) throws Exception {
-        CompletableFuture<Vertx> future = new CompletableFuture<>();
-        if (vertxOptions.getEventBusOptions().isClustered()) {
-            Vertx.clusteredVertx(vertxOptions, asyncResult -> {
-                if (asyncResult.succeeded()) {
-                    future.complete(asyncResult.result());
-                } else {
-                    future.completeExceptionally(asyncResult.cause());
-                }
-            });
-        } else {
-            future.complete(Vertx.vertx(vertxOptions));
-        }
+	public static Vertx createVertx(VertxOptions vertxOptions) throws Exception {
+		CompletableFuture<Vertx> future = new CompletableFuture<>();
+		if (vertxOptions.getEventBusOptions() != null) {
+			Vertx.clusteredVertx(vertxOptions, asyncResult -> {
+				if (asyncResult.succeeded()) {
+					future.complete(asyncResult.result());
+				} else {
+					future.completeExceptionally(asyncResult.cause());
+				}
+			});
+		} else {
+			future.complete(Vertx.vertx(vertxOptions));
+		}
 
-        return future.get();
-    }
+		return future.get();
+	}
 
-    public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, Verticle verticle)
-            throws Exception {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        vertx.deployVerticle(verticle, deployOptions, deployResponse -> {
-            if (deployResponse.succeeded()) {
-                LOG.info("verticle deployment is succeeded, {}:{}", verticle.getClass().getName(),
-                        deployResponse.result());
-                future.complete(deployResponse.result());
-            } else {
-                LOG.error("verticle deployment is failed, {}:{}", verticle.getClass().getName(),
-                        deployResponse.cause());
-                future.completeExceptionally(deployResponse.cause());
-            }
-        });
+	public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, Verticle verticle)
+			throws Exception {
+		CompletableFuture<String> future = new CompletableFuture<>();
+		vertx.deployVerticle(verticle, deployOptions, deployResponse -> {
+			if (deployResponse.succeeded()) {
+				LOG.info("verticle deployment is succeeded, {}:{}", verticle.getClass().getName(),
+						deployResponse.result());
+				future.complete(deployResponse.result());
+			} else {
+				LOG.error("verticle deployment is failed, {}:{}", verticle.getClass().getName(),
+						deployResponse.cause());
+				future.completeExceptionally(deployResponse.cause());
+			}
+		});
 
-        return future.get();
-    }
+		return future.get();
+	}
 
-    public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, String verticleName)
-            throws Exception {
-        return deployVerticle(vertx, deployOptions, null, verticleName);
-    }
+	public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, String verticleName)
+			throws Exception {
+		return deployVerticle(vertx, deployOptions, null, verticleName);
+	}
 
-    public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, VerticleFactory factory,
-            String verticleName) throws Exception {
-        Set<VerticleFactory> factories = vertx.verticleFactories();
-        if (factory != null && !factories.contains(factory)) {
-            vertx.registerVerticleFactory(factory);
-        }
+	public static String deployVerticle(Vertx vertx, DeploymentOptions deployOptions, VerticleFactory factory,
+			String verticleName) throws Exception {
+		Set<VerticleFactory> factories = vertx.verticleFactories();
+		if (factory != null && !factories.contains(factory)) {
+			vertx.registerVerticleFactory(factory);
+		}
 
-        CompletableFuture<String> future = new CompletableFuture<>();
-        vertx.deployVerticle(verticleName, deployOptions, deployResponse -> {
-            if (deployResponse.succeeded()) {
-                LOG.info("verticle deployment is succeeded, {}:{}", verticleName, deployResponse.result());
-                future.complete(deployResponse.result());
-            } else {
-                LOG.error("verticle deployment is failed, {}:{}", verticleName, deployResponse.cause());
-                future.completeExceptionally(deployResponse.cause());
-            }
-        });
+		CompletableFuture<String> future = new CompletableFuture<>();
+		vertx.deployVerticle(verticleName, deployOptions, deployResponse -> {
+			if (deployResponse.succeeded()) {
+				LOG.info("verticle deployment is succeeded, {}:{}", verticleName, deployResponse.result());
+				future.complete(deployResponse.result());
+			} else {
+				LOG.error("verticle deployment is failed, {}:{}", verticleName, deployResponse.cause());
+				future.completeExceptionally(deployResponse.cause());
+			}
+		});
 
-        return future.get();
-    }
+		return future.get();
+	}
 
 }

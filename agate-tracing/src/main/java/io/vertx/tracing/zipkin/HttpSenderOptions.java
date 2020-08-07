@@ -268,16 +268,6 @@ public class HttpSenderOptions extends HttpClientOptions {
 	}
 
 	@Override
-	public HttpSenderOptions setMaxWebsocketFrameSize(int maxWebsocketFrameSize) {
-		return (HttpSenderOptions) super.setMaxWebsocketFrameSize(maxWebsocketFrameSize);
-	}
-
-	@Override
-	public HttpSenderOptions setMaxWebsocketMessageSize(int maxWebsocketMessageSize) {
-		return (HttpSenderOptions) super.setMaxWebsocketMessageSize(maxWebsocketMessageSize);
-	}
-
-	@Override
 	public HttpSenderOptions setDefaultHost(String defaultHost) {
 		return (HttpSenderOptions) super.setDefaultHost(defaultHost);
 	}
@@ -375,31 +365,6 @@ public class HttpSenderOptions extends HttpClientOptions {
 	@Override
 	public HttpSenderOptions setLogActivity(boolean logEnabled) {
 		return (HttpSenderOptions) super.setLogActivity(logEnabled);
-	}
-
-	@Override
-	public HttpSenderOptions setTryUsePerFrameWebsocketCompression(boolean offer) {
-		return (HttpSenderOptions) super.setTryUsePerFrameWebsocketCompression(offer);
-	}
-
-	@Override
-	public HttpSenderOptions setTryUsePerMessageWebsocketCompression(boolean offer) {
-		return (HttpSenderOptions) super.setTryUsePerMessageWebsocketCompression(offer);
-	}
-
-	@Override
-	public HttpSenderOptions setWebsocketCompressionLevel(int compressionLevel) {
-		return (HttpSenderOptions) super.setWebsocketCompressionLevel(compressionLevel);
-	}
-
-	@Override
-	public HttpSenderOptions setWebsocketCompressionAllowClientNoContext(boolean offer) {
-		return (HttpSenderOptions) super.setWebsocketCompressionAllowClientNoContext(offer);
-	}
-
-	@Override
-	public HttpSenderOptions setWebsocketCompressionRequestServerNoContext(boolean offer) {
-		return (HttpSenderOptions) super.setWebsocketCompressionRequestServerNoContext(offer);
 	}
 
 	@Override

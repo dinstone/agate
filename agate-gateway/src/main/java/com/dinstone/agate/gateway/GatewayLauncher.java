@@ -72,9 +72,6 @@ public class GatewayLauncher extends Launcher {
 		// native transport
 		vertxOptions.setPreferNativeTransport(true);
 
-		// cluster is disabled
-		vertxOptions.getEventBusOptions().setClustered(false);
-
 		JsonObject vertxConfig = config.getJsonObject("vertx", new JsonObject());
 		int blockedThreadCheckInterval = vertxConfig.getInteger("blockedThreadCheckInterval", -1);
 		if (blockedThreadCheckInterval > 0) {

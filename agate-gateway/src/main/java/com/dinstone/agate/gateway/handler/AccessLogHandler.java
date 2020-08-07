@@ -78,7 +78,14 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 
 		String message = null;
 		switch (format) {
-		case DEFAULT:
+		case SHORT:
+			message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri, versionCode,
+					status, contentLength, costTime);
+			break;
+		case TINY:
+			message = String.format("[%s] %s %s %d %d - %d", accessTime, method, uri, status, contentLength, costTime);
+			break;
+		default:
 			final MultiMap headers = context.request().headers();
 			// as per RFC1945 the header is referer but it is not mandatory some
 			// implementations use referrer
@@ -90,13 +97,6 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 
 			message = String.format("%s - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" - %d", remoteClient, accessTime, method,
 					uri, versionCode, status, contentLength, referrer, userAgent, costTime);
-			break;
-		case SHORT:
-			message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri, versionCode,
-					status, contentLength, costTime);
-			break;
-		case TINY:
-			message = String.format("[%s] %s %s %d %d - %d", accessTime, method, uri, status, contentLength, costTime);
 			break;
 		}
 		doLog(status, message);

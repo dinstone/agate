@@ -108,7 +108,7 @@ public class ManageVerticle extends AbstractVerticle {
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
 		Future.<HttpServer>future(promise -> launch(promise)).compose(server -> regist(server))
-				.setHandler(startPromise);
+				.onComplete(startPromise);
 	}
 
 	@Override

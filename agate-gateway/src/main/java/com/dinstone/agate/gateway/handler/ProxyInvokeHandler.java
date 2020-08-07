@@ -39,6 +39,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
 
@@ -126,23 +127,30 @@ public class ProxyInvokeHandler implements RouteHandler {
 		}
 
 		// create backend request
-		HttpClientRequest beRequest = httpClient.requestAbs(method(feRequest.method()), requestUrl);
+		RequestOptions options = new RequestOptions();
+		// set url
+		options.setAbsoluteURI(requestUrl);
+		// set method
+		options.setMethod(method(feRequest.method()));
+		// set timeout
+		if (backendOptions.getTimeout() > 0) {
+			options.setTimeout(backendOptions.getTimeout());
+		}
 		// set headers
-		beRequest.headers().addAll(feRequest.headers());
+		options.setHeaders(feRequest.headers());
 		if (headerParams.size() > 0) {
 			for (Entry<String, String> e : headerParams) {
-				beRequest.headers().set(e.getKey(), e.getValue());
+				options.addHeader(e.getKey(), e.getValue());
 			}
 		}
+		// create http request
+		HttpClientRequest beRequest = httpClient.request(options);
 		if (zipkinTracer != null) {
 			trace(rc, beRequest);
 		} else {
 			common(rc, beRequest);
 		}
-		// timeout
-		if (backendOptions.getTimeout() > 0) {
-			beRequest.setTimeout(backendOptions.getTimeout());
-		}
+
 		// transport body and send request
 		if (HttpUtil.hasBody(beRequest.method())) {
 			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
@@ -160,7 +168,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 
 	private void common(RoutingContext rc, HttpClientRequest beRequest) {
 		// response handler
-		beRequest.setHandler(ar -> {
+		beRequest.onComplete(ar -> {
 			if (ar.succeeded()) {
 				rc.put(ContextConstants.BACKEND_RESPONSE, ar.result()).next();
 			} else {
@@ -174,7 +182,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 		HttpClientTracing tracing = zipkinTracer.httpClientTracing().start(beRequest);
 		tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
 		// response handler
-		beRequest.setHandler(ar -> {
+		beRequest.onComplete(ar -> {
 			if (ar.succeeded()) {
 				rc.put(ContextConstants.BACKEND_TRACING, tracing);
 				rc.put(ContextConstants.BACKEND_RESPONSE, ar.result());

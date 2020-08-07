@@ -20,8 +20,7 @@ public class VertxUnitTest {
 
 	@Before
 	public void before() {
-		VertxOptions options = new VertxOptions()
-				.setTracingOptions(new ZipkinTracingOptions("agate-test").setEnabled(true));
+		VertxOptions options = new VertxOptions().setTracingOptions(new ZipkinTracingOptions("agate-test"));
 		vertx = Vertx.vertx(options);
 	}
 
@@ -51,12 +50,12 @@ public class VertxUnitTest {
 		client.get(9191, "localhost", "/zipkin/", ar -> {
 			if (ar.succeeded()) {
 				HttpClientResponse response = ar.result();
-				response.body().setHandler(b -> {
-					System.out.println(b.toString());
+				response.body().onComplete(rar -> {
+					System.out.println(rar.result().toString());
 				});
 			}
 			cw.complete();
-		}).end();
+		});
 		cw.awaitSuccess();
 	}
 

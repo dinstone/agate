@@ -31,8 +31,8 @@ public class ZipkinTracerTest {
 	@Before
 	public void before() {
 		String url = zipkin.httpUrl() + "/api/v2/spans";
-		vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new ZipkinTracingOptions("agate-test")
-				.setSenderOptions(new HttpSenderOptions().setEndpoint(url)).setEnabled(true)));
+		vertx = Vertx.vertx(new VertxOptions().setTracingOptions(
+				new ZipkinTracingOptions("agate-test").setSenderOptions(new HttpSenderOptions().setEndpoint(url))));
 		client = vertx.createHttpClient();
 	}
 
@@ -69,7 +69,7 @@ public class ZipkinTracerTest {
 		Async responseLatch = ctx.async();
 		client.get(8080, "127.0.0.1", "/url", ar -> {
 			responseLatch.complete();
-		}).end();
+		});
 		responseLatch.awaitSuccess();
 
 		List<Span> trace = waitUntilTrace(zipkin, 2);
@@ -82,8 +82,9 @@ public class ZipkinTracerTest {
 		vertx.createHttpServer().requestHandler(req -> {
 			HttpClient c = vertx.createHttpClient();
 			c.get(8081, "localhost", "/s2s", ar -> {
+				System.out.println("testHttpClientRequest is "+ar.succeeded());
 				req.response().end();
-			}).end();
+			});
 		}).listen(8080, ar -> {
 			ctx.assertTrue(ar.succeeded(), "Could not bind on port 8080");
 			listenLatch.countDown();
@@ -100,7 +101,7 @@ public class ZipkinTracerTest {
 		Async responseLatch = ctx.async();
 		client.get(8080, "localhost", "/c2s", ar -> {
 			responseLatch.complete();
-		}).end();
+		});
 		responseLatch.awaitSuccess();
 
 		List<Span> trace = waitUntilTrace(4);

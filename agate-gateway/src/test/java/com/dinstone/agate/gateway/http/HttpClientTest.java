@@ -18,14 +18,14 @@ public class HttpClientTest {
 		for (int i = 0; i < 6; i++) {
 			new Thread() {
 				public void run() {
-					client.getAbs("http://localhost:8081/hr/a", ar -> {
+					client.get("http://localhost:8081/hr/a", ar -> {
 						if (ar.succeeded()) {
 							HttpClientResponse response = ar.result();
 							System.out.println(response.getHeader(HttpHeaders.CONTENT_LENGTH));
 						} else {
 							System.out.println(Thread.currentThread().getName() + ": error is " + ar.cause());
 						}
-					}).end();
+					});
 				};
 			}.start();
 		}

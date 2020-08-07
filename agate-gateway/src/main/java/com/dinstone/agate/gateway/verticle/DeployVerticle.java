@@ -105,7 +105,7 @@ public class DeployVerticle extends AbstractVerticle {
 
 		int instances = config().getInteger("instances", Runtime.getRuntime().availableProcessors());
 		DeploymentOptions options = new DeploymentOptions().setConfig(message.body()).setInstances(instances);
-		vertx.deployVerticle(AgateVerticleFactory.appendPrefix(ServerVerticle.class), options, ar -> {
+		vertx.deployVerticle(AgateVerticleFactory.verticleName(ServerVerticle.class), options, ar -> {
 			if (ar.succeeded()) {
 				deployment.get(appName).setDeployId(ar.result());
 				registApiWatch(appName);
@@ -257,7 +257,7 @@ public class DeployVerticle extends AbstractVerticle {
 		for (Deployer deployer : appDeploy.getApiDeployers()) {
 			futures.add(deployer.deployApi(api));
 		}
-		CompositeFuture.all(futures).setHandler(ar -> {
+		CompositeFuture.all(futures).onComplete(ar -> {
 			if (ar.succeeded()) {
 				LOG.info("deploy api success {}", api.getApiName());
 
@@ -293,7 +293,7 @@ public class DeployVerticle extends AbstractVerticle {
 		for (Deployer deployer : appDeploy.getApiDeployers()) {
 			futures.add(deployer.removeApi(api));
 		}
-		CompositeFuture.all(futures).setHandler(ar -> {
+		CompositeFuture.all(futures).onComplete(ar -> {
 			if (ar.succeeded()) {
 				LOG.info("remove api success {}", api.getApiName());
 
