@@ -32,12 +32,12 @@ public class RestfulUtil {
 		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
 	}
 
-	public static void failed(RoutingContext ctx, String message) {
+	public static void failure(RoutingContext ctx, String message) {
 		JsonObject json = new JsonObject().put("status", "-1").put("message", message);
 		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
 	}
 
-	public static void failed(RoutingContext ctx, Throwable throwable) {
+	public static void failure(RoutingContext ctx, Throwable throwable) {
 		JsonObject json = new JsonObject().put("status", "-1").put("message", getMessage(throwable));
 		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
 	}

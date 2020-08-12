@@ -205,11 +205,11 @@ public class ManageVerticle extends AbstractVerticle {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc);
 				} else {
-					RestfulUtil.failed(rc, ar.cause());
+					RestfulUtil.failure(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			RestfulUtil.failed(rc, e);
+			RestfulUtil.failure(rc, e);
 		}
 	}
 
@@ -219,11 +219,11 @@ public class ManageVerticle extends AbstractVerticle {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc);
 				} else {
-					RestfulUtil.failed(rc, ar.cause());
+					RestfulUtil.failure(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			RestfulUtil.failed(rc, e);
+			RestfulUtil.failure(rc, e);
 		}
 	}
 
@@ -234,11 +234,11 @@ public class ManageVerticle extends AbstractVerticle {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc);
 				} else {
-					RestfulUtil.failed(rc, ar.cause());
+					RestfulUtil.failure(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			RestfulUtil.failed(rc, e);
+			RestfulUtil.failure(rc, e);
 		}
 	}
 
@@ -249,11 +249,11 @@ public class ManageVerticle extends AbstractVerticle {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc);
 				} else {
-					RestfulUtil.failed(rc, ar.cause());
+					RestfulUtil.failure(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			RestfulUtil.failed(rc, e);
+			RestfulUtil.failure(rc, e);
 		}
 	}
 
@@ -261,18 +261,18 @@ public class ManageVerticle extends AbstractVerticle {
 		try {
 			String message = rc.request().getParam("mn");
 			if (message == null) {
-				RestfulUtil.failed(rc, "mn is null");
+				RestfulUtil.failure(rc, "mn is null");
 				return;
 			}
 			vertx.eventBus().request(AddressConstant.APM_METRICS, message, ar -> {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc, ar.result().body());
 				} else {
-					RestfulUtil.failed(rc, ar.cause());
+					RestfulUtil.failure(rc, ar.cause());
 				}
 			});
 		} catch (Exception e) {
-			RestfulUtil.failed(rc, e);
+			RestfulUtil.failure(rc, e);
 		}
 	}
 
