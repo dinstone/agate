@@ -144,26 +144,32 @@ public class ProxyInvokeHandler implements RouteHandler {
 			}
 		}
 		// create http request
-		HttpClientRequest beRequest = httpClient.request(options);
-		if (zipkinTracer != null) {
-			trace(rc, beRequest);
-		} else {
-			common(rc, beRequest);
-		}
+		httpClient.request(options).onComplete(ar -> {
+			if (ar.succeeded()) {
+				HttpClientRequest beRequest = ar.result();
+				if (zipkinTracer != null) {
+					trace(rc, beRequest);
+				} else {
+					common(rc, beRequest);
+				}
 
-		// transport body and send request
-		if (HttpUtil.hasBody(beRequest.method())) {
-			Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
-			feRequest.exceptionHandler(e -> {
-				LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
-				fe2bePump.stop();
-				beRequest.end();
-			}).endHandler(v -> {
-				beRequest.end();
-			});
-		} else {
-			beRequest.end();
-		}
+				// transport body and send request
+				if (HttpUtil.hasBody(beRequest.getMethod())) {
+					Pump fe2bePump = Pump.pump(feRequest, beRequest).start();
+					feRequest.exceptionHandler(e -> {
+						LOG.error("API:" + apiOptions.getApiName() + ", pump backedn request error.", e);
+						fe2bePump.stop();
+						beRequest.end();
+					}).endHandler(v -> {
+						beRequest.end();
+					});
+				} else {
+					beRequest.end();
+				}
+			} else {
+				rc.fail(503, ar.cause());
+			}
+		});
 	}
 
 	private void common(RoutingContext rc, HttpClientRequest beRequest) {
