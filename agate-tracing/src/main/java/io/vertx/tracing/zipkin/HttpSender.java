@@ -143,12 +143,11 @@ public class HttpSender extends Sender {
 		private void asyncSend(Callback<Void> callback) {
 			RequestOptions options = new RequestOptions().setAbsoluteURI(endpoint)
 					.addHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON).setTimeout(20000);
-			client.post(options, body, ar -> {
-				if (ar.succeeded()) {
-					callback.onSuccess(null);
-				} else {
-					callback.onError(ar.cause());
-				}
+			client.request(options).onSuccess(request -> {
+				request.end(body);
+				callback.onSuccess(null);
+			}).onFailure(t -> {
+				callback.onError(t);
 			});
 		}
 

@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -82,7 +83,7 @@ public class ZipkinTracerTest {
 		listenLatch.awaitSuccess();
 
 		Async responseLatch = ctx.async();
-		client.get(8080, "127.0.0.1", "/url", ar -> {
+		client.request(HttpMethod.GET, 8080, "127.0.0.1", "/url", ar -> {
 			responseLatch.complete();
 		});
 		responseLatch.awaitSuccess();
@@ -96,8 +97,8 @@ public class ZipkinTracerTest {
 		Async listenLatch = ctx.async(2);
 		vertx.createHttpServer().requestHandler(req -> {
 			HttpClient c = vertx.createHttpClient();
-			c.get(8081, "localhost", "/s2s", ar -> {
-				System.out.println("testHttpClientRequest is "+ar.succeeded());
+			c.request(HttpMethod.GET, 8081, "localhost", "/s2s", ar -> {
+				System.out.println("testHttpClientRequest is " + ar.succeeded());
 				req.response().end();
 			});
 		}).listen(8080, ar -> {
@@ -114,7 +115,7 @@ public class ZipkinTracerTest {
 		listenLatch.awaitSuccess();
 
 		Async responseLatch = ctx.async();
-		client.get(8080, "localhost", "/c2s", ar -> {
+		client.request(HttpMethod.GET, 8080, "localhost", "/c2s", ar -> {
 			responseLatch.complete();
 		});
 		responseLatch.awaitSuccess();

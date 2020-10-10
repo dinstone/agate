@@ -36,7 +36,7 @@ public class HttpClientRequestWrapper extends HttpClientRequest {
 
 	@Override
 	public String method() {
-		return delegate.method().name();
+		return delegate.getMethod().name();
 	}
 
 	@Override

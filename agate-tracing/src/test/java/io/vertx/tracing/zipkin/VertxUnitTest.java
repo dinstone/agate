@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -55,21 +55,27 @@ public class VertxUnitTest {
 		vertx.createHttpServer().requestHandler(req -> {
 			req.response().end("ok");
 		}).listen(9191, ar -> {
-			System.out.println("listen ok");
+			System.out.println("listen on 9191");
 			sw.complete();
 		});
 		sw.awaitSuccess();
 
 		Async cw = tc.async();
 		HttpClient client = vertx.createHttpClient();
-		client.get(9191, "localhost", "/zipkin/", ar -> {
+		client.request(HttpMethod.GET, 9191, "localhost", "/zipkin/", ar -> {
 			if (ar.succeeded()) {
-				HttpClientResponse response = ar.result();
-				response.body().onComplete(rar -> {
-					System.out.println(rar.result().toString());
+				ar.result().send().onSuccess(response -> {
+					response.body().onComplete(rar -> {
+						System.out.println(rar.result().toString());
+						cw.complete();
+					});
+				}).onFailure(t -> {
+					t.printStackTrace();
+					cw.complete();
 				});
+			} else {
+				System.out.println(ar.cause());
 			}
-			cw.complete();
 		});
 		cw.awaitSuccess();
 	}
