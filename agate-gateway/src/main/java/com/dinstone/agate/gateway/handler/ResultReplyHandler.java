@@ -15,63 +15,82 @@
  */
 package com.dinstone.agate.gateway.handler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
 import com.dinstone.agate.tracing.HttpClientTracing;
-
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * http route and proxy.
- * 
+ *
  * @author dinstone
  *
  */
 public class ResultReplyHandler implements AfterHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
 
-//	private BackendOptions backendOptions;
+    // private BackendOptions backendOptions;
 
-	public ResultReplyHandler(ApiOptions apiOptions) {
-//		backendOptions = apiOptions.getBackend();
-	}
+    public ResultReplyHandler(ApiOptions apiOptions) {
+        // backendOptions = apiOptions.getBackend();
+    }
 
-	@Override
-	public void handle(RoutingContext rc) {
-		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
-		HttpClientTracing beTracing = rc.get(ContextConstants.BACKEND_TRACING);
+    @Override
+    public void handle(RoutingContext rc) {
+        HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
+        HttpClientTracing beTracing = rc.get(ContextConstants.BACKEND_TRACING);
 
-		HttpServerResponse feResponse = rc.response();
-		feResponse.setStatusCode(beResponse.statusCode());
-		feResponse.headers().addAll(beResponse.headers());
+        HttpServerResponse feResponse = rc.response();
+        feResponse.setStatusCode(beResponse.statusCode());
+        feResponse.headers().addAll(beResponse.headers());
 
-		Pump be2fePump = Pump.pump(beResponse, feResponse).start();
-		beResponse.exceptionHandler(e -> {
-			LOG.error("backend response is error", e);
-			if (beTracing != null) {
-				beTracing.failure(e);
-			}
+        long len = getContentLength(beResponse);
+        if (len == 0) {
+            feResponse.end();
+            return;
+        }
 
-			be2fePump.stop();
-			rc.fail(503, new RuntimeException("backend response is error", e));
-		}).endHandler(v -> {
-			try {
-				if (beTracing != null) {
-					beTracing.success(beResponse);
-				}
-				feResponse.end();
-			} catch (Exception e) {
-				LOG.warn("route backend service error", e);
-			}
-		});
-	}
+        Pump be2fePump = Pump.pump(beResponse, feResponse).start();
+        beResponse.exceptionHandler(e -> {
+            LOG.error("backend response is error", e);
+            if (beTracing != null) {
+                beTracing.failure(e);
+            }
+
+            be2fePump.stop();
+            rc.fail(503, new RuntimeException("backend response is error", e));
+        }).endHandler(v -> {
+            try {
+                if (beTracing != null) {
+                    beTracing.success(beResponse);
+                }
+                feResponse.end();
+            } catch (Exception e) {
+                LOG.warn("route backend service error", e);
+            }
+        });
+    }
+
+    private long getContentLength(HttpClientResponse response) {
+        String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
+        if ("chunked".equalsIgnoreCase(tc)) {
+            return -1;
+        }
+
+        try {
+            return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
+        } catch (Exception e) {
+            // ignore
+        }
+        return -1;
+    }
 
 }
