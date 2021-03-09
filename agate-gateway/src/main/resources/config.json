@@ -6,26 +6,11 @@
 		"blockedThreadCheckInterval": 1000
 	},
 	"verticle": {
-		"manage.instances": 2,
-		"system.instances": 2
-	},
-	"manage": {
-		"host": "127.0.0.1",
-		"port": 5454
+		"manage.instances": 1,
+		"system.instances": 1
 	},
 	"consul": {
-		"host": "127.0.0.1",
+		"host": "consul",
 		"port": 8500
-	},
-	"redis": {
-		"host": "127.0.0.1",
-		"port": 6379,
-		"maxTotal": 8,
-		"minIdle": 1,
-		"timeout": 2000,
-		"maxWaitMillis": 3000,
-		"numTestsPerEvictionRun": -1,
-		"minEvictableIdleTimeMillis": 60000,
-		"timeBetweenEvictionRunsMillis": 30000
 	}
 }

@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  gateway:
+    image: agate/gateway:latest
+    # build: ./
+    container_name: agate-gateway
+    # restart: always
+    ports:
+      - 5454:5454
+      - 8002:8002
+    volumes:
+      - ~/docker/agate/gateway/logs:/agate/gateway/logs
+    depends_on:
+      - consul
+  
+  manager:
+    image: agate/manager
+    # build: ./
+    container_name: agate-manager
+    # restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ~/docker/agate/manager/logs:/agate/manager/logs
+      - ~/docker/agate/manager/data:/agate/manager/data
+    depends_on:
+      - consul
+  
+  consul:
+    image: consul
+    container_name: consul
+    # restart: always
+    ports:
+      - 8500:8500
+    volumes:
+      - ~/docker/agate/consul:/consul/data
