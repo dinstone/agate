@@ -21,12 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * APP deployment info.
+ * gateway deployment info.
  * 
  * @author dinstone
  *
  */
-public class AppDeploy {
+public class GatewayDeploy {
 
     private Map<String, ApiDeploy> apiDeployMap = new ConcurrentHashMap<>();
 
@@ -34,15 +34,15 @@ public class AppDeploy {
 
     private String deployId;
 
-    private String appName;
+    private String gateway;
 
-    public AppDeploy(String appName) {
+    public GatewayDeploy(String gateway) {
         super();
-        this.appName = appName;
+        this.gateway = gateway;
     }
 
-    public String getAppName() {
-        return appName;
+    public String getGateway() {
+        return gateway;
     }
 
     public void setDeployId(String deployId) {

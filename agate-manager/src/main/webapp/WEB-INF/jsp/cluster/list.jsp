@@ -7,7 +7,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Agate Manager APIS</title>
+<title>Agate Manager Clusters</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="${contextPath}/img/favicon.ico">
@@ -20,6 +20,17 @@
 <script src="${contextPath}/js/autosize.min.js"></script>
 <script src="${contextPath}/js/charisma.app.js?ctx=${contextPath}"></script>
 <script type="text/javascript">
+	function createRow(stats) {
+		var tsr = '<tr><td><a class="ajax-link" href="chart.html?tube='
+				+ stats.tubeName + '">' + stats.tubeName + '</a></td><td>'
+				+ stats.totalJobSize + '</td><td>' + stats.finishJobSize
+				+ '</td><td>' + stats.delayQueueSize + '</td><td>'
+				+ stats.readyQueueSize + '</td><td>' + stats.retainQueueSize
+				+ '</td><td>' + stats.failedQueueSize + '</td></tr>';
+
+		$("#tubeStatsList").append(tsr);
+	}
+
 	$(document).ready(function() {
 		// load stats
 
@@ -35,9 +46,9 @@
 					<div class="nav-canvas">
 						<div class="nav-sm nav nav-stacked"></div>
 						<ul class="nav nav-pills nav-stacked main-menu">
-							<li class="active"><a class="ajax-link" href="${contextPath}/view/api/list"><i class="glyphicon glyphicon-align-justify"></i><span> API Routes</span></a></li>
+							<li><a class="ajax-link" href="${contextPath}/view/api/list"><i class="glyphicon glyphicon-align-justify"></i><span> API Routes</span></a></li>
 							<li><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
-							<li><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
+							<li class="active"><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
 						</ul>
 					</div>
 				</div>
@@ -46,7 +57,7 @@
 				<div>
 					<ul class="breadcrumb">
 						<li><a href="${contextPath}/">Home</a></li>
-						<li>API Routes</li>
+						<li>Clusters</li>
 					</ul>
 				</div>
 				<div class="row">
@@ -54,37 +65,34 @@
 						<div class="box-inner">
 							<div class="box-header well">
 								<h2>
-									<i class="glyphicon glyphicon-th"></i> API Route List
+									<i class="glyphicon glyphicon-th"></i> Cluster List
 								</h2>
 							</div>
-							<div class="box-content" id="tubelist">
-								<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
+							<div class="box-content">
+								<!-- <div id="container" style="width: 600px; height: 400px;"></div> -->
+								<table class="table">
 									<thead>
 										<tr>
+											<th rowspan="1" colspan="1" style="width: 99px;">Code</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/api/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create API
+											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/cluster/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Cluster
 											</a></th>
 										</tr>
 									</thead>
 									<tbody>
-										<c:forEach items="${apis}" var="api">
+										<c:forEach items="${clusters}" var="cluster">
 											<tr class="line">
-												<td><a href="${contextPath}/view/api/detail?apiId=${api.arId}">${api.name}</a></td>
-												<td>${api.requestConfig.path}</td>
-												<td>${api.remark}</td>
-												<c:if test="${api.status > 0}">
-													<td>Started</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/api/close?apiId=${api.arId}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default" href="${contextPath}/view/api/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
-																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/api/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+												<td><a href="${contextPath}/view/cluster/detail?id=${cluster.id}">${cluster.code}</a></td>
+												<td>${cluster.name}</td>
+												<c:if test="${fn:length(cluster.nodes)==0}">
+													<td>Down (0)</td>
 												</c:if>
-												<c:if test="${api.status == 0}">
-													<td>Closed</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/api/start?apiId=${api.arId}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="${contextPath}/view/api/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
-																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/api/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+												<c:if test="${fn:length(cluster.nodes)>0}">
+													<td>Up (${fn:length(cluster.nodes)})</td>
 												</c:if>
+												<td><a class="btn btn-default" href="${contextPath}/view/cluster/update?id=${cluster.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default" href="${contextPath}/view/cluster/delete?id=${cluster.id}"><i class="glyphicon glyphicon-trash"></i><span>
+															Delete</span></a></td>
 											</tr>
 										</c:forEach>
 									</tbody>

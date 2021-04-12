@@ -22,7 +22,7 @@ import java.util.List;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class FrontendOptions {
+public class RequestOptions {
 
 	private String prefix;
 
@@ -34,7 +34,7 @@ public class FrontendOptions {
 
 	private String[] produces;
 
-	public FrontendOptions(JsonObject json) {
+	public RequestOptions(JsonObject json) {
 		fromJson(json);
 	}
 

@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Deployment {
 
-    private Map<String, AppDeploy> appDeployMap = new ConcurrentHashMap<>();
+    private Map<String, GatewayDeploy> appDeployMap = new ConcurrentHashMap<>();
 
     private String cluster;
 
@@ -32,15 +32,15 @@ public class Deployment {
         return cluster;
     }
 
-    public AppDeploy get(String appName) {
+    public GatewayDeploy get(String appName) {
         return appDeployMap.get(appName);
     }
 
-    public void put(AppDeploy appDeploy) {
-        appDeployMap.put(appDeploy.getAppName(), appDeploy);
+    public void put(GatewayDeploy appDeploy) {
+        appDeployMap.put(appDeploy.getGateway(), appDeploy);
     }
 
-    public AppDeploy remove(String appName) {
+    public GatewayDeploy remove(String appName) {
         return appDeployMap.remove(appName);
     }
 

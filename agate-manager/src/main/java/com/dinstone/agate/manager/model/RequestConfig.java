@@ -15,24 +15,32 @@
  */
 package com.dinstone.agate.manager.model;
 
-import java.util.List;
+public class RequestConfig {
 
-public class BackendConfig {
+	private String prefix;
 
-	private Integer timeout;
+	private String path;
 
 	private String method;
 
-	private List<String> urls;
+	private String consumes;
 
-	private List<ParamConfig> params;
+	private String produces;
 
-	public Integer getTimeout() {
-		return timeout;
+	public String getPrefix() {
+		return prefix;
 	}
 
-	public void setTimeout(Integer timeout) {
-		this.timeout = timeout;
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 	public String getMethod() {
@@ -43,20 +51,20 @@ public class BackendConfig {
 		this.method = method;
 	}
 
-	public List<String> getUrls() {
-		return urls;
+	public String getConsumes() {
+		return consumes;
 	}
 
-	public void setUrls(List<String> urls) {
-		this.urls = urls;
+	public void setConsumes(String consumes) {
+		this.consumes = consumes;
 	}
 
-	public List<ParamConfig> getParams() {
-		return params;
+	public String getProduces() {
+		return produces;
 	}
 
-	public void setParams(List<ParamConfig> params) {
-		this.params = params;
+	public void setProduces(String produces) {
+		this.produces = produces;
 	}
 
 }

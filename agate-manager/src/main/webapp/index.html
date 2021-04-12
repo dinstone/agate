@@ -14,32 +14,6 @@
 <script src="js/autosize.min.js"></script>
 <script src="js/charisma.app.js"></script>
 <script src="js/highcharts.min.js"></script>
-<script type="text/javascript">
-	$(document).ready(function() {
-		/* $("form").submit(function(event) {
-			event.preventDefault();
-			if (!$("#username").val()) {
-				$("#tip").html("Username is empty");
-				return;
-			}
-			if (!$("#password").val()) {
-				$("#tip").html("Password is empty");
-				return;
-			}
-			var params = {};
-			params.username = $("#username").val();
-			params.password = $("#password").val();
-			var parmData = JSON.stringify(params);
-			$.post("/api/authen/login", params, function(data, status) {
-				if (data && data.status > 0) {
-					$(location).attr('href', "/index.html");
-				} else {
-					$("#tip").html(data.message);
-				}
-			}, "json");
-		}); */
-	});
-</script>
 </head>
 <div class="ch-container">
 	<div class="row">
@@ -54,7 +28,7 @@
 
 		<div class="row">
 			<div class="well col-md-5 center login-box">
-				<a href="/view/app/list" class="btn btn-info">APP Manager</a>
+				<a href="/view/api/list" class="btn btn-info">API Routes</a>
 			</div>
 			<!--/span-->
 		</div>

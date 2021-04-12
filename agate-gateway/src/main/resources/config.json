@@ -1,5 +1,7 @@
 {
-	"cluster": "default",
+	"gateway": {
+		"cluster": "default"
+	},
 	"vertx": {
 		"workerPoolSize": 4,
 		"eventLoopPoolSize": 4,

@@ -37,7 +37,7 @@ public class MeterMetricsHandler implements BeforeHandler {
 	private Timer timer;
 
 	public MeterMetricsHandler(ApiOptions apiOptions, MeterRegistry meterRegistry) {
-		List<Tag> tags = Arrays.asList(Tag.of("app.name", apiOptions.getAppName()));
+		List<Tag> tags = Arrays.asList(Tag.of("app.name", apiOptions.getGateway()));
 		this.count = meterRegistry.counter(apiOptions.getApiName() + "_count", tags);
 		this.error = meterRegistry.counter(apiOptions.getApiName() + "_error", tags);
 		this.timer = meterRegistry.timer(apiOptions.getApiName() + "_time", tags);

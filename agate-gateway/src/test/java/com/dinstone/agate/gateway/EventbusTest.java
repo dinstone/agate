@@ -22,7 +22,7 @@ import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.options.AppOptions;
+import com.dinstone.agate.gateway.options.GatewayOptions;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -40,21 +40,21 @@ public class EventbusTest {
 
 		Vertx vertx = Vertx.vertx();
 
-		vertx.eventBus().registerDefaultCodec(AppOptions.class, new MessageCodec<AppOptions, AppOptions>() {
+		vertx.eventBus().registerDefaultCodec(GatewayOptions.class, new MessageCodec<GatewayOptions, GatewayOptions>() {
 
 			@Override
-			public void encodeToWire(Buffer buffer, AppOptions s) {
+			public void encodeToWire(Buffer buffer, GatewayOptions s) {
 				// TODO Auto-generated method stub
 			}
 
 			@Override
-			public AppOptions decodeFromWire(int pos, Buffer buffer) {
+			public GatewayOptions decodeFromWire(int pos, Buffer buffer) {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
 			@Override
-			public AppOptions transform(AppOptions s) {
+			public GatewayOptions transform(GatewayOptions s) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -70,7 +70,7 @@ public class EventbusTest {
 			}
 
 		});
-		vertx.eventBus().send("test", new AppOptions());
+		vertx.eventBus().send("test", new GatewayOptions());
 
 		System.out.println("ok");
 	}

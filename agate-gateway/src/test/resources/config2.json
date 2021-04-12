@@ -1,5 +1,8 @@
 {
-	"cluster": "default",
+	"cluster": {
+		"code": "default",
+		"env": "release"
+	},
 	"vertx": {
 		"workerPoolSize": 4,
 		"eventLoopPoolSize": 4,

@@ -15,45 +15,43 @@
  */
 package com.dinstone.agate.gateway.options;
 
-import java.util.Objects;
-
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 
-public class AppOptions {
+public class GatewayOptions {
+
+    private String envCode;
 
     private String cluster;
 
-    private String appName;
+    private String gateway;
 
     private String remark;
-
-    private String prefix;
 
     private HttpServerOptions serverOptions;
 
     private HttpClientOptions clientOptions;
 
-    public AppOptions() {
+    public GatewayOptions() {
         super();
     }
 
-    public AppOptions(JsonObject json) {
+    public GatewayOptions(JsonObject json) {
         fromJson(json);
     }
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
 
-        if (appName != null) {
-            json.put("appName", appName);
+        if (gateway != null) {
+            json.put("gateway", gateway);
         }
         if (cluster != null) {
             json.put("cluster", cluster);
         }
-        if (prefix != null) {
-            json.put("prefix", prefix);
+        if (envCode != null) {
+            json.put("envCode", envCode);
         }
         if (remark != null) {
             json.put("remark", remark);
@@ -71,9 +69,9 @@ public class AppOptions {
     public void fromJson(JsonObject json) {
         for (java.util.Map.Entry<String, Object> member : json) {
             switch (member.getKey()) {
-            case "appName":
+            case "gateway":
                 if (member.getValue() instanceof String) {
-                    this.setAppName((String) member.getValue());
+                    this.setGateway((String) member.getValue());
                 }
                 break;
             case "cluster":
@@ -81,9 +79,9 @@ public class AppOptions {
                     this.setCluster((String) member.getValue());
                 }
                 break;
-            case "prefix":
+            case "envCode":
                 if (member.getValue() instanceof String) {
-                    this.setPrefix((String) member.getValue());
+                    this.setEnvCode((String) member.getValue());
                 }
                 break;
             case "remark":
@@ -105,6 +103,14 @@ public class AppOptions {
         }
     }
 
+    public String getEnvCode() {
+        return envCode;
+    }
+
+    public void setEnvCode(String envCode) {
+        this.envCode = envCode;
+    }
+
     public String getCluster() {
         return cluster;
     }
@@ -113,12 +119,12 @@ public class AppOptions {
         this.cluster = cluster;
     }
 
-    public String getAppName() {
-        return appName;
+    public String getGateway() {
+        return gateway;
     }
 
-    public void setAppName(String appName) {
-        this.appName = appName;
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
     }
 
     public String getRemark() {
@@ -127,14 +133,6 @@ public class AppOptions {
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
     }
 
     public HttpServerOptions getServerOptions() {
@@ -155,7 +153,12 @@ public class AppOptions {
 
     @Override
     public int hashCode() {
-        return Objects.hash(appName, cluster);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((cluster == null) ? 0 : cluster.hashCode());
+        result = prime * result + ((envCode == null) ? 0 : envCode.hashCode());
+        result = prime * result + ((gateway == null) ? 0 : gateway.hashCode());
+        return result;
     }
 
     @Override
@@ -166,8 +169,23 @@ public class AppOptions {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        AppOptions other = (AppOptions) obj;
-        return Objects.equals(appName, other.appName) && Objects.equals(cluster, other.cluster);
+        GatewayOptions other = (GatewayOptions) obj;
+        if (cluster == null) {
+            if (other.cluster != null)
+                return false;
+        } else if (!cluster.equals(other.cluster))
+            return false;
+        if (envCode == null) {
+            if (other.envCode != null)
+                return false;
+        } else if (!envCode.equals(other.envCode))
+            return false;
+        if (gateway == null) {
+            if (other.gateway != null)
+                return false;
+        } else if (!gateway.equals(other.gateway))
+            return false;
+        return true;
     }
 
 }

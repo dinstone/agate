@@ -33,105 +33,112 @@ import zipkin2.reporter.AsyncReporter;
 
 public class ApplicationContext {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
 
-	private static final String DEFAULT_CLUSTER = "default";
+    private JsonObject config;
 
-	private JsonObject config;
+    private String clusterCode;
 
-	private String clusterId;
+    private Deployment deployment;
 
-	private Deployment deployment;
+    private ZipkinTracer zipkinTracer;
 
-	private ZipkinTracer zipkinTracer;
+    private ConsulClientOptions consulOptions;
 
-	private ConsulClientOptions consulOptions;
+    public ApplicationContext(JsonObject config) throws Exception {
+        this.config = config;
 
-	public ApplicationContext(JsonObject config) throws Exception {
-		this.config = config;
+        init();
+    }
 
-		init();
-	}
+    private void init() throws Exception {
+        LOG.debug("init application context start");
 
-	private void init() throws Exception {
-		LOG.debug("init application context start");
+        // cluster id
 
-		// cluster id
-		clusterId = config.getString("cluster", DEFAULT_CLUSTER);
+        JsonObject node = config.getJsonObject("gateway");
+        if (node == null) {
+            throw new IllegalArgumentException("gateway is empty");
+        }
+        String cluster = node.getString("cluster");
+        if (cluster == null || cluster.isEmpty()) {
+            throw new IllegalArgumentException("cluster is empty");
+        }
+        clusterCode = cluster;
 
-		// consul options
-		JsonObject consulJson = config.getJsonObject("consul");
-		if (consulJson != null) {
-			consulOptions = new ConsulClientOptions(consulJson);
-		} else {
-			consulOptions = new ConsulClientOptions();
-		}
+        // consul options
+        JsonObject consulJson = config.getJsonObject("consul");
+        if (consulJson != null) {
+            consulOptions = new ConsulClientOptions(consulJson);
+        } else {
+            consulOptions = new ConsulClientOptions();
+        }
 
-		Tracing tracing = Tracing.current();
-		if (tracing == null) {
-			JsonObject tracingJson = config.getJsonObject("tracing");
-			ZipkinTracingOptions zipkinOptions = tracingOptions(tracingJson);
-			HttpSender sender = new HttpSender(zipkinOptions.getSenderOptions());
-			tracing = Tracing.newBuilder().localServiceName(zipkinOptions.getServiceName())
-					.spanReporter(AsyncReporter.builder(sender).build())
-					.sampler(Sampler.create(zipkinOptions.getProbability())).build();
-			zipkinTracer = new ZipkinTracer(tracing) {
-				@Override
-				public void destroy() {
-					super.destroy();
-					try {
-						sender.close();
-					} catch (IOException e) {
-						// ignore
-					}
-				}
-			};
-		} else {
-			zipkinTracer = new ZipkinTracer(tracing);
-		}
+        Tracing tracing = Tracing.current();
+        if (tracing == null) {
+            JsonObject tracingJson = config.getJsonObject("tracing");
+            ZipkinTracingOptions zipkinOptions = tracingOptions(tracingJson);
+            HttpSender sender = new HttpSender(zipkinOptions.getSenderOptions());
+            tracing = Tracing.newBuilder().localServiceName(zipkinOptions.getServiceName())
+                    .spanReporter(AsyncReporter.builder(sender).build())
+                    .sampler(Sampler.create(zipkinOptions.getProbability())).build();
+            zipkinTracer = new ZipkinTracer(tracing) {
+                @Override
+                public void destroy() {
+                    super.destroy();
+                    try {
+                        sender.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+            };
+        } else {
+            zipkinTracer = new ZipkinTracer(tracing);
+        }
 
-		// deployment
-		deployment = new Deployment(clusterId);
+        // deployment
+        deployment = new Deployment(clusterCode);
 
-		LOG.debug("init application context ended");
-	}
+        LOG.debug("init application context ended");
+    }
 
-	private ZipkinTracingOptions tracingOptions(JsonObject tracingConfig) {
-		ZipkinTracingOptions options;
-		if (tracingConfig != null) {
-			options = new ZipkinTracingOptions(tracingConfig);
-		} else {
-			options = new ZipkinTracingOptions("agate-gateway");
-		}
-		if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
-			options.setServiceName("agate-gateway");
-		}
-		return options;
-	}
+    private ZipkinTracingOptions tracingOptions(JsonObject tracingConfig) {
+        ZipkinTracingOptions options;
+        if (tracingConfig != null) {
+            options = new ZipkinTracingOptions(tracingConfig);
+        } else {
+            options = new ZipkinTracingOptions("agate-gateway");
+        }
+        if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
+            options.setServiceName("agate-gateway");
+        }
+        return options;
+    }
 
-	public void destroy() {
-		deployment.destroy();
-		zipkinTracer.destroy();
-	}
+    public void destroy() {
+        deployment.destroy();
+        zipkinTracer.destroy();
+    }
 
-	public JsonObject getConfig() {
-		return config;
-	}
+    public JsonObject getConfig() {
+        return config;
+    }
 
-	public Deployment getDeployment() {
-		return deployment;
-	}
+    public Deployment getDeployment() {
+        return deployment;
+    }
 
-	public String getClusterId() {
-		return clusterId;
-	}
+    public String getClusterCode() {
+        return clusterCode;
+    }
 
-	public ZipkinTracer getZipkinTracer() {
-		return zipkinTracer;
-	}
+    public ZipkinTracer getZipkinTracer() {
+        return zipkinTracer;
+    }
 
-	public ConsulClientOptions getConsulOptions() {
-		return consulOptions;
-	}
+    public ConsulClientOptions getConsulOptions() {
+        return consulOptions;
+    }
 
 }

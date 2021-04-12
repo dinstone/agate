@@ -15,7 +15,9 @@
  */
 package com.dinstone.agate.manager.model;
 
-public class ApiConfig {
+import java.util.Date;
+
+public class ApiRouteEntity {
 
     private Integer arId;
 
@@ -25,15 +27,19 @@ public class ApiConfig {
 
     private String remark;
 
+    private String request;
+
+    private String response;
+
+    private String routing;
+
+    private String handlers;
+
     private int status;
 
-    private RequestConfig requestConfig;
+    private Date createTime;
 
-    private RoutingConfig routingConfig;
-
-    private ResponseConfig responseConfig;
-
-    private HandlersConfig handlersConfig;
+    private Date updateTime;
 
     public Integer getArId() {
         return arId;
@@ -67,6 +73,38 @@ public class ApiConfig {
         this.remark = remark;
     }
 
+    public String getRequest() {
+        return request;
+    }
+
+    public void setRequest(String request) {
+        this.request = request;
+    }
+
+    public String getResponse() {
+        return response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
+    }
+
+    public String getRouting() {
+        return routing;
+    }
+
+    public void setRouting(String routing) {
+        this.routing = routing;
+    }
+
+    public String getHandlers() {
+        return handlers;
+    }
+
+    public void setHandlers(String handlers) {
+        this.handlers = handlers;
+    }
+
     public int getStatus() {
         return status;
     }
@@ -75,36 +113,20 @@ public class ApiConfig {
         this.status = status;
     }
 
-    public RequestConfig getRequestConfig() {
-        return requestConfig;
+    public Date getCreateTime() {
+        return createTime;
     }
 
-    public void setRequestConfig(RequestConfig requestConfig) {
-        this.requestConfig = requestConfig;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
-    public RoutingConfig getRoutingConfig() {
-        return routingConfig;
+    public Date getUpdateTime() {
+        return updateTime;
     }
 
-    public void setRoutingConfig(RoutingConfig routingConfig) {
-        this.routingConfig = routingConfig;
-    }
-
-    public ResponseConfig getResponseConfig() {
-        return responseConfig;
-    }
-
-    public void setResponseConfig(ResponseConfig responseConfig) {
-        this.responseConfig = responseConfig;
-    }
-
-    public HandlersConfig getHandlersConfig() {
-        return handlersConfig;
-    }
-
-    public void setHandlersConfig(HandlersConfig handlersConfig) {
-        this.handlersConfig = handlersConfig;
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 
 }

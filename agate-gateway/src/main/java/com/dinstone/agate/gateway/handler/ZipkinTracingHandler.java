@@ -42,7 +42,7 @@ public class ZipkinTracingHandler implements BeforeHandler {
 
 		HttpServerTracing tracing = zipkinTracer.httpServerTracing();
 		try (Scope scope = tracing.start(context.request()).scope()) {
-			tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
+			tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getGateway());
 			context.addBodyEndHandler(v -> {
 				if (context.failed()) {
 					tracing.failure(context.failure());

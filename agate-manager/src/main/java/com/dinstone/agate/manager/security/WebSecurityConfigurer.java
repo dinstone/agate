@@ -29,46 +29,49 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableWebSecurity
 public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
-	}
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
+    }
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
 
-		http.formLogin().loginPage("/login.html").loginProcessingUrl("/login")// login process
-				// .defaultSuccessUrl("/admin/index.html", true)
-				.and().logout().logoutUrl("/logout")// logout process
-				.and().csrf().disable()// csrf disabled
-				.headers().frameOptions().sameOrigin();
-		//
-		http.rememberMe().tokenValiditySeconds(180);
-	}
+        // http.addFilterAfter(new EnironmentCheckFilter(), FilterSecurityInterceptor.class);
+        // http.authorizeRequests().antMatchers("/view/**").authenticated();
 
-	@Override
-	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/**/*.html", "/bcs/**", "/css/**", "/font/**", "/img/**", "/js/**");
-	}
+        http.formLogin().loginPage("/login.html").loginProcessingUrl("/login")// login process
+                // .defaultSuccessUrl("/admin/index.html", true)
+                .and().logout().logoutUrl("/logout")// logout process
+                .and().csrf().disable()// csrf disabled
+                .headers().frameOptions().sameOrigin();
+        //
+        http.rememberMe().tokenValiditySeconds(180);
+    }
 
-	@Bean
-	protected AuthenticationManager authenticationManager() throws Exception {
-		return super.authenticationManager();
-	}
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/**/*.html", "/bcs/**", "/css/**", "/font/**", "/img/**", "/js/**");
+    }
 
-	/**
-	 * this PasswordEncoder only for test
-	 * 
-	 * @return
-	 */
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return NoOpPasswordEncoder.getInstance();
-	}
+    @Bean
+    protected AuthenticationManager authenticationManager() throws Exception {
+        return super.authenticationManager();
+    }
 
-	@Bean
-	public UserDetailsService userDetailsService() {
-		return new AuthenUserDetailsService();
-	}
+    /**
+     * this PasswordEncoder only for test
+     * 
+     * @return
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new AuthenUserDetailsService();
+    }
 }

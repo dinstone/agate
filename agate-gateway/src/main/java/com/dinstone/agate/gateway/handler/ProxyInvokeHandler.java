@@ -19,7 +19,7 @@ import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
 import com.dinstone.agate.gateway.options.ApiOptions;
-import com.dinstone.agate.gateway.options.BackendOptions;
+import com.dinstone.agate.gateway.options.RoutingOptions;
 import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.spi.RouteHandler;
@@ -53,7 +53,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 
     private final ZipkinTracer zipkinTracer;
 
-    private final BackendOptions backendOptions;
+    private final RoutingOptions backendOptions;
 
     private int count;
 
@@ -61,7 +61,7 @@ public class ProxyInvokeHandler implements RouteHandler {
         this.apiOptions = apiOptions;
         this.httpClient = httpClient;
         this.zipkinTracer = zipkinTracer;
-        this.backendOptions = apiOptions.getBackend();
+        this.backendOptions = apiOptions.getRouting();
     }
 
     @Override
@@ -184,7 +184,7 @@ public class ProxyInvokeHandler implements RouteHandler {
     void trace(RoutingContext rc, HttpClientRequest beRequest) {
         // tracing
         HttpClientTracing tracing = zipkinTracer.httpClientTracing().start(beRequest);
-        tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getAppName());
+        tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getGateway());
         // response handler
         beRequest.response().onComplete(ar -> {
             if (ar.succeeded()) {

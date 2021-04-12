@@ -33,7 +33,7 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/view/api/list?appId=${api.appId}">APIs</a></li>
+						<li><a href="${contextPath}/view/api/list?arId=${api.arId}">APIs</a></li>
 						<li>API Detail</li>
 					</ul>
 				</div>
@@ -49,68 +49,79 @@
 								<c:if test="${!empty error}">
 									<div id="tip" class="alert alert-info">${error}</div>
 								</c:if>
-								<input name="action" value="${action}" type="hidden"> <input name="appId" value="${api.appId}" type="hidden"><input name="apiId" value="${api.apiId}" type="hidden">
+								<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
 								<div class="form-group">
-									<label>Name (API Uniqueness)</label> <input type="text" class="form-control" disabled="disabled" value="${api.name}">
+									<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}" disabled="disabled">
 								</div>
 								<div class="form-group">
 									<label>Remark</label>
-									<textarea class="form-control" disabled="disabled">${api.remark}</textarea>
+									<textarea class="form-control" name="remark" disabled="disabled">${api.remark}</textarea>
 								</div>
 								<div class="form-group">
-									<label>Frontend Path (Path start with '/')</label>
-									<div class="input-group">
-										<span class="input-group-addon">${api.frontendConfig.prefix}</span><input type="text" class="form-control" disabled="disabled" value="${api.frontendConfig.path}">
-									</div>
+									<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" value="${gateway.name}" disabled="disabled">
 								</div>
 								<div class="form-group">
-									<label>Frontend Method (Http Method)</label> <input type="text" class="form-control" disabled="disabled" value="${api.frontendConfig.method}">
+									<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="requestConfig.path" value="${api.requestConfig.path}" disabled="disabled">
 								</div>
 								<div class="form-group">
-									<label>Frontend Consumes (consume type and split by ',')</label> <input type="text" class="form-control" disabled="disabled" value="${api.frontendConfig.consumes}"
-										placeholder="please input consume type and split by ','">
+									<label>Request Method (Http Method)</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.requestConfig.method}" disabled="disabled">
 								</div>
 								<div class="form-group">
-									<label>Frontend Produces (produce type and split by ',')</label> <input type="text" class="form-control" disabled="disabled" value="${api.frontendConfig.produces}"
-										placeholder="please input produce type and split by ','">
+									<label>Request Consumes (consume type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.requestConfig.consumes}" disabled="disabled">
+								</div>
+								<div class="form-group">
+									<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.produces" value="${api.requestConfig.produces}" disabled="disabled">
 								</div>
 								<div class="form-group has-feedback">
-									<label>Backend Timeout</label>
+									<label>Routing Timeout</label>
 									<div class="input-group">
-										<input type="text" class="form-control" disabled="disabled" value="${api.backendConfig.timeout}"><span class="input-group-addon">ms</span>
+										<input type="text" class="form-control" name="routingConfig.timeout" value="${api.routingConfig.timeout}" disabled="disabled"><span class="input-group-addon">ms</span>
 									</div>
 								</div>
 								<div class="form-group">
-									<label>Backend URLs</label>
-									<table class="table">
+									<label>Routing URLs <i class="glyphicon glyphicon-star red"></i></label>
+									<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 										<tbody>
-											<c:forEach var="url" items="${api.backendConfig.urls}" varStatus="status">
+											<c:if test="${empty api.routingConfig.urls}">
 												<tr>
-													<td><input type="text" class="form-control" disabled="disabled" value="${url}"></td>
+													<td><input type="text" class="form-control" name="routingConfig.urls" disabled="disabled"></td>
+												</tr>
+											</c:if>
+											<c:forEach var="url" items="${api.routingConfig.urls}" varStatus="status">
+												<tr>
+													<td><input type="text" class="form-control" name="routingConfig.urls" value="${url}" disabled="disabled"></td>
 												</tr>
 											</c:forEach>
 										</tbody>
 									</table>
 								</div>
 								<div class="form-group">
-									<label>Backend Method (Http Method)</label> <input type="text" class="form-control" disabled="disabled" value="${api.backendConfig.method}">
+									<label>Routing Method (Http Method)</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.routingConfig.method}" disabled="disabled">
 								</div>
 								<div class="form-group">
 									<label>Param Mapping</label>
 									<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 										<tbody>
 											<tr>
-												<th width="20%" class="ng-binding">Frontend ParamName</th>
-												<th width="20%" class="ng-binding">Frontend ParamType</th>
-												<th width="20%" class="ng-binding">Backend ParamName</th>
-												<th width="20%" class="ng-binding">Backend ParamType</th>
+												<th width="20%" class="ng-binding">Request ParamName</th>
+												<th width="20%" class="ng-binding">Request ParamType</th>
+												<th width="20%" class="ng-binding">Routing ParamName</th>
+												<th width="20%" class="ng-binding">Routing ParamType</th>
 											</tr>
-											<c:forEach var="paramConfig" items="${api.backendConfig.params}">
+											<c:forEach var="paramConfig" items="${api.routingConfig.params}" varStatus="status">
 												<tr class="ng-scope">
-													<td><input class="form-control" disabled="disabled" value="${paramConfig.feParamName}"></td>
-													<td><input class="form-control" disabled="disabled" value="${paramConfig.feParamType}"></td>
-													<td><input class="form-control" disabled="disabled" value="${paramConfig.beParamName}"></td>
-													<td><input class="form-control" disabled="disabled" value="${paramConfig.beParamType}"></td>
+													<td><input class="form-control" name="routingConfig.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
+													<td><select class="form-control" name="routingConfig.params[${status.index}].feParamType">
+															<option value="PATH">PATH</option>
+															<option value="QUERY">QUERY</option>
+															<option value="HEADER">HEADER</option>
+													</select></td>
+													<td><input class="form-control" name="routingConfig.params[${status.index}].beParamName" value="${paramConfig.beParamName}"></td>
+													<td><select class="form-control" name="routingConfig.params[${status.index}].beParamType">
+															<option value="PATH">PATH</option>
+															<option value="QUERY">QUERY</option>
+															<option value="HEADER">HEADER</option>
+													</select></td>
 												</tr>
 											</c:forEach>
 										</tbody>

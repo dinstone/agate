@@ -1,5 +1,8 @@
 {
-	"cluster": "default",
+	"gateway": {
+		"cluster": "default",
+		"envCode": "test"
+	},
 	"tracing": {
 		"serviceName": "agate-gateway",
 		"probability": 1.0,

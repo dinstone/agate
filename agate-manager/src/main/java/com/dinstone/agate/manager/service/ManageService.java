@@ -25,391 +25,404 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.dinstone.agate.manager.dao.ApiDao;
-import com.dinstone.agate.manager.dao.AppDao;
+import com.dinstone.agate.manager.dao.ApiRouteDao;
+import com.dinstone.agate.manager.dao.GatewayDao;
 import com.dinstone.agate.manager.model.ApiConfig;
-import com.dinstone.agate.manager.model.ApiEntity;
-import com.dinstone.agate.manager.model.AppEntity;
-import com.dinstone.agate.manager.model.BackendConfig;
-import com.dinstone.agate.manager.model.FrontendConfig;
+import com.dinstone.agate.manager.model.ApiRouteEntity;
+import com.dinstone.agate.manager.model.GatewayEntity;
+import com.dinstone.agate.manager.model.HandlersConfig;
 import com.dinstone.agate.manager.model.ParamConfig;
+import com.dinstone.agate.manager.model.RequestConfig;
+import com.dinstone.agate.manager.model.ResponseConfig;
+import com.dinstone.agate.manager.model.RoutingConfig;
 import com.dinstone.agate.manager.utils.JacksonCodec;
 import com.orbitz.consul.KeyValueClient;
 
 @Component
 public class ManageService {
 
-	private static final int STATUS_START = 1;
-	private static final int STATUS_CLOSE = 0;
+    private static final int STATUS_START = 1;
+    private static final int STATUS_CLOSE = 0;
 
-	@Autowired
-	private AppDao appDao;
+    @Autowired
+    private GatewayDao gatewayDao;
 
-	@Autowired
-	private ApiDao apiDao;
+    @Autowired
+    private ApiRouteDao apiRouteDao;
 
-	@Autowired
-	private KeyValueClient keyValueClient;
+    @Autowired
+    private KeyValueClient keyValueClient;
 
-	public void createApp(AppEntity entity) throws BusinessException {
-		// app param check
-		appParamCheck(entity);
+    public void createGateway(GatewayEntity entity) throws BusinessException {
+        // app param check
+        gatewayParamCheck(entity);
 
-		Date now = new Date();
-		entity.setCreateTime(now);
-		entity.setUpdateTime(now);
+        Date now = new Date();
 
-		appDao.create(entity);
-	}
+        entity.setCreateTime(now);
+        entity.setUpdateTime(now);
 
-	private void appParamCheck(AppEntity entity) throws BusinessException {
-		if (entity.getName() == null || entity.getName().isEmpty()) {
-			throw new BusinessException(40101, "APP Name is empty");
-		}
-		if (entity.getCluster() == null || entity.getCluster().isEmpty()) {
-			throw new BusinessException(40102, "Cluster is empty");
-		}
-		if (entity.getPrefix() == null || entity.getPrefix().isEmpty()) {
-			throw new BusinessException(40103, "Prefix is empty");
-		}
-		if (entity.getPort() == null || entity.getPort() <= 0) {
-			throw new BusinessException(40104, "Port must be great than 0");
-		}
-		if (entity.getServerConfig() != null && !checkJsonFormat(entity.getServerConfig())) {
-			throw new BusinessException(40105, "ServerConfig is invalid json object");
-		}
-		if (entity.getClientConfig() != null && !checkJsonFormat(entity.getClientConfig())) {
-			throw new BusinessException(40106, "ClientConfig is invalid json object");
-		}
-		// app logic check
-		if (appDao.clusterAppExist(entity)) {
-			throw new BusinessException(40107, "APP is not unique for cluster");
-		}
-		if (appDao.clusterPortExist(entity)) {
-			throw new BusinessException(40107, "Port is not unique for cluster");
-		}
-	}
+        gatewayDao.create(entity);
+    }
 
-	public void updateApp(AppEntity entity) throws BusinessException {
-		// app logic check
-		if (entity.getId() == null) {
-			throw new BusinessException(40108, "APP id is invalid");
-		}
+    private void gatewayParamCheck(GatewayEntity entity) throws BusinessException {
+        if (entity.getName() == null || entity.getName().isEmpty()) {
+            throw new BusinessException(40101, "Gateway Name is empty");
+        }
+        if (entity.getCluster() == null || entity.getCluster().isEmpty()) {
+            throw new BusinessException(40102, "Cluster is empty");
+        }
+        if (entity.getPort() == null || entity.getPort() <= 0) {
+            throw new BusinessException(40104, "Port must be great than 0");
+        }
+        if (entity.getServerConfig() != null && !checkJsonFormat(entity.getServerConfig())) {
+            throw new BusinessException(40105, "ServerConfig is invalid json object");
+        }
+        if (entity.getClientConfig() != null && !checkJsonFormat(entity.getClientConfig())) {
+            throw new BusinessException(40106, "ClientConfig is invalid json object");
+        }
+        // app logic check
+        if (gatewayDao.gatewayNameExist(entity)) {
+            throw new BusinessException(40107, "Gateway Name is not unique for cluster");
+        }
+        if (gatewayDao.gatewayPortExist(entity)) {
+            throw new BusinessException(40107, "Gateway Port is not unique for cluster");
+        }
+    }
 
-		// app param check
-		appParamCheck(entity);
+    public void updateGateway(GatewayEntity entity) throws BusinessException {
+        // app logic check
+        if (entity.getId() == null) {
+            throw new BusinessException(40108, "Gateway id is invalid");
+        }
 
-		AppEntity ue = appDao.find(entity.getId());
-		if (ue == null) {
-			throw new BusinessException(40109, "can't find APP");
-		}
+        // app param check
+        gatewayParamCheck(entity);
 
-		ue.setUpdateTime(new Date());
-		ue.setName(entity.getName());
-		ue.setCluster(entity.getCluster());
-		ue.setHost(entity.getHost());
-		ue.setPort(entity.getPort());
-		ue.setPrefix(entity.getPrefix());
-		ue.setRemark(entity.getRemark());
-		ue.setServerConfig(entity.getServerConfig());
-		ue.setClientConfig(entity.getClientConfig());
+        GatewayEntity ue = gatewayDao.find(entity.getId());
+        if (ue == null) {
+            throw new BusinessException(40109, "can't find gateway");
+        }
 
-		appDao.update(ue);
-	}
+        ue.setUpdateTime(new Date());
+        ue.setName(entity.getName());
+        ue.setCluster(entity.getCluster());
+        ue.setHost(entity.getHost());
+        ue.setPort(entity.getPort());
+        ue.setRemark(entity.getRemark());
+        ue.setServerConfig(entity.getServerConfig());
+        ue.setClientConfig(entity.getClientConfig());
 
-	private boolean checkJsonFormat(String config) throws BusinessException {
-		try {
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
-	}
+        gatewayDao.update(ue);
+    }
 
-	public List<AppEntity> appList() {
-		return appDao.list();
-	}
+    private boolean checkJsonFormat(String config) throws BusinessException {
+        try {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-	public AppEntity getAppById(Integer id) {
-		if (id == null) {
-			return null;
-		}
-		return appDao.find(id);
-	}
+    public List<GatewayEntity> gatewayList() {
+        return gatewayDao.list();
+    }
 
-	public void deleteApp(Integer id) throws BusinessException {
-		if (id == null) {
-			throw new BusinessException(40108, "APP id is invalid");
-		}
+    public GatewayEntity getGatewayById(Integer id) {
+        if (id == null) {
+            return null;
+        }
+        return gatewayDao.find(id);
+    }
 
-		// close APIs
-		List<ApiEntity> ael = apiDao.list(id);
-		if (ael != null) {
-			for (ApiEntity entity : ael) {
-				closeApi(entity.getApiId());
-			}
-		}
+    public void deleteGateway(Integer gwId) throws BusinessException {
+        if (gwId == null) {
+            throw new BusinessException(40108, "Gateway id is invalid");
+        }
 
-		// close APP
-		closeApp(id);
+        // close APIs
+        List<ApiRouteEntity> ael = apiRouteDao.list(gwId);
+        if (ael != null) {
+            for (ApiRouteEntity entity : ael) {
+                closeApi(entity.getArId());
+            }
+        }
 
-		// delete APIs and APP
-		apiDao.deleteByAppId(id);
-		appDao.delete(id);
-	}
+        // close Gateway
+        closeGateway(gwId);
 
-	public void startApp(Integer id) throws BusinessException {
-		if (id == null) {
-			throw new BusinessException(40108, "APP id is invalid");
-		}
-		AppEntity app = appDao.find(id);
-		if (app != null && app.getStatus() == STATUS_CLOSE) {
-			app.setStatus(STATUS_START);
-			app.setUpdateTime(new Date());
-			appDao.updateStatus(app);
+        // delete APIs and Gateway
+        apiRouteDao.deleteByGatewayId(gwId);
+        gatewayDao.delete(gwId);
+    }
 
-			String key = "agate/apps/" + app.getCluster() + "/" + app.getName();
-			String value = convertAppOptions(app);
-			keyValueClient.putValue(key, value);
-		}
-	}
+    public void startGateway(Integer id) throws BusinessException {
+        if (id == null) {
+            throw new BusinessException(40108, "Gateway id is invalid");
+        }
+        GatewayEntity ge = gatewayDao.find(id);
+        if (ge != null && ge.getStatus() == STATUS_CLOSE) {
+            ge.setStatus(STATUS_START);
+            ge.setUpdateTime(new Date());
+            gatewayDao.updateStatus(ge);
 
-	private String convertAppOptions(AppEntity appEntity) {
-		Map<String, Object> appOptions = new HashMap<>();
-		appOptions.put("cluster", appEntity.getCluster());
-		appOptions.put("appName", appEntity.getName());
-		appOptions.put("prefix", appEntity.getPrefix());
-		appOptions.put("remark", appEntity.getRemark());
+            String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
+            String value = convertGatewayOptions(ge);
+            keyValueClient.putValue(key, value);
+        }
+    }
 
-		Map<String, Object> serverOptions = null;
-		if (appEntity.getServerConfig() != null && !appEntity.getServerConfig().isEmpty()) {
-			serverOptions = JacksonCodec.decodeValue(appEntity.getServerConfig(), Map.class);
-		} else {
-			serverOptions = new HashMap<>();
-		}
-		serverOptions.put("host", appEntity.getHost());
-		serverOptions.put("port", appEntity.getPort());
-		appOptions.put("serverOptions", serverOptions);
+    @SuppressWarnings("unchecked")
+    private String convertGatewayOptions(GatewayEntity entity) {
+        Map<String, Object> appOptions = new HashMap<>();
+        appOptions.put("cluster", entity.getCluster());
+        appOptions.put("gateway", entity.getName());
+        appOptions.put("remark", entity.getRemark());
 
-		if (appEntity.getClientConfig() != null && !appEntity.getClientConfig().isEmpty()) {
-			Map<String, Object> clientOptions = JacksonCodec.decodeValue(appEntity.getClientConfig(), Map.class);
-			appOptions.put("clientOptions", clientOptions);
-		}
+        Map<String, Object> serverOptions = null;
+        if (entity.getServerConfig() != null && !entity.getServerConfig().isEmpty()) {
+            serverOptions = JacksonCodec.decodeValue(entity.getServerConfig(), Map.class);
+        } else {
+            serverOptions = new HashMap<>();
+        }
+        serverOptions.put("host", entity.getHost());
+        serverOptions.put("port", entity.getPort());
+        appOptions.put("serverOptions", serverOptions);
 
-		return JacksonCodec.encode(appOptions);
-	}
+        if (entity.getClientConfig() != null && !entity.getClientConfig().isEmpty()) {
+            Map<String, Object> clientOptions = JacksonCodec.decodeValue(entity.getClientConfig(), Map.class);
+            appOptions.put("clientOptions", clientOptions);
+        }
 
-	public void closeApp(Integer id) throws BusinessException {
-		if (id == null) {
-			throw new BusinessException(40108, "APP id is invalid");
-		}
-		AppEntity app = appDao.find(id);
-		if (app != null && app.getStatus() == STATUS_START) {
-			app.setStatus(STATUS_CLOSE);
-			app.setUpdateTime(new Date());
-			appDao.updateStatus(app);
+        return JacksonCodec.encode(appOptions);
+    }
 
-			String key = "agate/apps/" + app.getCluster() + "/" + app.getName();
-			keyValueClient.deleteKey(key);
-		}
-	}
+    public void closeGateway(Integer id) throws BusinessException {
+        if (id == null) {
+            throw new BusinessException(40108, "APP id is invalid");
+        }
+        GatewayEntity ge = gatewayDao.find(id);
+        if (ge != null && ge.getStatus() == STATUS_START) {
+            ge.setStatus(STATUS_CLOSE);
+            ge.setUpdateTime(new Date());
+            gatewayDao.updateStatus(ge);
 
-	public List<ApiConfig> apiList(Integer appId) {
-		List<ApiConfig> apiConfigs = new LinkedList<>();
+            String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
+            keyValueClient.deleteKey(key);
+        }
+    }
 
-		List<ApiEntity> aes = apiDao.list(appId);
-		if (aes != null) {
-			for (ApiEntity apiEntity : aes) {
-				apiConfigs.add(covert(apiEntity));
-			}
-		}
+    public List<ApiConfig> apiList() {
+        List<ApiConfig> apiConfigs = new LinkedList<>();
 
-		return apiConfigs;
-	}
+        List<ApiRouteEntity> aes = apiRouteDao.list();
+        if (aes != null) {
+            for (ApiRouteEntity apiEntity : aes) {
+                apiConfigs.add(covert(apiEntity));
+            }
+        }
 
-	private ApiConfig covert(ApiEntity apiEntity) {
-		ApiConfig apiConfig = new ApiConfig();
-		apiConfig.setApiId(apiEntity.getApiId());
-		apiConfig.setAppId(apiEntity.getAppId());
-		apiConfig.setName(apiEntity.getName());
-		apiConfig.setRemark(apiEntity.getRemark());
-		apiConfig.setStatus(apiEntity.getStatus());
+        return apiConfigs;
+    }
 
-		BackendConfig bc = JacksonCodec.decodeValue(apiEntity.getBackend(), BackendConfig.class);
-		apiConfig.setBackendConfig(bc);
+    private ApiConfig covert(ApiRouteEntity apiEntity) {
+        ApiConfig apiConfig = new ApiConfig();
+        apiConfig.setArId(apiEntity.getArId());
+        apiConfig.setGwId(apiEntity.getGwId());
+        apiConfig.setName(apiEntity.getName());
+        apiConfig.setRemark(apiEntity.getRemark());
+        apiConfig.setStatus(apiEntity.getStatus());
 
-		FrontendConfig fc = JacksonCodec.decodeValue(apiEntity.getFrontend(), FrontendConfig.class);
-		apiConfig.setFrontendConfig(fc);
+        RoutingConfig bc = JacksonCodec.decodeValue(apiEntity.getRouting(), RoutingConfig.class);
+        apiConfig.setRoutingConfig(bc);
 
-		return apiConfig;
-	}
+        RequestConfig fc = JacksonCodec.decodeValue(apiEntity.getRequest(), RequestConfig.class);
+        apiConfig.setRequestConfig(fc);
 
-	private ApiEntity covert(ApiConfig apiConfig) {
-		ApiEntity apiEntity = new ApiEntity();
-		apiEntity.setApiId(apiConfig.getApiId());
-		apiEntity.setAppId(apiConfig.getAppId());
-		apiEntity.setName(apiConfig.getName());
-		apiEntity.setRemark(apiConfig.getRemark());
+        ResponseConfig rc = JacksonCodec.decodeValue(apiEntity.getResponse(), ResponseConfig.class);
+        apiConfig.setResponseConfig(rc);
 
-		apiEntity.setFrontend(JacksonCodec.encode(apiConfig.getFrontendConfig()));
+        HandlersConfig hc = JacksonCodec.decodeValue(apiEntity.getHandlers(), HandlersConfig.class);
+        apiConfig.setHandlersConfig(hc);
 
-		BackendConfig backendConfig = apiConfig.getBackendConfig();
-		if (backendConfig.getParams() != null) {
-			for (Iterator<ParamConfig> iterator = backendConfig.getParams().iterator(); iterator.hasNext();) {
-				ParamConfig pc = iterator.next();
-				if (pc == null || pc.getFeParamName() == null || pc.getBeParamName() == null) {
-					iterator.remove();
-				}
-			}
-		}
-		apiEntity.setBackend(JacksonCodec.encode(backendConfig));
+        return apiConfig;
+    }
 
-		return apiEntity;
-	}
+    private ApiRouteEntity covert(ApiConfig apiConfig) {
+        ApiRouteEntity apiEntity = new ApiRouteEntity();
+        apiEntity.setArId(apiConfig.getArId());
+        apiEntity.setGwId(apiConfig.getGwId());
+        apiEntity.setName(apiConfig.getName());
+        apiEntity.setRemark(apiConfig.getRemark());
 
-	public void createApi(ApiConfig apiConfig) throws BusinessException {
-		if (apiConfig.getAppId() == null) {
-			throw new BusinessException(40200, "APP id is invalid");
-		}
-		if (apiConfig.getName() == null || apiConfig.getName().isEmpty()) {
-			throw new BusinessException(40201, "API name is empty");
-		}
-		FrontendConfig frontendConfig = apiConfig.getFrontendConfig();
-		if (frontendConfig == null) {
-			throw new BusinessException(40202, "frontend config is null");
-		}
-		if (frontendConfig.getPath() == null || frontendConfig.getPath().isEmpty()) {
-			throw new BusinessException(40203, "frontend path is empty");
-		}
-		BackendConfig backendConfig = apiConfig.getBackendConfig();
-		if (backendConfig == null) {
-			throw new BusinessException(40204, "backend config is null");
-		}
-		if (backendConfig.getUrls() == null || backendConfig.getUrls().isEmpty()) {
-			throw new BusinessException(40205, "backend urls is null");
-		}
+        apiEntity.setRequest(JacksonCodec.encode(apiConfig.getRequestConfig()));
+        apiEntity.setResponse(JacksonCodec.encode(apiConfig.getResponseConfig()));
 
-		for (Iterator<String> iterator = backendConfig.getUrls().iterator(); iterator.hasNext();) {
-			String next = iterator.next();
-			if (next == null || next.isEmpty()) {
-				iterator.remove();
-			}
-		}
-		if (backendConfig.getUrls().isEmpty()) {
-			throw new BusinessException(40205, "backend urls is null");
-		}
+        apiEntity.setHandlers(JacksonCodec.encode(apiConfig.getHandlersConfig()));
 
-		if (apiDao.apiNameExist(apiConfig.getName())) {
-			throw new BusinessException(40206, "API name is invalid");
-		}
+        RoutingConfig backendConfig = apiConfig.getRoutingConfig();
+        if (backendConfig.getParams() != null) {
+            for (Iterator<ParamConfig> iterator = backendConfig.getParams().iterator(); iterator.hasNext();) {
+                ParamConfig pc = iterator.next();
+                if (pc == null || pc.getFeParamName() == null || pc.getBeParamName() == null) {
+                    iterator.remove();
+                }
+            }
+        }
+        apiEntity.setRouting(JacksonCodec.encode(backendConfig));
 
-		AppEntity app = appDao.find(apiConfig.getAppId());
-		if (app == null) {
-			return;
-		}
+        return apiEntity;
+    }
 
-		frontendConfig.setPrefix(app.getPrefix());
-		ApiEntity apiEntity = covert(apiConfig);
-		Date now = new Date();
-		apiEntity.setCreateTime(now);
-		apiEntity.setUpdateTime(now);
+    public void createApi(ApiConfig apiConfig) throws BusinessException {
+        if (apiConfig.getGwId() == null) {
+            throw new BusinessException(40200, "gateway is invalid");
+        }
+        if (apiConfig.getName() == null || apiConfig.getName().isEmpty()) {
+            throw new BusinessException(40201, "API name is empty");
+        }
+        RequestConfig frontendConfig = apiConfig.getRequestConfig();
+        if (frontendConfig == null) {
+            throw new BusinessException(40202, "request config is null");
+        }
+        if (frontendConfig.getPath() == null || frontendConfig.getPath().isEmpty()) {
+            throw new BusinessException(40203, "request path is empty");
+        }
+        RoutingConfig backendConfig = apiConfig.getRoutingConfig();
+        if (backendConfig == null) {
+            throw new BusinessException(40204, "routing config is null");
+        }
+        if (backendConfig.getUrls() == null || backendConfig.getUrls().isEmpty()) {
+            throw new BusinessException(40205, "routing urls is null");
+        }
 
-		apiDao.create(apiEntity);
-	}
+        for (Iterator<String> iterator = backendConfig.getUrls().iterator(); iterator.hasNext();) {
+            String next = iterator.next();
+            if (next == null || next.isEmpty()) {
+                iterator.remove();
+            }
+        }
+        if (backendConfig.getUrls().isEmpty()) {
+            throw new BusinessException(40205, "routing urls is null");
+        }
 
-	public void updateApi(ApiConfig apiConfig) throws BusinessException {
-		FrontendConfig frontendConfig = apiConfig.getFrontendConfig();
-		if (frontendConfig == null) {
-			throw new BusinessException(40202, "frontend config is null");
-		}
-		if (frontendConfig.getPath() == null || frontendConfig.getPath().isEmpty()) {
-			throw new BusinessException(40203, "frontend path is empty");
-		}
-		BackendConfig backendConfig = apiConfig.getBackendConfig();
-		if (backendConfig == null) {
-			throw new BusinessException(40204, "backend config is null");
-		}
-		if (backendConfig.getUrls() == null || backendConfig.getUrls().isEmpty()) {
-			throw new BusinessException(40205, "backend urls is null");
-		}
-		for (Iterator<String> iterator = backendConfig.getUrls().iterator(); iterator.hasNext();) {
-			String next = iterator.next();
-			if (next == null || next.isEmpty()) {
-				iterator.remove();
-			}
-		}
-		if (backendConfig.getUrls().isEmpty()) {
-			throw new BusinessException(40205, "backend urls is null");
-		}
+        if (apiRouteDao.apiNameExist(apiConfig.getName())) {
+            throw new BusinessException(40206, "API name is invalid");
+        }
 
-		ApiEntity apiEntity = apiDao.find(apiConfig.getApiId());
-		if (apiEntity == null) {
-			throw new BusinessException(40207, "can't find API");
-		}
-		AppEntity appEntity = appDao.find(apiEntity.getAppId());
-		if (appEntity == null) {
-			throw new BusinessException(40208, "can't find APP");
-		}
-		
-		frontendConfig.setPrefix(appEntity.getPrefix());
-		ApiEntity ae = covert(apiConfig);
-		apiEntity.setRemark(ae.getRemark());
-		apiEntity.setFrontend(ae.getFrontend());
-		apiEntity.setBackend(ae.getBackend());
-		apiEntity.setUpdateTime(new Date());
+        GatewayEntity entity = gatewayDao.find(apiConfig.getGwId());
+        if (entity == null) {
+            return;
+        }
 
-		apiDao.update(apiEntity);
-	}
+        ApiRouteEntity apiEntity = covert(apiConfig);
+        Date now = new Date();
+        apiEntity.setCreateTime(now);
+        apiEntity.setUpdateTime(now);
 
-	public ApiConfig getApiById(Integer apiId) {
-		ApiEntity ae = apiDao.find(apiId);
-		if (ae != null) {
-			return covert(ae);
-		}
-		return null;
-	}
+        apiRouteDao.create(apiEntity);
+    }
 
-	public void deleteApi(Integer apiId) {
-		closeApi(apiId);
-		apiDao.delete(apiId);
-	}
+    public void updateApi(ApiConfig apiConfig) throws BusinessException {
+        RequestConfig frontendConfig = apiConfig.getRequestConfig();
+        if (frontendConfig == null) {
+            throw new BusinessException(40202, "frontend config is null");
+        }
+        if (frontendConfig.getPath() == null || frontendConfig.getPath().isEmpty()) {
+            throw new BusinessException(40203, "frontend path is empty");
+        }
+        RoutingConfig backendConfig = apiConfig.getRoutingConfig();
+        if (backendConfig == null) {
+            throw new BusinessException(40204, "backend config is null");
+        }
+        if (backendConfig.getUrls() == null || backendConfig.getUrls().isEmpty()) {
+            throw new BusinessException(40205, "backend urls is null");
+        }
+        for (Iterator<String> iterator = backendConfig.getUrls().iterator(); iterator.hasNext();) {
+            String next = iterator.next();
+            if (next == null || next.isEmpty()) {
+                iterator.remove();
+            }
+        }
+        if (backendConfig.getUrls().isEmpty()) {
+            throw new BusinessException(40205, "backend urls is null");
+        }
 
-	public void startApi(Integer id) {
-		ApiEntity api = apiDao.find(id);
-		if (api != null && api.getStatus() == STATUS_CLOSE) {
-			api.setStatus(STATUS_START);
-			apiDao.updateStatus(api);
+        ApiRouteEntity apiEntity = apiRouteDao.find(apiConfig.getArId());
+        if (apiEntity == null) {
+            throw new BusinessException(40207, "can't find API");
+        }
+        GatewayEntity appEntity = gatewayDao.find(apiEntity.getGwId());
+        if (appEntity == null) {
+            throw new BusinessException(40208, "can't find Gateway");
+        }
 
-			AppEntity app = appDao.find(api.getAppId());
+        ApiRouteEntity ae = covert(apiConfig);
+        apiEntity.setRemark(ae.getRemark());
+        apiEntity.setRequest(ae.getRequest());
+        apiEntity.setRouting(ae.getRouting());
+        apiEntity.setResponse(ae.getResponse());
+        apiEntity.setHandlers(ae.getHandlers());
+        apiEntity.setUpdateTime(new Date());
 
-			String key = "agate/apis/" + app.getName() + "/" + api.getName();
-			String value = convertApiOption(app, api);
-			keyValueClient.putValue(key, value);
-		}
-	}
+        apiRouteDao.update(apiEntity);
+    }
 
-	private String convertApiOption(AppEntity appEntity, ApiEntity apiEntity) {
-		Map<String, Object> apiOptions = new HashMap<>();
-		apiOptions.put("cluster", appEntity.getCluster());
-		apiOptions.put("appName", appEntity.getName());
-		apiOptions.put("apiName", apiEntity.getName());
+    public ApiConfig getApiById(Integer apiId) {
+        ApiRouteEntity ae = apiRouteDao.find(apiId);
+        if (ae != null) {
+            return covert(ae);
+        }
+        return null;
+    }
 
-		apiOptions.put("frontend", JacksonCodec.decodeValue(apiEntity.getFrontend(), Map.class));
-		apiOptions.put("backend", JacksonCodec.decodeValue(apiEntity.getBackend(), Map.class));
+    public void deleteApi(Integer apiId) {
+        closeApi(apiId);
+        apiRouteDao.delete(apiId);
+    }
 
-		return JacksonCodec.encode(apiOptions);
-	}
+    public void startApi(Integer arId) throws BusinessException {
+        ApiRouteEntity api = apiRouteDao.find(arId);
+        if (api != null && api.getStatus() == STATUS_CLOSE) {
+            GatewayEntity ge = gatewayDao.find(api.getGwId());
+            if (ge.getStatus() != STATUS_START) {
+                throw new BusinessException(40290, "gateway is closed");
+            }
 
-	public void closeApi(Integer apiId) {
-		ApiEntity api = apiDao.find(apiId);
-		if (api != null && api.getStatus() == STATUS_START) {
-			api.setStatus(STATUS_CLOSE);
-			apiDao.updateStatus(api);
+            api.setStatus(STATUS_START);
+            apiRouteDao.updateStatus(api);
 
-			AppEntity app = appDao.find(api.getAppId());
+            String key = "agate/apis/" + ge.getName() + "/" + api.getName();
+            String value = convertApiOption(ge, api);
+            keyValueClient.putValue(key, value);
+        }
+    }
 
-			String key = "agate/apis/" + app.getName() + "/" + api.getName();
-			keyValueClient.deleteKey(key);
-		}
-	}
+    private String convertApiOption(GatewayEntity gatewayEntity, ApiRouteEntity apiEntity) {
+        Map<String, Object> apiOptions = new HashMap<>();
+        apiOptions.put("cluster", gatewayEntity.getCluster());
+        apiOptions.put("gateway", gatewayEntity.getName());
+        apiOptions.put("apiName", apiEntity.getName());
+
+        apiOptions.put("request", JacksonCodec.decodeValue(apiEntity.getRequest(), Map.class));
+        apiOptions.put("routing", JacksonCodec.decodeValue(apiEntity.getRouting(), Map.class));
+        apiOptions.put("response", JacksonCodec.decodeValue(apiEntity.getResponse(), Map.class));
+        apiOptions.put("handlers", JacksonCodec.decodeValue(apiEntity.getHandlers(), Map.class));
+
+        return JacksonCodec.encode(apiOptions);
+    }
+
+    public void closeApi(Integer apiId) {
+        ApiRouteEntity api = apiRouteDao.find(apiId);
+        if (api != null && api.getStatus() == STATUS_START) {
+            api.setStatus(STATUS_CLOSE);
+            apiRouteDao.updateStatus(api);
+
+            GatewayEntity ge = gatewayDao.find(api.getGwId());
+
+            String key = "agate/apis/" + ge.getName() + "/" + api.getName();
+            keyValueClient.deleteKey(key);
+        }
+    }
 
 }

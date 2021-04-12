@@ -29,13 +29,13 @@
 		var tbody = $(ev).parent().parent().parent();
 		var index = tbody.children().size()-1;
 		var tr = '<tr class="ng-scope">'+
-			'<td><input class="form-control" name="backendConfig.params['+index+'].feParamName"></td>'+
-			'<td><select class="form-control" name="backendConfig.params['+index+'].feParamType">'+
+			'<td><input class="form-control" name="routingConfig.params['+index+'].feParamName"></td>'+
+			'<td><select class="form-control" name="routingConfig.params['+index+'].feParamType">'+
 					'<option value="PATH">PATH</option>'+
 					'<option value="QUERY">QUERY</option>'+
 					'<option value="HEADER">HEADER</option></select></td>'+
-			'<td><input class="form-control" name="backendConfig.params['+index+'].beParamName"></td>'+
-			'<td><select class="form-control" name="backendConfig.params['+index+'].beParamType">'+
+			'<td><input class="form-control" name="routingConfig.params['+index+'].beParamName"></td>'+
+			'<td><select class="form-control" name="routingConfig.params['+index+'].beParamType">'+
 					'<option value="PATH">PATH</option>'+
 					'<option value="QUERY">QUERY</option>'+
 					'<option value="HEADER">HEADER</option></select></td>'+
@@ -49,7 +49,7 @@
 	function addUrl(ev){
 		event.preventDefault();
 		var tr = `<tr>
-			<td><input type="text" class="form-control" name="backendConfig.urls"></td>
+			<td><input type="text" class="form-control" name="routingConfig.urls"></td>
 			<td>
 				<button class="btn btn-primary" onclick="delUrl(this)">
 					<i class="glyphicon glyphicon-trash"></i> Delete
@@ -72,7 +72,7 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/view/api/list?appId=${app.id}">APIs</a></li>
+						<li><a href="${contextPath}/view/api/list">API Routes</a></li>
 						<c:if test="${action == 'create'}">
 							<li>API Create</li>
 						</c:if>
@@ -94,22 +94,26 @@
 									<div id="tip" class="alert alert-info">${error}</div>
 								</c:if>
 								<form action="/view/api/save" method="post">
-									<input name="action" value="${action}" type="hidden"> <input name="appId" value="${app.id}" type="hidden"><input name="apiId" value="${api.apiId}" type="hidden">
+									<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
 									<div class="form-group">
-										<label>Name (APP Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
+										<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
 									</div>
 									<div class="form-group">
 										<label>Remark</label>
 										<textarea class="form-control" name="remark">${api.remark}</textarea>
 									</div>
 									<div class="form-group">
-										<label>Frontend Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label>
-										<div class="input-group">
-											<span class="input-group-addon">${app.prefix}</span><input type="text" class="form-control" name="frontendConfig.path" value="${api.frontendConfig.path}">
-										</div>
+										<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <select name="gwId" class="form-control">
+											<c:forEach items="${gateways}" var="gateway">
+												<option value="${gateway.id}">${gateway.name}</option>
+											</c:forEach>
+										</select>
 									</div>
 									<div class="form-group">
-										<label>Frontend Method (Http Method)</label> <select name="frontendConfig.method" class="form-control">
+										<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="requestConfig.path" value="${api.requestConfig.path}">
+									</div>
+									<div class="form-group">
+										<label>Request Method (Http Method)</label> <select name="requestConfig.method" class="form-control">
 											<option></option>
 											<option value="GET">GET</option>
 											<option value="POST">POST</option>
@@ -118,29 +122,24 @@
 										</select>
 									</div>
 									<div class="form-group">
-										<label>Frontend Consumes (consume type and split by ',')</label> <input type="text" class="form-control" name="frontendConfig.consumes" value="${api.frontendConfig.consumes}"
-											placeholder="please input consume type and split by ','">
+										<label>Request Consumes (consume type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.requestConfig.consumes}" placeholder="please input consume type and split by ','">
 									</div>
 									<div class="form-group">
-										<label>Frontend Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="frontendConfig.produces" value="${api.frontendConfig.produces}"
-											placeholder="please input produce type and split by ','">
+										<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.produces" value="${api.requestConfig.produces}" placeholder="please input produce type and split by ','">
 									</div>
 									<div class="form-group has-feedback">
-										<label>Backend Timeout</label>
+										<label>Routing Timeout</label>
 										<div class="input-group">
-											<input type="text" class="form-control" name="backendConfig.timeout" value="${api.backendConfig.timeout}"><span class="input-group-addon">ms</span>
+											<input type="text" class="form-control" name="routingConfig.timeout" value="${api.routingConfig.timeout}"><span class="input-group-addon">ms</span>
 										</div>
 									</div>
 									<div class="form-group">
+										<label>Routing URLs <i class="glyphicon glyphicon-star red"></i></label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 											<tbody>
-												<tr>
-													<th>Backend URLs <i class="glyphicon glyphicon-star red"></i></th>
-													<th width="10%"></th>
-												</tr>
-												<c:if test="${empty api.backendConfig.urls}">
+												<c:if test="${empty api.routingConfig.urls}">
 													<tr>
-														<td><input type="text" class="form-control" name="backendConfig.urls" placeholder="example: http://127.0.0.1/test"></td>
+														<td><input type="text" class="form-control" name="routingConfig.urls" placeholder="example: http://127.0.0.1/test"></td>
 														<td>
 															<button class="btn btn-primary" onclick="addUrl(this)">
 																<i class="glyphicon glyphicon-th-list"></i> Create
@@ -148,11 +147,11 @@
 														</td>
 													</tr>
 												</c:if>
-												<c:forEach var="url" items="${api.backendConfig.urls}" varStatus="status">
+												<c:forEach var="url" items="${api.routingConfig.urls}" varStatus="status">
 													<c:choose>
 														<c:when test="${status.index==0}">
 															<tr>
-																<td><input type="text" class="form-control" name="backendConfig.urls" value="${url}" placeholder="example: http://127.0.0.1/test"></td>
+																<td><input type="text" class="form-control" name="routingConfig.urls" value="${url}" placeholder="example: http://127.0.0.1/test"></td>
 																<td>
 																	<button class="btn btn-primary" onclick="addUrl(this)">
 																		<i class="glyphicon glyphicon-th-list"></i> Create
@@ -162,7 +161,7 @@
 														</c:when>
 														<c:otherwise>
 															<tr>
-																<td><input type="text" class="form-control" name="backendConfig.urls" value="${url}"></td>
+																<td><input type="text" class="form-control" name="routingConfig.urls" value="${url}"></td>
 																<td>
 																	<button class="btn btn-primary" onclick="delUrl(this)">
 																		<i class="glyphicon glyphicon-trash"></i> Delete
@@ -176,7 +175,7 @@
 										</table>
 									</div>
 									<div class="form-group">
-										<label>Backend Method (Http Method)</label> <select name="backendConfig.method" class="form-control">
+										<label>Routing Method (Http Method)</label> <select name="routingConfig.method" class="form-control">
 											<option></option>
 											<option value="GET">GET</option>
 											<option value="POST">POST</option>
@@ -189,24 +188,24 @@
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 											<tbody>
 												<tr>
-													<th width="20%" class="ng-binding">Frontend ParamName</th>
-													<th width="20%" class="ng-binding">Frontend ParamType</th>
-													<th width="20%" class="ng-binding">Backend ParamName</th>
-													<th width="20%" class="ng-binding">Backend ParamType</th>
+													<th width="20%" class="ng-binding">Request ParamName</th>
+													<th width="20%" class="ng-binding">Request ParamType</th>
+													<th width="20%" class="ng-binding">Routing ParamName</th>
+													<th width="20%" class="ng-binding">Routing ParamType</th>
 													<th width="10%" class="ng-binding"><button class="btn btn-primary" onclick="addParam(this)">
 															<i class="glyphicon glyphicon-th-list"></i> Create
 														</button></th>
 												</tr>
-												<c:forEach var="paramConfig" items="${api.backendConfig.params}" varStatus="status">
+												<c:forEach var="paramConfig" items="${api.routingConfig.params}" varStatus="status">
 													<tr class="ng-scope">
-														<td><input class="form-control" name="backendConfig.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
-														<td><select class="form-control" name="backendConfig.params[${status.index}].feParamType">
+														<td><input class="form-control" name="routingConfig.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
+														<td><select class="form-control" name="routingConfig.params[${status.index}].feParamType">
 																<option value="PATH">PATH</option>
 																<option value="QUERY">QUERY</option>
 																<option value="HEADER">HEADER</option>
 														</select></td>
-														<td><input class="form-control" name="backendConfig.params[${status.index}].beParamName" value="${paramConfig.beParamName}"></td>
-														<td><select class="form-control" name="backendConfig.params[${status.index}].beParamType">
+														<td><input class="form-control" name="routingConfig.params[${status.index}].beParamName" value="${paramConfig.beParamName}"></td>
+														<td><select class="form-control" name="routingConfig.params[${status.index}].beParamType">
 																<option value="PATH">PATH</option>
 																<option value="QUERY">QUERY</option>
 																<option value="HEADER">HEADER</option>

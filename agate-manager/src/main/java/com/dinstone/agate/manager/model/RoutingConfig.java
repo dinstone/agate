@@ -15,32 +15,24 @@
  */
 package com.dinstone.agate.manager.model;
 
-public class FrontendConfig {
+import java.util.List;
 
-	private String prefix;
+public class RoutingConfig {
 
-	private String path;
+	private Integer timeout;
 
 	private String method;
 
-	private String consumes;
+	private List<String> urls;
 
-	private String produces;
+	private List<ParamConfig> params;
 
-	public String getPrefix() {
-		return prefix;
+	public Integer getTimeout() {
+		return timeout;
 	}
 
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
+	public void setTimeout(Integer timeout) {
+		this.timeout = timeout;
 	}
 
 	public String getMethod() {
@@ -51,20 +43,20 @@ public class FrontendConfig {
 		this.method = method;
 	}
 
-	public String getConsumes() {
-		return consumes;
+	public List<String> getUrls() {
+		return urls;
 	}
 
-	public void setConsumes(String consumes) {
-		this.consumes = consumes;
+	public void setUrls(List<String> urls) {
+		this.urls = urls;
 	}
 
-	public String getProduces() {
-		return produces;
+	public List<ParamConfig> getParams() {
+		return params;
 	}
 
-	public void setProduces(String produces) {
-		this.produces = produces;
+	public void setParams(List<ParamConfig> params) {
+		this.params = params;
 	}
 
 }

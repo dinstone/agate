@@ -111,7 +111,7 @@ public class LaunchVerticle extends AbstractVerticle {
 	 */
 	private Future<Void> watch() {
 		return Future.future(p -> {
-			appsWatch = Watch.keyPrefix("agate/apps/" + appContext.getClusterId(), vertx,
+			appsWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
 					new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
 						try {
 							watchEventHandle(ar);

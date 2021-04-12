@@ -24,16 +24,16 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
-import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
 import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
 import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ResultReplyHandler;
+import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
-import com.dinstone.agate.gateway.options.AppOptions;
-import com.dinstone.agate.gateway.options.FrontendOptions;
+import com.dinstone.agate.gateway.options.RequestOptions;
+import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.tracing.ZipkinTracer;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -61,203 +61,205 @@ import io.vertx.micrometer.backends.BackendRegistries;
  */
 public class ServerVerticle extends AbstractVerticle implements Deployer {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
 
-	private Map<String, Route> apiRouteMap = new ConcurrentHashMap<>();
+    private Map<String, Route> apiRouteMap = new ConcurrentHashMap<>();
 
-	private ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
-	private HttpServerOptions serverOptions;
+    private HttpServerOptions serverOptions;
 
-	private HttpClientOptions clientOptions;
+    private HttpClientOptions clientOptions;
 
-	private ZipkinTracer zipkinTracer;
+    private ZipkinTracer zipkinTracer;
 
-	private HttpClient httpClient;
+    private HttpClient httpClient;
 
-	private Router mainRouter;
+    private Router mainRouter;
 
-	private String appName;
+    private String gatewayName;
 
-	public ServerVerticle(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
+    public ServerVerticle(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
-	@Override
-	public void init(Vertx vertx, Context context) {
-		super.init(vertx, context);
+    @Override
+    public void init(Vertx vertx, Context context) {
+        super.init(vertx, context);
 
-		AppOptions appOptions = new AppOptions(config());
-		appName = appOptions.getAppName();
+        GatewayOptions gatewayOptions = new GatewayOptions(config());
+        gatewayName = gatewayOptions.getGateway();
 
-		serverOptions = appOptions.getServerOptions();
-		if (serverOptions == null) {
-			serverOptions = new HttpServerOptions();
-		}
-		String host = serverOptions.getHost();
-		if (host == null || host.isEmpty() || "*".equals(host)) {
-			serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
-		}
+        serverOptions = gatewayOptions.getServerOptions();
+        if (serverOptions == null) {
+            serverOptions = new HttpServerOptions();
+        }
+        String host = serverOptions.getHost();
+        if (host == null || host.isEmpty() || "*".equals(host)) {
+            serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
+        }
 
-		clientOptions = appOptions.getClientOptions();
-		if (clientOptions == null) {
-			clientOptions = new HttpClientOptions();
-		}
-		clientOptions.setConnectTimeout(3000).setIdleTimeout(10).setMaxPoolSize(5).setMaxWaitQueueSize(5);
+        clientOptions = gatewayOptions.getClientOptions();
+        if (clientOptions == null) {
+            clientOptions = new HttpClientOptions();
+        }
+        clientOptions.setConnectTimeout(3000).setIdleTimeout(10).setMaxPoolSize(5).setMaxWaitQueueSize(5);
 
-		zipkinTracer = applicationContext.getZipkinTracer();
-	}
+        zipkinTracer = applicationContext.getZipkinTracer();
+    }
 
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-		httpClient = vertx.createHttpClient(clientOptions);
+    @Override
+    public void start(Promise<Void> startPromise) throws Exception {
+        httpClient = vertx.createHttpClient(clientOptions);
 
-		mainRouter = createHttpServerRouter();
-		vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
-			if (ar.succeeded()) {
-				// register api deployer
-				registApiDeployer();
+        mainRouter = createHttpServerRouter();
+        vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
+            if (ar.succeeded()) {
+                // register api deployer
+                registApiDeployer();
 
-				LOG.info("server verticle start success, {}/{}:{}", appName, serverOptions.getHost(),
-						serverOptions.getPort());
-				startPromise.complete();
-			} else {
-				LOG.error("server verticle start failed, {}/{}:{}", appName, serverOptions.getHost(),
-						serverOptions.getPort());
-				startPromise.fail(ar.cause());
-			}
-		});
+                LOG.info("server verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+                        serverOptions.getPort());
+                startPromise.complete();
+            } else {
+                LOG.error("server verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
+                        serverOptions.getPort());
+                startPromise.fail(ar.cause());
+            }
+        });
 
-	}
+    }
 
-	@Override
-	public void stop() throws Exception {
-		removeApiDeployer();
+    @Override
+    public void stop() throws Exception {
+        removeApiDeployer();
 
-		LOG.info("server verticle stop success, {}/{}:{}", appName, serverOptions.getHost(), serverOptions.getPort());
-	}
+        LOG.info("server verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+                serverOptions.getPort());
+    }
 
-	@Override
-	public Future<Void> deployApi(ApiOptions api) {
-		Promise<Void> promise = Promise.promise();
+    @Override
+    public Future<Void> deployApi(ApiOptions api) {
+        Promise<Void> promise = Promise.promise();
 
-		context.runOnContext(ar -> {
-			try {
-				if (apiRouteMap.containsKey(api.getApiName())) {
-					promise.complete();
-					return;
-				}
+        context.runOnContext(ar -> {
+            try {
+                if (apiRouteMap.containsKey(api.getApiName())) {
+                    promise.complete();
+                    return;
+                }
 
-				FrontendOptions feo = api.getFrontend();
-				// create sub router for api
-				Router subRouter = Router.router(vertx);
-				// create api route
-				Route route = null;
-				if (HttpUtil.pathIsRegex(feo.getPath())) {
-					route = subRouter.routeWithRegex(feo.getPath());
-				} else {
-					route = subRouter.route(feo.getPath());
-				}
-				// method
-				String method = feo.getMethod();
-				if (method != null && method.length() > 0) {
-					route.method(HttpMethod.valueOf(method.toUpperCase()));
-				}
-				// consumes
-				if (feo.getConsumes() != null) {
-					for (String consume : feo.getConsumes()) {
-						route.consumes(consume);
-					}
-				}
-				// produces
-				if (feo.getProduces() != null) {
-					for (String produce : feo.getProduces()) {
-						route.produces(produce);
-					}
-				}
+                RequestOptions feo = api.getRequest();
+                // create sub router for api
+                Router subRouter = Router.router(vertx);
+                // create api route
+                Route route = null;
+                if (HttpUtil.pathIsRegex(feo.getPath())) {
+                    route = subRouter.routeWithRegex(feo.getPath());
+                } else {
+                    route = subRouter.route(feo.getPath());
+                }
+                // method
+                String method = feo.getMethod();
+                if (method != null && method.length() > 0) {
+                    route.method(HttpMethod.valueOf(method.toUpperCase()));
+                }
+                // consumes
+                if (feo.getConsumes() != null) {
+                    for (String consume : feo.getConsumes()) {
+                        route.consumes(consume);
+                    }
+                }
+                // produces
+                if (feo.getProduces() != null) {
+                    for (String produce : feo.getProduces()) {
+                        route.produces(produce);
+                    }
+                }
 
-				// before handler: tracing handler
-				if (zipkinTracer != null) {
-					route.handler(new ZipkinTracingHandler(api, zipkinTracer));
-				}
-				// before handler: metrics handler
-				MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
-				if (meterRegistry != null) {
-					route.handler(new MeterMetricsHandler(api, meterRegistry));
-				}
-				// before handler : rate limit handler
-				if (api.getRateLimit() != null) {
-					route.handler(new RateLimitHandler(api));
-				}
-				// route handler
-				route.handler(new ProxyInvokeHandler(api, httpClient, zipkinTracer));
-				// after handler : result reply handler
-				route.handler(new ResultReplyHandler(api));
-				// failure handler
-				route.failureHandler(new RestfulFailureHandler(api));
-				// cache api route
-				apiRouteMap.put(api.getApiName(), mountRoute(feo.getPrefix(), subRouter));
+                // before handler: tracing handler
+                if (zipkinTracer != null) {
+                    route.handler(new ZipkinTracingHandler(api, zipkinTracer));
+                }
+                // before handler: metrics handler
+                MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
+                if (meterRegistry != null) {
+                    route.handler(new MeterMetricsHandler(api, meterRegistry));
+                }
+                // before handler : rate limit handler
+                if (api.getHandlers() != null) {
+                    route.handler(new RateLimitHandler(api));
+                }
+                // route handler
+                route.handler(new ProxyInvokeHandler(api, httpClient, zipkinTracer));
+                // after handler : result reply handler
+                route.handler(new ResultReplyHandler(api));
+                // failure handler
+                route.failureHandler(new RestfulFailureHandler(api));
+                // cache api route
+                apiRouteMap.put(api.getApiName(), mountRoute("/", subRouter));
 
-				promise.complete();
-			} catch (Exception e) {
-				promise.fail(e);
-			}
-		});
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
 
-		return promise.future();
-	}
+        return promise.future();
+    }
 
-	/**
-	 * mount sub router to main router
-	 * 
-	 * @param path
-	 * @param subRouter
-	 * @return
-	 */
-	private Route mountRoute(String path, Router subRouter) {
-		if (!path.endsWith("*")) {
-			path = path + "*";
-		}
-		return mainRouter.route(path).subRouter(subRouter);
-	}
+    /**
+     * mount sub router to main router
+     * 
+     * @param path
+     * @param subRouter
+     * 
+     * @return
+     */
+    private Route mountRoute(String path, Router subRouter) {
+        if (!path.endsWith("*")) {
+            path = path + "*";
+        }
+        return mainRouter.route(path).subRouter(subRouter);
+    }
 
-	@Override
-	public Future<Void> removeApi(ApiOptions api) {
-		Promise<Void> promise = Promise.promise();
+    @Override
+    public Future<Void> removeApi(ApiOptions api) {
+        Promise<Void> promise = Promise.promise();
 
-		context.runOnContext(ar -> {
-			try {
-				Route route = apiRouteMap.remove(api.getApiName());
-				if (route != null) {
-					route.disable().remove();
-				}
-				promise.complete();
-			} catch (Exception e) {
-				promise.fail(e);
-			}
-		});
+        context.runOnContext(ar -> {
+            try {
+                Route route = apiRouteMap.remove(api.getApiName());
+                if (route != null) {
+                    route.disable().remove();
+                }
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
 
-		return promise.future();
-	}
+        return promise.future();
+    }
 
-	private void registApiDeployer() {
-		applicationContext.getDeployment().get(appName).regist(this);
-	}
+    private void registApiDeployer() {
+        applicationContext.getDeployment().get(gatewayName).regist(this);
+    }
 
-	private void removeApiDeployer() {
-		applicationContext.getDeployment().get(appName).remove(this);
-	}
+    private void removeApiDeployer() {
+        applicationContext.getDeployment().get(gatewayName).remove(this);
+    }
 
-	@SuppressWarnings("unused")
-	private SessionHandler sessionHandler() {
-		return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
-				.setNagHttps(false);
-	}
+    @SuppressWarnings("unused")
+    private SessionHandler sessionHandler() {
+        return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
+                .setNagHttps(false);
+    }
 
-	private Router createHttpServerRouter() {
-		Router mainRouter = Router.router(vertx);
-		mainRouter.route().handler(new AccessLogHandler());
-		return mainRouter;
-	}
+    private Router createHttpServerRouter() {
+        Router mainRouter = Router.router(vertx);
+        mainRouter.route().handler(new AccessLogHandler());
+        return mainRouter;
+    }
 
 }

@@ -19,139 +19,147 @@ import io.vertx.core.json.JsonObject;
 
 public class ApiOptions {
 
-	private String cluster;
+    private String cluster;
 
-	private String appName;
+    private String gateway;
 
-	private String apiName;
+    private String apiName;
 
-	private String remarks;
+    // ====================
+    private RequestOptions request;
 
-	// ====================
-	private FrontendOptions frontend;
+    private RoutingOptions routing;
 
-	private BackendOptions backend;
+    private ResponseOptions response;
 
-	// ====================
-	private RateLimitOptions rateLimit;
+    // ====================
+    private HandlersOptions handlers;
 
-	public ApiOptions(JsonObject json) {
-		fromJson(json);
-	}
+    public ApiOptions(JsonObject json) {
+        fromJson(json);
+    }
 
-	public String getCluster() {
-		return cluster;
-	}
+    public String getCluster() {
+        return cluster;
+    }
 
-	public void setCluster(String cluster) {
-		this.cluster = cluster;
-	}
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
+    }
 
-	public String getAppName() {
-		return appName;
-	}
+    public String getGateway() {
+        return gateway;
+    }
 
-	public void setAppName(String appName) {
-		this.appName = appName;
-	}
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
+    }
 
-	public String getApiName() {
-		return apiName;
-	}
+    public String getApiName() {
+        return apiName;
+    }
 
-	public void setApiName(String apiName) {
-		this.apiName = apiName;
-	}
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
+    }
 
-	public String getRemarks() {
-		return remarks;
-	}
+    public RequestOptions getRequest() {
+        return request;
+    }
 
-	public void setRemarks(String remarks) {
-		this.remarks = remarks;
-	}
+    public void setRequest(RequestOptions frontend) {
+        this.request = frontend;
+    }
 
-	public FrontendOptions getFrontend() {
-		return frontend;
-	}
+    public RoutingOptions getRouting() {
+        return routing;
+    }
 
-	public void setFrontend(FrontendOptions frontend) {
-		this.frontend = frontend;
-	}
+    public void setRouting(RoutingOptions backend) {
+        this.routing = backend;
+    }
 
-	public BackendOptions getBackend() {
-		return backend;
-	}
+    public ResponseOptions getResponse() {
+        return response;
+    }
 
-	public void setBackend(BackendOptions backend) {
-		this.backend = backend;
-	}
+    public void setResponse(ResponseOptions response) {
+        this.response = response;
+    }
 
-	public RateLimitOptions getRateLimit() {
-		return rateLimit;
-	}
+    public HandlersOptions getHandlers() {
+        return handlers;
+    }
 
-	public void setRateLimit(RateLimitOptions rateLimit) {
-		this.rateLimit = rateLimit;
-	}
+    public void setHandlers(HandlersOptions handlers) {
+        this.handlers = handlers;
+    }
 
-	public JsonObject toJson() {
-		JsonObject json = new JsonObject();
+    public JsonObject toJson() {
+        JsonObject json = new JsonObject();
 
-		if (appName != null) {
-			json.put("appName", appName);
-		}
-		if (cluster != null) {
-			json.put("cluster", cluster);
-		}
-		if (frontend != null) {
-			json.put("frontend", frontend.toJson());
-		}
-		if (backend != null) {
-			json.put("backend", backend.toJson());
-		}
-		if (rateLimit != null) {
-			json.put("rateLimit", rateLimit.toJson());
-		}
+        if (cluster != null) {
+            json.put("cluster", cluster);
+        }
+        if (gateway != null) {
+            json.put("gateway", gateway);
+        }
+        if (request != null) {
+            json.put("request", request.toJson());
+        }
+        if (routing != null) {
+            json.put("routing", routing.toJson());
+        }
+        if (response != null) {
+            json.put("response", response.toJson());
+        }
+        if (handlers != null) {
+            json.put("handlers", handlers.toJson());
+        }
 
-		return json;
-	}
+        return json;
+    }
 
-	public void fromJson(JsonObject json) {
-		for (java.util.Map.Entry<String, Object> member : json) {
-			switch (member.getKey()) {
-			case "appName":
-				if (member.getValue() instanceof String) {
-					this.setAppName((String) member.getValue());
-				}
-				break;
-			case "cluster":
-				if (member.getValue() instanceof String) {
-					this.setCluster((String) member.getValue());
-				}
-				break;
-			case "apiName":
-				if (member.getValue() instanceof String) {
-					this.setApiName((String) member.getValue());
-				}
-				break;
-			case "backend":
-				if (member.getValue() instanceof JsonObject) {
-					this.setBackend(new BackendOptions((JsonObject) member.getValue()));
-				}
-				break;
-			case "frontend":
-				if (member.getValue() instanceof JsonObject) {
-					this.setFrontend(new FrontendOptions((JsonObject) member.getValue()));
-				}
-				break;
-			case "rateLimit":
-				if (member.getValue() instanceof JsonObject) {
-					this.setRateLimit(new RateLimitOptions((JsonObject) member.getValue()));
-				}
-				break;
-			}
-		}
-	}
+    public void fromJson(JsonObject json) {
+        for (java.util.Map.Entry<String, Object> member : json) {
+            switch (member.getKey()) {
+            case "gateway":
+                if (member.getValue() instanceof String) {
+                    this.setGateway((String) member.getValue());
+                }
+                break;
+            case "cluster":
+                if (member.getValue() instanceof String) {
+                    this.setCluster((String) member.getValue());
+                }
+                break;
+            case "apiName":
+                if (member.getValue() instanceof String) {
+                    this.setApiName((String) member.getValue());
+                }
+                break;
+            case "request":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setRequest(new RequestOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "routing":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setRouting(new RoutingOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "response":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "handlers":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setHandlers(new HandlersOptions((JsonObject) member.getValue()));
+                }
+                break;
+            }
+        }
+    }
 
 }

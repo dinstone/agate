@@ -32,34 +32,34 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class RateLimitHandler implements BeforeHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
-	private RateLimiter limiter;
+    private RateLimiter limiter;
 
-	private ApiOptions api;
+    private ApiOptions api;
 
-	public RateLimitHandler(ApiOptions api) {
-		this.api = api;
-		if (api.getRateLimit().getPermitsPerSecond() > 0) {
-			limiter = RateLimiter.create(api.getRateLimit().getPermitsPerSecond());
-		}
-	}
+    public RateLimitHandler(ApiOptions api) {
+        this.api = api;
+        // if (api.getHandlers().getPermitsPerSecond() > 0) {
+        // limiter = RateLimiter.create(api.getHandlers().getPermitsPerSecond());
+        // }
+    }
 
-	@Override
-	public void handle(RoutingContext rc) {
-		if (limiter == null) {
-			rc.next();
-			return;
-		}
+    @Override
+    public void handle(RoutingContext rc) {
+        if (limiter == null) {
+            rc.next();
+            return;
+        }
 
-		if (limiter.tryAcquire()) {
-			rc.next();
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("{} rate limit than {}/s", api.getApiName(), limiter.getRate());
-			}
-			rc.fail(502, new RuntimeException("rate limit"));
-		}
-	}
+        if (limiter.tryAcquire()) {
+            rc.next();
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("{} rate limit than {}/s", api.getApiName(), limiter.getRate());
+            }
+            rc.fail(502, new RuntimeException("rate limit"));
+        }
+    }
 
 }

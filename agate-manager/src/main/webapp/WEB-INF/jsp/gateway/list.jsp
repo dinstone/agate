@@ -7,7 +7,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Agate Manager APPS</title>
+<title>Agate Manager Gateways</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="${contextPath}/img/favicon.ico">
@@ -46,8 +46,9 @@
 					<div class="nav-canvas">
 						<div class="nav-sm nav nav-stacked"></div>
 						<ul class="nav nav-pills nav-stacked main-menu">
-							<li class="active"><a class="ajax-link" href="${contextPath}/view/app/list"><i class="glyphicon glyphicon-align-justify"></i><span> APPs</span></a></li>
-							<li><a class="ajax-link" href="${contextPath}/view/cluster"><i class="glyphicon glyphicon-align-justify"></i><span> Cluster</span></a></li>
+							<li><a class="ajax-link" href="${contextPath}/view/api/list"><i class="glyphicon glyphicon-align-justify"></i><span> API Routes</span></a></li>
+							<li class="active"><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
+							<li><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
 						</ul>
 					</div>
 				</div>
@@ -56,7 +57,7 @@
 				<div>
 					<ul class="breadcrumb">
 						<li><a href="${contextPath}/">Home</a></li>
-						<li>APPs</li>
+						<li>Gateways</li>
 					</ul>
 				</div>
 				<div class="row">
@@ -64,44 +65,38 @@
 						<div class="box-inner">
 							<div class="box-header well">
 								<h2>
-									<i class="glyphicon glyphicon-th"></i> APP List
+									<i class="glyphicon glyphicon-th"></i> Gateway List
 								</h2>
 							</div>
 							<div class="box-content" id="tubelist">
-								<!-- <div id="container" style="width: 600px; height: 400px;"></div> -->
-								<table class="table" id="DataTables_Table_0" aria-describedby="DataTables_Table_0_info">
+								<table class="table">
 									<thead>
 										<tr>
-											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Gateway</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Cluster</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Service</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Endpoint</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default"
-												href="${contextPath}/view/app/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create APP
+											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/gateway/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Gateway
 											</a></th>
 										</tr>
 									</thead>
 									<tbody id="appList">
-										<c:forEach items="${apps}" var="app">
+										<c:forEach items="${gateways}" var="gateway">
 											<tr class="line">
-												<td><a href="${contextPath}/view/app/detail?id=${app.id}">${app.name}</a></td>
-												<td>${app.cluster}</td>
-												<td>${app.host}:${app.port}${app.prefix}</td>
-												<td>${app.remark}</td>
-												<c:if test="${app.status > 0}">
+												<td><a href="${contextPath}/view/gateway/detail?id=${gateway.id}">${gateway.name}</a></td>
+												<td>${gateway.cluster}</td>
+												<td>${gateway.host}:${gateway.port}</td>
+												<td>${gateway.remark}</td>
+												<c:if test="${gateway.status > 0}">
 													<td>Started</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/app/close?id=${app.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/api/list?appId=${app.id}"><i class="glyphicon glyphicon-list-alt"></i><span> APIs</span></a></td>
+													<td><a class="btn btn-default" href="${contextPath}/view/gateway/close?id=${gateway.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default" href="${contextPath}/view/gateway/update?id=${gateway.id}"><i class="glyphicon glyphicon-pencil"></i><span>
+																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/gateway/delete?id=${gateway.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
 												</c:if>
-												<c:if test="${app.status == 0}">
+												<c:if test="${gateway.status == 0}">
 													<td>Closed</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/app/start?id=${app.id}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/app/update?id=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/app/delete?id=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a> <a class="btn btn-default"
-														href="${contextPath}/view/api/list?appId=${app.id}"><i class="glyphicon glyphicon-list-alt"></i><span> APIs</span></a></td>
+													<td><a class="btn btn-default" href="${contextPath}/view/gateway/start?id=${gateway.id}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="${contextPath}/view/gateway/update?id=${gateway.id}"><i class="glyphicon glyphicon-pencil"></i><span>
+																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/gateway/delete?id=${gateway.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
 												</c:if>
 											</tr>
 										</c:forEach>
