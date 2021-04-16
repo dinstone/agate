@@ -22,15 +22,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
-public class EnvController {
+public class EnvironmentController {
 
     @RequestMapping("/env")
     public ModelAndView env(String env, HttpServletRequest request) {
         try {
-            return new ModelAndView("forward:/view/gateway/list");
+            return new ModelAndView("index");
         }catch (Exception e) {
         }
-        return new ModelAndView("redirect:/logout");
+        return new ModelAndView("index");
     }
 
 }

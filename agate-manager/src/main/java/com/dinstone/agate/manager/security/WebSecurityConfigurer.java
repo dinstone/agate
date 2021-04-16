@@ -38,11 +38,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
 
-        // http.addFilterAfter(new EnironmentCheckFilter(), FilterSecurityInterceptor.class);
-        // http.authorizeRequests().antMatchers("/view/**").authenticated();
-
-        http.formLogin().loginPage("/login.html").loginProcessingUrl("/login")// login process
-                // .defaultSuccessUrl("/admin/index.html", true)
+        http.formLogin().loginPage("/index.html").loginProcessingUrl("/login")// login process
+                 .defaultSuccessUrl("/env", true) // env process
                 .and().logout().logoutUrl("/logout")// logout process
                 .and().csrf().disable()// csrf disabled
                 .headers().frameOptions().sameOrigin();

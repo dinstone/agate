@@ -295,7 +295,7 @@ public class DeployVerticle extends AbstractVerticle {
         }
         CompositeFuture.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
-                LOG.info("remove api success {}", api.getApiName());
+                LOG.info("remove api success : {}", api.getApiName());
 
                 appDeploy.removeApi(api.getApiName());
                 message.reply(null);

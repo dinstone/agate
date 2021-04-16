@@ -32,8 +32,8 @@ import com.dinstone.agate.gateway.handler.ResultReplyHandler;
 import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
-import com.dinstone.agate.gateway.options.RequestOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
+import com.dinstone.agate.gateway.options.RequestOptions;
 import com.dinstone.agate.tracing.ZipkinTracer;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -196,8 +196,11 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                 route.handler(new ResultReplyHandler(api));
                 // failure handler
                 route.failureHandler(new RestfulFailureHandler(api));
+
+                // mount sub router
+                Route mountRoute = mountRoute("/", subRouter);
                 // cache api route
-                apiRouteMap.put(api.getApiName(), mountRoute("/", subRouter));
+                apiRouteMap.put(api.getApiName(), mountRoute);
 
                 promise.complete();
             } catch (Exception e) {
@@ -217,10 +220,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
      * @return
      */
     private Route mountRoute(String path, Router subRouter) {
-        if (!path.endsWith("*")) {
-            path = path + "*";
-        }
-        return mainRouter.route(path).subRouter(subRouter);
+        return mainRouter.mountSubRouter(path, subRouter);
     }
 
     @Override

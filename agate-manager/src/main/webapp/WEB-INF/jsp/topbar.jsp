@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 <c:set var="contextPath" value="${pageContext.request.contextPath}" />
 <div class="navbar navbar-default" role="navigation">
 	<div class="navbar-inner">
@@ -33,5 +33,13 @@
 			</ul>
 		</div>
 		<!-- theme selector ends -->
+		<ul class="collapse navbar-collapse nav navbar-nav top-menu">
+			<li class="dropdown"><a href="#" data-toggle="dropdown"><i class="glyphicon glyphicon-globe"></i> Environment <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li><a href="#">Test</a></li>
+					<li><a href="#">Release</a></li>
+					<li><a href="#">Product</a></li>
+				</ul></li>
+		</ul>
 	</div>
 </div>
