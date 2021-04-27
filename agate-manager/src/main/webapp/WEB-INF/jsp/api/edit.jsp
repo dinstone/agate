@@ -83,25 +83,18 @@
 				</div>
 				<div class="row">
 					<div class="box col-md-12">
-						<div class="box-inner">
-							<div class="box-header well">
-								<h2>
-									<i class="glyphicon glyphicon-th"></i> API Config
-								</h2>
-							</div>
-							<div class="box-content">
-								<c:if test="${!empty error}">
-									<div id="tip" class="alert alert-info">${error}</div>
-								</c:if>
-								<form action="/view/api/save" method="post">
-									<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
-									<div class="form-group">
-										<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
-									</div>
-									<div class="form-group">
-										<label>Remark</label>
-										<textarea class="form-control" name="remark">${api.remark}</textarea>
-									</div>
+						<c:if test="${!empty error}">
+							<div id="tip" class="alert alert-info">${error}</div>
+						</c:if>
+						<form action="/view/api/save" method="post">
+							<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h4>
+										<i class="glyphicon glyphicon-th"></i> Basic
+									</h4>
+								</div>
+								<div class="panel-body">
 									<div class="form-group">
 										<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <select name="gwId" class="form-control">
 											<c:forEach items="${gateways}" var="gateway">
@@ -109,6 +102,22 @@
 											</c:forEach>
 										</select>
 									</div>
+									<div class="form-group">
+										<label>API Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
+									</div>
+									<div class="form-group">
+										<label>Remark</label>
+										<textarea class="form-control" name="remark">${api.remark}</textarea>
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h4>
+										<i class="glyphicon glyphicon-th"></i> Request
+									</h4>
+								</div>
+								<div class="panel-body">
 									<div class="form-group">
 										<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="requestConfig.path" value="${api.requestConfig.path}">
 									</div>
@@ -126,6 +135,24 @@
 									</div>
 									<div class="form-group">
 										<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.produces" value="${api.requestConfig.produces}" placeholder="please input produce type and split by ','">
+									</div>
+								</div>
+							</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h4>
+										<i class="glyphicon glyphicon-th"></i> Routing
+									</h4>
+								</div>
+								<div class="panel-body">
+									<div class="form-group">
+										<label>Routing Method (Http Method)</label> <select name="routingConfig.method" class="form-control">
+											<option></option>
+											<option value="GET">GET</option>
+											<option value="POST">POST</option>
+											<option value="PUT">PUT</option>
+											<option value="DELETE">DELETE</option>
+										</select>
 									</div>
 									<div class="form-group has-feedback">
 										<label>Routing Timeout</label>
@@ -175,15 +202,6 @@
 										</table>
 									</div>
 									<div class="form-group">
-										<label>Routing Method (Http Method)</label> <select name="routingConfig.method" class="form-control">
-											<option></option>
-											<option value="GET">GET</option>
-											<option value="POST">POST</option>
-											<option value="PUT">PUT</option>
-											<option value="DELETE">DELETE</option>
-										</select>
-									</div>
-									<div class="form-group">
 										<label>Param Mapping</label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 											<tbody>
@@ -220,13 +238,22 @@
 											</tbody>
 										</table>
 									</div>
-									<div class="form-group">
-										<button type="reset" class="btn btn-default">Reset</button>
-										<button type="submit" class="btn btn-default">Submit</button>
-									</div>
-								</form>
+								</div>
 							</div>
-						</div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h4>
+										<i class="glyphicon glyphicon-th"></i> Response
+									</h4>
+								</div>
+								<div class="panel-body"></div>
+							</div>
+
+							<div class="form-group">
+								<button type="reset" class="btn btn-default">Reset</button>
+								<button type="submit" class="btn btn-default">Submit</button>
+							</div>
+						</form>
 					</div>
 				</div>
 			</div>

@@ -39,27 +39,36 @@
 				</div>
 				<div class="row">
 					<div class="box col-md-12">
-						<div class="box-inner">
-							<div class="box-header well">
-								<h2>
-									<i class="glyphicon glyphicon-th"></i> API Config Detail
-								</h2>
+						<c:if test="${!empty error}">
+							<div id="tip" class="alert alert-info">${error}</div>
+						</c:if>
+						<input name="arId" value="${api.arId}" type="hidden">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4>
+									<i class="glyphicon glyphicon-th"></i> Basic
+								</h4>
 							</div>
-							<div class="box-content">
-								<c:if test="${!empty error}">
-									<div id="tip" class="alert alert-info">${error}</div>
-								</c:if>
-								<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
+							<div class="panel-body">
 								<div class="form-group">
-									<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}" disabled="disabled">
+									<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" value="${gateway.name}" disabled="disabled">
+								</div>
+								<div class="form-group">
+									<label>API Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}" disabled="disabled">
 								</div>
 								<div class="form-group">
 									<label>Remark</label>
 									<textarea class="form-control" name="remark" disabled="disabled">${api.remark}</textarea>
 								</div>
-								<div class="form-group">
-									<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" value="${gateway.name}" disabled="disabled">
-								</div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4>
+									<i class="glyphicon glyphicon-th"></i> Request
+								</h4>
+							</div>
+							<div class="panel-body">
 								<div class="form-group">
 									<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="requestConfig.path" value="${api.requestConfig.path}" disabled="disabled">
 								</div>
@@ -71,6 +80,18 @@
 								</div>
 								<div class="form-group">
 									<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.produces" value="${api.requestConfig.produces}" disabled="disabled">
+								</div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4>
+									<i class="glyphicon glyphicon-th"></i> Routing
+								</h4>
+							</div>
+							<div class="panel-body">
+								<div class="form-group">
+									<label>Routing Method (Http Method)</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.routingConfig.method}" disabled="disabled">
 								</div>
 								<div class="form-group has-feedback">
 									<label>Routing Timeout</label>
@@ -94,9 +115,6 @@
 											</c:forEach>
 										</tbody>
 									</table>
-								</div>
-								<div class="form-group">
-									<label>Routing Method (Http Method)</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.routingConfig.method}" disabled="disabled">
 								</div>
 								<div class="form-group">
 									<label>Param Mapping</label>
@@ -128,6 +146,14 @@
 									</table>
 								</div>
 							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h4>
+									<i class="glyphicon glyphicon-th"></i> Response
+								</h4>
+							</div>
+							<div class="panel-body"></div>
 						</div>
 					</div>
 				</div>

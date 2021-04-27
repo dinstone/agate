@@ -62,22 +62,28 @@
 				</div>
 				<div class="row">
 					<div class="box col-md-12">
-						<div class="box-inner">
-							<div class="box-header well">
-								<h2>
-									<i class="glyphicon glyphicon-th"></i> Cluster List
-								</h2>
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-md-9" style="line-height: 30px;">
+										<h4>
+											<i class="glyphicon glyphicon-th"></i> Cluster List
+										</h4>
+									</div>
+									<div class="col-md-3">
+										<a class="btn btn-default" href="${contextPath}/view/cluster/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Cluster
+										</a>
+									</div>
+								</div>
 							</div>
-							<div class="box-content">
-								<!-- <div id="container" style="width: 600px; height: 400px;"></div> -->
+							<div class="panel-body">
 								<table class="table">
 									<thead>
 										<tr>
 											<th rowspan="1" colspan="1" style="width: 99px;">Code</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/cluster/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Cluster
-											</a></th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Operation</th>
 										</tr>
 									</thead>
 									<tbody>

@@ -75,7 +75,7 @@ public class GatewayDao {
     }
 
     public List<GatewayEntity> list() {
-        String sql = "select * from t_gateway";
+        String sql = "select g.id,g.name,c.name cluster,remark,g.host,g.port,g.status from t_gateway g, t_cluster c where g.cluster=c.code";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class));
     }
 

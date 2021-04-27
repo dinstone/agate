@@ -29,7 +29,10 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.net.SocketAddress;
+import io.vertx.core.spi.tracing.SpanKind;
 import io.vertx.core.spi.tracing.TagExtractor;
+import io.vertx.core.spi.tracing.VertxTracer;
+import io.vertx.core.tracing.TracingPolicy;
 
 /**
  * - https://zipkin.io/pages/instrumenting.html <br>
@@ -56,7 +59,6 @@ public class ZipkinTracer implements io.vertx.core.spi.tracing.VertxTracer<Span,
 		this.serverHandler = HttpServerHandler.create(httpTracing);
 	}
 
-	@Override
 	public <R> Span receiveRequest(Context context, R request, String operation,
 			Iterable<Map.Entry<String, String>> headers, TagExtractor<R> tagExtractor) {
 		if (request instanceof HttpServerRequest) {
@@ -83,8 +85,14 @@ public class ZipkinTracer implements io.vertx.core.spi.tracing.VertxTracer<Span,
 			}
 		}
 	}
-
+	
 	@Override
+	public <R> BiConsumer<Object, Throwable> sendRequest(Context context, SpanKind kind, TracingPolicy policy,
+	        R request, String operation, BiConsumer<String, String> headers, TagExtractor<R> tagExtractor) {
+	    // TODO Auto-generated method stub
+	    return VertxTracer.super.sendRequest(context, kind, policy, request, operation, headers, tagExtractor);
+	}
+
 	public <R> BiConsumer<Object, Throwable> sendRequest(Context context, R request, String operation,
 			BiConsumer<String, String> headers, TagExtractor<R> tagExtractor) {
 		if (request instanceof HttpClientRequest) {

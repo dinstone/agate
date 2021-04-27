@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
+import com.dinstone.agate.gateway.handler.HttpProxyHandler;
 import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
-import com.dinstone.agate.gateway.handler.ProxyInvokeHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
 import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ResultReplyHandler;
@@ -49,6 +49,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.micrometer.backends.BackendRegistries;
@@ -191,7 +192,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                     route.handler(new RateLimitHandler(api));
                 }
                 // route handler
-                route.handler(new ProxyInvokeHandler(api, httpClient, zipkinTracer));
+                route.handler(new HttpProxyHandler(api, httpClient, zipkinTracer));
                 // after handler : result reply handler
                 route.handler(new ResultReplyHandler(api));
                 // failure handler
@@ -259,6 +260,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
     private Router createHttpServerRouter() {
         Router mainRouter = Router.router(vertx);
         mainRouter.route().handler(new AccessLogHandler());
+        mainRouter.route().handler(ResponseTimeHandler.create());
         return mainRouter;
     }
 

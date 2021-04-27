@@ -43,9 +43,9 @@ import java.util.Map.Entry;
  * @author dinstone
  *
  */
-public class ProxyInvokeHandler implements RouteHandler {
+public class HttpProxyHandler implements RouteHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyInvokeHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpProxyHandler.class);
 
     private final HttpClient httpClient;
 
@@ -57,7 +57,7 @@ public class ProxyInvokeHandler implements RouteHandler {
 
     private int count;
 
-    public ProxyInvokeHandler(ApiOptions apiOptions, HttpClient httpClient, ZipkinTracer zipkinTracer) {
+    public HttpProxyHandler(ApiOptions apiOptions, HttpClient httpClient, ZipkinTracer zipkinTracer) {
         this.apiOptions = apiOptions;
         this.httpClient = httpClient;
         this.zipkinTracer = zipkinTracer;

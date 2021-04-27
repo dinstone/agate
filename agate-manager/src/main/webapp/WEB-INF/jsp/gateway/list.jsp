@@ -62,23 +62,30 @@
 				</div>
 				<div class="row">
 					<div class="box col-md-12">
-						<div class="box-inner">
-							<div class="box-header well">
-								<h2>
-									<i class="glyphicon glyphicon-th"></i> Gateway List
-								</h2>
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-md-9" style="line-height: 30px;">
+										<h4>
+											<i class="glyphicon glyphicon-th"></i> Gateway List
+										</h4>
+									</div>
+									<div class="col-md-3">
+										<a class="btn btn-default" href="${contextPath}/view/gateway/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Gateway
+										</a>
+									</div>
+								</div>
 							</div>
-							<div class="box-content" id="tubelist">
+							<div class="panel-body">
 								<table class="table">
 									<thead>
 										<tr>
-											<th rowspan="1" colspan="1" style="width: 99px;">Gateway</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Cluster</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Gateway Name</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Cluster Name</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Endpoint</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th rowspan="1" colspan="1" style="width: 99px;"><a class="btn btn-default" href="${contextPath}/view/gateway/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Gateway
-											</a></th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Operation</th>
 										</tr>
 									</thead>
 									<tbody id="appList">
