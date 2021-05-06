@@ -52,7 +52,7 @@
 								<form role="form" action="#">
 									<input name="action" value="${action}" type="hidden"> <input name="id" value="${gateway.id}" type="hidden">
 									<div class="form-group">
-										<label>Cluster (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="cluster" value="${gateway.cluster}" disabled="disabled">
+										<label>Cluster (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="cluster" value="${cluster.name}" disabled="disabled">
 									</div>
 									<div class="form-group">
 										<label>Name (Cluster Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${gateway.name}" disabled="disabled">

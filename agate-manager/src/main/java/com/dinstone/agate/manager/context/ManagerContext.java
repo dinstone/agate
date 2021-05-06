@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.dinstone.agate.manager.service.ClusterService;
+import com.dinstone.agate.manager.service.ManageService;
 import com.dinstone.agate.manager.utils.NamedThreadFactory;
 
 @Component
@@ -21,6 +22,9 @@ public class ManagerContext implements ApplicationListener<ApplicationStartedEve
 
     @Autowired
     private ClusterService clusterManager;
+
+    @Autowired
+    private ManageService manageService;
 
     private ScheduledExecutorService executor;
 
@@ -32,12 +36,24 @@ public class ManagerContext implements ApplicationListener<ApplicationStartedEve
             @Override
             public void run() {
                 try {
-                    clusterManager.refresh();
+                    clusterManager.clusterRefresh();
                 } catch (Exception e) {
-                    LOG.warn("agate gateway discovery error: {}", e.getMessage());
+                    LOG.warn("agate gateway cluster discovery error: {}", e.getMessage());
                 }
             }
         }, 1, 3, TimeUnit.SECONDS);
+
+        executor.scheduleAtFixedRate(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    manageService.gatewayRefresh();
+                } catch (Exception e) {
+                    LOG.warn("agate gateway instance refresh error: {}", e.getMessage());
+                }
+            }
+        }, 3, 5, TimeUnit.SECONDS);
     }
 
 }

@@ -25,6 +25,8 @@ public class ApiConfig {
 
     private String remark;
 
+    private String gateway;
+
     private int status;
 
     private RequestConfig requestConfig;
@@ -105,6 +107,14 @@ public class ApiConfig {
 
     public void setHandlersConfig(HandlersConfig handlersConfig) {
         this.handlersConfig = handlersConfig;
+    }
+
+    public String getGateway() {
+        return gateway;
+    }
+
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
     }
 
 }

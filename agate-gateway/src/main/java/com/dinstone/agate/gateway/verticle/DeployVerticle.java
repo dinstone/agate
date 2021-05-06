@@ -28,9 +28,9 @@ import com.dinstone.agate.gateway.context.AddressConstant;
 import com.dinstone.agate.gateway.context.AgateVerticleFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.ApiDeploy;
-import com.dinstone.agate.gateway.deploy.GatewayDeploy;
 import com.dinstone.agate.gateway.deploy.Deployer;
 import com.dinstone.agate.gateway.deploy.Deployment;
+import com.dinstone.agate.gateway.deploy.GatewayDeploy;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 
@@ -259,7 +259,7 @@ public class DeployVerticle extends AbstractVerticle {
         }
         CompositeFuture.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
-                LOG.info("deploy api success : {}", api.getApiName());
+                LOG.info("deploy api success : {} / {}", api.getGateway(), api.getApiName());
 
                 ApiDeploy apiDeploy = new ApiDeploy();
                 apiDeploy.setName(api.getApiName());
@@ -295,7 +295,7 @@ public class DeployVerticle extends AbstractVerticle {
         }
         CompositeFuture.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
-                LOG.info("remove api success : {}", api.getApiName());
+                LOG.info("remove api success : {} / {}", api.getGateway(), api.getApiName());
 
                 appDeploy.removeApi(api.getApiName());
                 message.reply(null);

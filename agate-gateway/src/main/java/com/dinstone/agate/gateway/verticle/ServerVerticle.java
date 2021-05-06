@@ -31,6 +31,7 @@ import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
 import com.dinstone.agate.gateway.handler.ResultReplyHandler;
 import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
+import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.gateway.options.RequestOptions;
@@ -259,6 +260,24 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
     private Router createHttpServerRouter() {
         Router mainRouter = Router.router(vertx);
+        // error handler
+        mainRouter.errorHandler(400, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "can’t accept an empty body");
+        });
+        mainRouter.errorHandler(404, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "no route matches the path " + rc.request().path());
+        });
+        mainRouter.errorHandler(405, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "don’t match the HTTP Method " + rc.request().method());
+        });
+        mainRouter.errorHandler(406, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(),
+                    "can’t provide a response with a content type matching Accept header");
+        });
+        mainRouter.errorHandler(415, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");
+        });
+
         mainRouter.route().handler(new AccessLogHandler());
         mainRouter.route().handler(ResponseTimeHandler.create());
         return mainRouter;

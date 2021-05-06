@@ -20,41 +20,46 @@ import io.vertx.ext.web.RoutingContext;
 
 public class RestfulUtil {
 
-	private static final String CONTENT_TYPE_NAME = "Content-Type";
-	private static final String CONTENT_TYPE_JSON = "application/json";
+    private static final String CONTENT_TYPE_NAME = "Content-Type";
+    private static final String CONTENT_TYPE_JSON = "application/json";
 
-	public static void success(RoutingContext ctx) {
-		success(ctx, null);
-	}
+    public static void success(RoutingContext ctx) {
+        success(ctx, null);
+    }
 
-	public static void success(RoutingContext ctx, Object result) {
-		JsonObject json = new JsonObject().put("status", "1").put("result", result);
-		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
-	}
+    public static void success(RoutingContext ctx, Object result) {
+        JsonObject json = new JsonObject().put("status", "1").put("result", result);
+        ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
+    }
 
-	public static void failure(RoutingContext ctx, String message) {
-		JsonObject json = new JsonObject().put("status", "-1").put("message", message);
-		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
-	}
+    public static void failure(RoutingContext ctx, String message) {
+        JsonObject json = new JsonObject().put("status", "-1").put("message", message);
+        ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
+    }
 
-	public static void failure(RoutingContext ctx, Throwable throwable) {
-		JsonObject json = new JsonObject().put("status", "-1").put("message", getMessage(throwable));
-		ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
-	}
+    public static void failure(RoutingContext ctx, Throwable throwable) {
+        JsonObject json = new JsonObject().put("status", "-1").put("message", getMessage(throwable));
+        ctx.response().putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
+    }
 
-	public static void exception(RoutingContext rc, int statusCode, Throwable failure) {
-		JsonObject json = new JsonObject().put("status", statusCode).put("message", getMessage(failure));
-		rc.response().setStatusCode(statusCode).putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
-	}
+    public static void exception(RoutingContext rc, int statusCode, String message) {
+        JsonObject json = new JsonObject().put("status", statusCode).put("message", message);
+        rc.response().setStatusCode(statusCode).putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
+    }
 
-	private static String getMessage(Throwable t) {
-		if (t == null) {
-			return "";
-		}
-		String message = t.getMessage();
-		if (message == null) {
-			return getMessage(t.getCause());
-		}
-		return message;
-	}
+    public static void exception(RoutingContext rc, int statusCode, Throwable failure) {
+        JsonObject json = new JsonObject().put("status", statusCode).put("message", getMessage(failure));
+        rc.response().setStatusCode(statusCode).putHeader(CONTENT_TYPE_NAME, CONTENT_TYPE_JSON).end(json.encode());
+    }
+
+    private static String getMessage(Throwable t) {
+        if (t == null) {
+            return "";
+        }
+        String message = t.getMessage();
+        if (message == null) {
+            return getMessage(t.getCause());
+        }
+        return message;
+    }
 }

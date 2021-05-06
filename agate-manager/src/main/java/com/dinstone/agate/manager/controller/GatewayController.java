@@ -89,8 +89,10 @@ public class GatewayController {
     public ModelAndView detail(Integer id) {
         ModelAndView mav = new ModelAndView("gateway/detail");
         try {
-            GatewayEntity entity = manageService.getGatewayById(id);
-            mav.addObject("gateway", entity);
+            GatewayEntity gateway = manageService.getGatewayById(id);
+            ClusterEntity cluster = clusterService.getClusterByCode(gateway.getCluster());
+            mav.addObject("cluster", cluster);
+            mav.addObject("gateway", gateway);
             mav.addObject("action", "detail");
         } catch (Exception e) {
             mav.addObject("error", e.getMessage());

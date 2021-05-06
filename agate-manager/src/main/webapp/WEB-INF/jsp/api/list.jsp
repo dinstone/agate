@@ -69,6 +69,7 @@
 								<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 									<thead>
 										<tr>
+											<th rowspan="1" colspan="1" style="width: 99px;">Gateway</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
@@ -79,6 +80,7 @@
 									<tbody>
 										<c:forEach items="${apis}" var="api">
 											<tr class="line">
+												<td>${api.gateway}</td>
 												<td><a href="${contextPath}/view/api/detail?apiId=${api.arId}">${api.name}</a></td>
 												<td>${api.requestConfig.path}</td>
 												<td>${api.remark}</td>

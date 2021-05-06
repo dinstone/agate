@@ -63,6 +63,16 @@ public class ClusterDao {
         return null;
     }
 
+    public ClusterEntity find(String code) {
+        String sql = "select * from t_cluster where code=?";
+        List<ClusterEntity> apps = jdbcTemplate.query(sql, new Object[] { code },
+                BeanPropertyRowMapper.newInstance(ClusterEntity.class));
+        if (!apps.isEmpty()) {
+            return apps.get(0);
+        }
+        return null;
+    }
+
     public void delete(Integer id) {
         String sql = "delete from t_cluster where id=?";
         jdbcTemplate.update(sql, new Object[] { id });

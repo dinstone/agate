@@ -89,6 +89,16 @@ public class GatewayDao {
         return null;
     }
 
+    public GatewayEntity find(String cluster, String name) {
+        String sql = "select * from t_gateway where cluster=? and name=?";
+        List<GatewayEntity> apps = jdbcTemplate.query(sql, new Object[] { cluster, name },
+                BeanPropertyRowMapper.newInstance(GatewayEntity.class));
+        if (!apps.isEmpty()) {
+            return apps.get(0);
+        }
+        return null;
+    }
+
     public void delete(Integer id) {
         String sql = "delete from t_gateway where id=?";
         jdbcTemplate.update(sql, new Object[] { id });
@@ -97,6 +107,11 @@ public class GatewayDao {
     public void updateStatus(GatewayEntity entity) {
         String sql = "update t_gateway set status=?,updatetime=? where id=?";
         jdbcTemplate.update(sql, new Object[] { entity.getStatus(), entity.getUpdateTime(), entity.getId() });
+    }
+
+    public List<GatewayEntity> all() {
+        String sql = "select * from t_gateway";
+        return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class));
     }
 
 }

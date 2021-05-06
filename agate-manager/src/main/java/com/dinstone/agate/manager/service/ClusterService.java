@@ -49,7 +49,7 @@ public class ClusterService {
         }
     }
 
-    public void refresh() {
+    public void clusterRefresh() {
         List<NodeEntity> entities = new ArrayList<>();
 
         ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
@@ -118,6 +118,10 @@ public class ClusterService {
 
     public ClusterEntity getClusterById(Integer id) {
         return clusterDao.find(id);
+    }
+
+    public ClusterEntity getClusterByCode(String code) {
+        return clusterDao.find(code);
     }
 
 }

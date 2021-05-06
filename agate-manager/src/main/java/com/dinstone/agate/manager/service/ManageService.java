@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,7 @@ import com.dinstone.agate.manager.model.ResponseConfig;
 import com.dinstone.agate.manager.model.RoutingConfig;
 import com.dinstone.agate.manager.utils.JacksonCodec;
 import com.orbitz.consul.KeyValueClient;
+import com.orbitz.consul.model.kv.Value;
 
 @Component
 public class ManageService {
@@ -166,35 +168,8 @@ public class ManageService {
             ge.setUpdateTime(new Date());
             gatewayDao.updateStatus(ge);
 
-            String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
-            String value = convertGatewayOptions(ge);
-            keyValueClient.putValue(key, value);
+            createGatewayKey(ge);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private String convertGatewayOptions(GatewayEntity entity) {
-        Map<String, Object> appOptions = new HashMap<>();
-        appOptions.put("cluster", entity.getCluster());
-        appOptions.put("gateway", entity.getName());
-        appOptions.put("remark", entity.getRemark());
-
-        Map<String, Object> serverOptions = null;
-        if (entity.getServerConfig() != null && !entity.getServerConfig().isEmpty()) {
-            serverOptions = JacksonCodec.decodeValue(entity.getServerConfig(), Map.class);
-        } else {
-            serverOptions = new HashMap<>();
-        }
-        serverOptions.put("host", entity.getHost());
-        serverOptions.put("port", entity.getPort());
-        appOptions.put("serverOptions", serverOptions);
-
-        if (entity.getClientConfig() != null && !entity.getClientConfig().isEmpty()) {
-            Map<String, Object> clientOptions = JacksonCodec.decodeValue(entity.getClientConfig(), Map.class);
-            appOptions.put("clientOptions", clientOptions);
-        }
-
-        return JacksonCodec.encode(appOptions);
     }
 
     public void closeGateway(Integer id) throws BusinessException {
@@ -207,8 +182,7 @@ public class ManageService {
             ge.setUpdateTime(new Date());
             gatewayDao.updateStatus(ge);
 
-            String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
-            keyValueClient.deleteKey(key);
+            deleteGatewayKey(ge);
         }
     }
 
@@ -233,16 +207,18 @@ public class ManageService {
         apiConfig.setRemark(apiEntity.getRemark());
         apiConfig.setStatus(apiEntity.getStatus());
 
-        RoutingConfig bc = JacksonCodec.decodeValue(apiEntity.getRouting(), RoutingConfig.class);
+        apiConfig.setGateway(gatewayDao.find(apiEntity.getGwId()).getName());
+
+        RoutingConfig bc = JacksonCodec.decode(apiEntity.getRouting(), RoutingConfig.class);
         apiConfig.setRoutingConfig(bc);
 
-        RequestConfig fc = JacksonCodec.decodeValue(apiEntity.getRequest(), RequestConfig.class);
+        RequestConfig fc = JacksonCodec.decode(apiEntity.getRequest(), RequestConfig.class);
         apiConfig.setRequestConfig(fc);
 
-        ResponseConfig rc = JacksonCodec.decodeValue(apiEntity.getResponse(), ResponseConfig.class);
+        ResponseConfig rc = JacksonCodec.decode(apiEntity.getResponse(), ResponseConfig.class);
         apiConfig.setResponseConfig(rc);
 
-        HandlersConfig hc = JacksonCodec.decodeValue(apiEntity.getHandlers(), HandlersConfig.class);
+        HandlersConfig hc = JacksonCodec.decode(apiEntity.getHandlers(), HandlersConfig.class);
         apiConfig.setHandlersConfig(hc);
 
         return apiConfig;
@@ -404,10 +380,10 @@ public class ManageService {
         apiOptions.put("gateway", gatewayEntity.getName());
         apiOptions.put("apiName", apiEntity.getName());
 
-        apiOptions.put("request", JacksonCodec.decodeValue(apiEntity.getRequest(), Map.class));
-        apiOptions.put("routing", JacksonCodec.decodeValue(apiEntity.getRouting(), Map.class));
-        apiOptions.put("response", JacksonCodec.decodeValue(apiEntity.getResponse(), Map.class));
-        apiOptions.put("handlers", JacksonCodec.decodeValue(apiEntity.getHandlers(), Map.class));
+        apiOptions.put("request", JacksonCodec.decode(apiEntity.getRequest(), Map.class));
+        apiOptions.put("routing", JacksonCodec.decode(apiEntity.getRouting(), Map.class));
+        apiOptions.put("response", JacksonCodec.decode(apiEntity.getResponse(), Map.class));
+        apiOptions.put("handlers", JacksonCodec.decode(apiEntity.getHandlers(), Map.class));
 
         return JacksonCodec.encode(apiOptions);
     }
@@ -423,6 +399,77 @@ public class ManageService {
             String key = "agate/apis/" + ge.getName() + "/" + api.getName();
             keyValueClient.deleteKey(key);
         }
+    }
+
+    public void gatewayRefresh() {
+        String key = "agate/gateway";
+        List<String> ks = keyValueClient.getKeys(key);
+        for (String k : ks) {
+            Optional<Value> v = keyValueClient.getValue(k);
+            if (v.isPresent()) {
+                String[] gps = v.get().getKey().split("/");
+                GatewayEntity g = gatewayDao.find(gps[2], gps[3]);
+                if (g == null || g.getStatus() == STATUS_CLOSE) {
+                    keyValueClient.deleteKey(k);
+
+                    key = "agate/apis/" + gps[3];
+                    keyValueClient.deleteKey(key);
+                }
+            }
+        }
+
+        List<GatewayEntity> ges = gatewayDao.all();
+        for (GatewayEntity ge : ges) {
+            if (ge.getStatus() == STATUS_START) {
+                if (!existGatewayKey(ge)) {
+                    createGatewayKey(ge);
+                }
+            } else {
+                deleteGatewayKey(ge);
+            }
+        }
+    }
+
+    private void createGatewayKey(GatewayEntity ge) {
+        String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
+        String value = convertGatewayOptions(ge);
+        keyValueClient.putValue(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private String convertGatewayOptions(GatewayEntity entity) {
+        Map<String, Object> appOptions = new HashMap<>();
+        appOptions.put("cluster", entity.getCluster());
+        appOptions.put("gateway", entity.getName());
+        appOptions.put("remark", entity.getRemark());
+
+        Map<String, Object> serverOptions = null;
+        if (entity.getServerConfig() != null && !entity.getServerConfig().isEmpty()) {
+            serverOptions = JacksonCodec.decode(entity.getServerConfig(), Map.class);
+        } else {
+            serverOptions = new HashMap<>();
+        }
+        serverOptions.put("host", entity.getHost());
+        serverOptions.put("port", entity.getPort());
+        appOptions.put("serverOptions", serverOptions);
+
+        if (entity.getClientConfig() != null && !entity.getClientConfig().isEmpty()) {
+            Map<String, Object> clientOptions = JacksonCodec.decode(entity.getClientConfig(), Map.class);
+            appOptions.put("clientOptions", clientOptions);
+        }
+
+        return JacksonCodec.encode(appOptions);
+    }
+
+    private boolean existGatewayKey(GatewayEntity ge) {
+        String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
+        Optional<Value> value = keyValueClient.getValue(key);
+        return !value.isEmpty();
+    }
+
+    private void deleteGatewayKey(GatewayEntity ge) {
+        String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
+        keyValueClient.deleteKey(key);
     }
 
 }

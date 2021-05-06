@@ -46,7 +46,7 @@ public class JacksonCodec {
         }
     }
 
-    public static <T> T decodeValue(String str, Class<T> clazz) {
+    public static <T> T decode(String str, Class<T> clazz) {
         if (str == null) {
             return null;
         }

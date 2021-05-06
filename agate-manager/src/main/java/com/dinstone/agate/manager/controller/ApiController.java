@@ -87,7 +87,6 @@ public class ApiController {
         try {
             ApiConfig apiConfig = manageService.getApiById(apiId);
             if (apiConfig != null) {
-                // AppEntity appEntity = manageService.getAppById(apiConfig.getAppId());
                 GatewayEntity gateway = manageService.getGatewayById(apiConfig.getGwId());
                 mav.addObject("api", apiConfig).addObject("gateway", gateway);
             }
