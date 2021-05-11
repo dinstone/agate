@@ -79,8 +79,8 @@ public class DeployVerticle extends AbstractVerticle {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        vertx.eventBus().consumer(AddressConstant.APP_START, this::startGateway);
-        vertx.eventBus().consumer(AddressConstant.APP_CLOSE, this::closeGateway);
+        vertx.eventBus().consumer(AddressConstant.GATEWAY_START, this::startGateway);
+        vertx.eventBus().consumer(AddressConstant.GATEWAY_CLOSE, this::closeGateway);
         vertx.eventBus().consumer(AddressConstant.API_DEPLOY, this::deployApiRoute);
         vertx.eventBus().consumer(AddressConstant.API_REMOVE, this::removeApiRoute);
 
@@ -88,14 +88,14 @@ public class DeployVerticle extends AbstractVerticle {
     }
 
     private void startGateway(Message<JsonObject> message) {
-        GatewayOptions appParam = new GatewayOptions(message.body());
-        String error = checkGatewayParams(appParam);
+        GatewayOptions gatewayOptions = new GatewayOptions(message.body());
+        String error = checkGatewayParams(gatewayOptions);
         if (error != null) {
             message.fail(400, error);
             return;
         }
 
-        String gatewayName = appParam.getGateway();
+        String gatewayName = gatewayOptions.getGateway();
         // check app is start
         if (deployment.get(gatewayName) != null) {
             message.reply(null);
@@ -243,18 +243,18 @@ public class DeployVerticle extends AbstractVerticle {
             return;
         }
 
-        GatewayDeploy appDeploy = deployment.get(api.getGateway());
-        if (appDeploy == null) {
+        GatewayDeploy gatewayDeploy = deployment.get(api.getGateway());
+        if (gatewayDeploy == null) {
             message.fail(503, "gateway is not start");
             return;
         }
-        if (appDeploy.containApi(api.getApiName())) {
+        if (gatewayDeploy.containApi(api.getApiName())) {
             message.reply(null);
             return;
         }
 
         List<Future> futures = new LinkedList<Future>();
-        for (Deployer deployer : appDeploy.getApiDeployers()) {
+        for (Deployer deployer : gatewayDeploy.getApiDeployers()) {
             futures.add(deployer.deployApi(api));
         }
         CompositeFuture.all(futures).onComplete(ar -> {
@@ -265,7 +265,7 @@ public class DeployVerticle extends AbstractVerticle {
                 apiDeploy.setName(api.getApiName());
                 apiDeploy.setPrefix(api.getRequest().getPrefix());
                 apiDeploy.setPath(api.getRequest().getPath());
-                appDeploy.registApi(apiDeploy);
+                gatewayDeploy.registApi(apiDeploy);
 
                 message.reply(null);
             } else {

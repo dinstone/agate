@@ -32,85 +32,85 @@ import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 
 public class GatewayLauncher extends Launcher {
 
-	private static final Logger LOG = LoggerFactory.getLogger(GatewayLauncher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GatewayLauncher.class);
 
-	private static final String DEFAULT_GATEWAY_CONFIG = "config.json";
+    private static final String DEFAULT_GATEWAY_CONFIG = "config.json";
 
-	private JsonObject config;
+    private JsonObject config;
 
-	public static void main(String[] args) {
-		// disable DnsResolver
-		System.setProperty("vertx.disableDnsResolver", "true");
+    public static void main(String[] args) {
+        // disable DnsResolver
+        System.setProperty("vertx.disableDnsResolver", "true");
 
-		// init vertx log factory
-		if (System.getProperty("vertx.logger-delegate-factory-class-name") == null) {
-			System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
-		}
+        // init vertx log factory
+        if (System.getProperty("vertx.logger-delegate-factory-class-name") == null) {
+            System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
+        }
 
-		new GatewayLauncher().dispatch(args);
-	}
+        new GatewayLauncher().dispatch(args);
+    }
 
-	@Override
-	public void afterConfigParsed(JsonObject config) {
-		// config from command line
-		if (!config.isEmpty()) {
-			this.config = config;
-		} else {
-			this.config = ConfigUtil.loadConfig(DEFAULT_GATEWAY_CONFIG);
-		}
-		LOG.info("application config :\r\n{}", this.config.encodePrettily());
-	}
+    @Override
+    public void afterConfigParsed(JsonObject config) {
+        // config from command line
+        if (!config.isEmpty()) {
+            this.config = config;
+        } else {
+            this.config = ConfigUtil.loadConfig(DEFAULT_GATEWAY_CONFIG);
+        }
+        LOG.info("application config :\r\n{}", this.config.encodePrettily());
+    }
 
-	@Override
-	public void beforeStartingVertx(VertxOptions vertxOptions) {
-		// tracing
-		vertxOptions.setTracingOptions(tracingOptions());
+    @Override
+    public void beforeStartingVertx(VertxOptions vertxOptions) {
+        // tracing
+        vertxOptions.setTracingOptions(tracingOptions());
 
-		// metrics
-		vertxOptions.setMetricsOptions(metricsOptions());
+        // metrics
+        vertxOptions.setMetricsOptions(metricsOptions());
 
-		// native transport
-		vertxOptions.setPreferNativeTransport(true);
+        // native transport
+        vertxOptions.setPreferNativeTransport(true);
 
-		JsonObject vertxConfig = config.getJsonObject("vertx", new JsonObject());
-		int blockedThreadCheckInterval = vertxConfig.getInteger("blockedThreadCheckInterval", -1);
-		if (blockedThreadCheckInterval > 0) {
-			vertxOptions.setBlockedThreadCheckInterval(blockedThreadCheckInterval);
-		}
+        JsonObject vertxConfig = config.getJsonObject("vertx", new JsonObject());
+        int blockedThreadCheckInterval = vertxConfig.getInteger("blockedThreadCheckInterval", -1);
+        if (blockedThreadCheckInterval > 0) {
+            vertxOptions.setBlockedThreadCheckInterval(blockedThreadCheckInterval);
+        }
 
-		int eventLoopPoolSize = vertxConfig.getInteger("eventLoopPoolSize", -1);
-		if (eventLoopPoolSize > 0) {
-			vertxOptions.setEventLoopPoolSize(eventLoopPoolSize);
-		}
+        int eventLoopPoolSize = vertxConfig.getInteger("eventLoopPoolSize", -1);
+        if (eventLoopPoolSize > 0) {
+            vertxOptions.setEventLoopPoolSize(eventLoopPoolSize);
+        }
 
-		int workerPoolSize = vertxConfig.getInteger("workerPoolSize", -1);
-		if (workerPoolSize > 0) {
-			vertxOptions.setWorkerPoolSize(workerPoolSize);
-		}
-	}
+        int workerPoolSize = vertxConfig.getInteger("workerPoolSize", -1);
+        if (workerPoolSize > 0) {
+            vertxOptions.setWorkerPoolSize(workerPoolSize);
+        }
+    }
 
-	private TracingOptions tracingOptions() {
-		ZipkinTracingOptions options;
-		JsonObject tracingConfig = config.getJsonObject("tracing");
-		if (tracingConfig != null) {
-			options = new ZipkinTracingOptions(tracingConfig);
-		} else {
-			options = new ZipkinTracingOptions("agate-gateway");
-		}
-		if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
-			options.setServiceName("agate-gateway");
-		}
-		return options;
-	}
+    private TracingOptions tracingOptions() {
+        ZipkinTracingOptions options;
+        JsonObject tracingConfig = config.getJsonObject("tracing");
+        if (tracingConfig != null) {
+            options = new ZipkinTracingOptions(tracingConfig);
+        } else {
+            options = new ZipkinTracingOptions().setServiceName("agate-gateway");
+        }
+        if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
+            options.setServiceName("agate-gateway");
+        }
+        return options;
+    }
 
-	private MicrometerMetricsOptions metricsOptions() {
-		VertxJmxMetricsOptions jmxo = new VertxJmxMetricsOptions().setEnabled(true);
-		return new MicrometerMetricsOptions().setEnabled(true).setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
-	}
+    private MicrometerMetricsOptions metricsOptions() {
+        VertxJmxMetricsOptions jmxo = new VertxJmxMetricsOptions().setEnabled(true);
+        return new MicrometerMetricsOptions().setEnabled(true).setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
+    }
 
-	@Override
-	public void beforeDeployingVerticle(DeploymentOptions deploymentOptions) {
-		deploymentOptions.setConfig(config).setInstances(1);
-	}
+    @Override
+    public void beforeDeployingVerticle(DeploymentOptions deploymentOptions) {
+        deploymentOptions.setConfig(config).setInstances(1);
+    }
 
 }

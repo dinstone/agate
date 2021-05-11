@@ -15,27 +15,37 @@
  */
 package com.dinstone.agate.gateway.handler;
 
-import com.dinstone.agate.gateway.context.ContextConstants;
-import com.dinstone.agate.gateway.http.HttpUtil;
-import com.dinstone.agate.gateway.http.QueryCoder;
-import com.dinstone.agate.gateway.options.ApiOptions;
-import com.dinstone.agate.gateway.options.RoutingOptions;
-import com.dinstone.agate.gateway.options.ParamOptions;
-import com.dinstone.agate.gateway.options.ParamType;
-import com.dinstone.agate.gateway.spi.RouteHandler;
-import com.dinstone.agate.tracing.HttpClientTracing;
-import com.dinstone.agate.tracing.ZipkinTracer;
-import io.vertx.core.MultiMap;
-import io.vertx.core.http.*;
-import io.vertx.core.streams.Pump;
-import io.vertx.ext.web.RoutingContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.dinstone.agate.gateway.context.ContextConstants;
+import com.dinstone.agate.gateway.http.HttpUtil;
+import com.dinstone.agate.gateway.http.QueryCoder;
+import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.ParamOptions;
+import com.dinstone.agate.gateway.options.ParamType;
+import com.dinstone.agate.gateway.options.RoutingOptions;
+import com.dinstone.agate.gateway.spi.RouteHandler;
+
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
+import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.RequestOptions;
+import io.vertx.core.streams.Pump;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * http route and proxy.
@@ -51,29 +61,59 @@ public class HttpProxyHandler implements RouteHandler {
 
     private final ApiOptions apiOptions;
 
-    private final ZipkinTracer zipkinTracer;
-
     private final RoutingOptions backendOptions;
+
+    private CircuitBreaker circuitBreaker;
 
     private int count;
 
-    public HttpProxyHandler(ApiOptions apiOptions, HttpClient httpClient, ZipkinTracer zipkinTracer) {
+    public HttpProxyHandler(ApiOptions apiOptions, Vertx vertx, HttpClientOptions clientOptions) {
         this.apiOptions = apiOptions;
-        this.httpClient = httpClient;
-        this.zipkinTracer = zipkinTracer;
         this.backendOptions = apiOptions.getRouting();
+
+        if (clientOptions == null) {
+            clientOptions = new HttpClientOptions();
+            clientOptions.setConnectTimeout(2000);
+            clientOptions.setMaxWaitQueueSize(5);
+            clientOptions.setIdleTimeout(10);
+            clientOptions.setMaxPoolSize(5);
+            // clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+        }
+        this.httpClient = vertx.createHttpClient(clientOptions);
+
+        CircuitBreakerOptions cbOptions = new CircuitBreakerOptions();
+        // cbOptions.setFailuresRollingWindow(10000);
+        cbOptions.setMaxFailures(10);
+        // If an action is not completed before this timeout, the action is considered as a failure.
+        cbOptions.setTimeout(2000);
+        // does not succeed in time
+        cbOptions.setFallbackOnFailure(false);
+        // time spent in open state before attempting to re-try
+        cbOptions.setResetTimeout(10000);
+        this.circuitBreaker = CircuitBreaker.create(apiOptions.getApiName(), vertx, cbOptions).openHandler(v -> {
+            LOG.debug("circuit breaker {} open", circuitBreaker.name());
+        }).closeHandler(v -> {
+            LOG.debug("circuit breaker {} close", circuitBreaker.name());
+        }).halfOpenHandler(v -> {
+            LOG.debug("circuit breaker {} half", circuitBreaker.name());
+        });
     }
 
     @Override
     public void handle(RoutingContext rc) {
-        try {
+        if (circuitBreaker != null) {
+            circuitBreaker.<Void> executeWithFallback(promise -> {
+                routing(rc).onComplete(promise);
+            }, t -> {
+                rc.fail(504, t); // gateway time-out
+                return null;
+            });
+        } else {
             routing(rc);
-        } catch (Exception e) {
-            rc.fail(500, new RuntimeException("route handle error: " + e.getMessage(), e));
         }
     }
 
-    private void routing(RoutingContext rc) {
+    private Future<Void> routing(RoutingContext rc) {
         Map<String, String> pathParams = new HashMap<>();
         MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
         MultiMap headerParams = MultiMap.caseInsensitiveMultiMap();
@@ -142,14 +182,23 @@ public class HttpProxyHandler implements RouteHandler {
                 options.addHeader(e.getKey(), e.getValue());
             }
         }
+
+        Promise<Void> promise = Promise.promise();
+
         // create http request
-        httpClient.request(options).onSuccess(r -> {
-            HttpClientRequest beRequest = r;
-            if (zipkinTracer != null) {
-                trace(rc, beRequest);
-            } else {
-                common(rc, beRequest);
-            }
+        httpClient.request(options).onSuccess(beRequest -> {
+            // response handler
+            beRequest.response().onComplete(ar -> {
+                if (ar.succeeded()) {
+                    rc.put(ContextConstants.BACKEND_RESPONSE, ar.result());
+                    rc.next();
+                    promise.complete();
+                } else {
+                    // tracing.failure(ar.cause());
+                    rc.fail(503, ar.cause()); // Service Unavailable
+                    promise.fail(ar.cause());
+                }
+            });
 
             // transport body and send request
             if (HttpUtil.hasBody(beRequest.getMethod())) {
@@ -165,37 +214,11 @@ public class HttpProxyHandler implements RouteHandler {
                 beRequest.end();
             }
         }).onFailure(t -> {
-            rc.fail(503, t);
+            rc.fail(502, t);// bad gateway
+            promise.fail(t);
         });
-    }
 
-    private void common(RoutingContext rc, HttpClientRequest beRequest) {
-        // response handler
-        beRequest.response().onComplete(ar -> {
-            if (ar.succeeded()) {
-                rc.put(ContextConstants.BACKEND_RESPONSE, ar.result());
-                rc.next();
-            } else {
-                rc.fail(503, ar.cause());
-            }
-        });
-    }
-
-    void trace(RoutingContext rc, HttpClientRequest beRequest) {
-        // tracing
-        HttpClientTracing tracing = zipkinTracer.httpClientTracing().start(beRequest);
-        tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getGateway());
-        // response handler
-        beRequest.response().onComplete(ar -> {
-            if (ar.succeeded()) {
-                rc.put(ContextConstants.BACKEND_TRACING, tracing);
-                rc.put(ContextConstants.BACKEND_RESPONSE, ar.result());
-                rc.next();
-            } else {
-                tracing.failure(ar.cause());
-                rc.fail(503, ar.cause());
-            }
-        });
+        return promise.future();
     }
 
     private String findParamValue(RoutingContext rc, ParamOptions param) {

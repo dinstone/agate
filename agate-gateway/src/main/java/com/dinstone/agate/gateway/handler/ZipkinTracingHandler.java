@@ -17,42 +17,26 @@ package com.dinstone.agate.gateway.handler;
 
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.BeforeHandler;
-import com.dinstone.agate.tracing.HttpServerTracing;
-import com.dinstone.agate.tracing.ZipkinTracer;
 
-import brave.propagation.CurrentTraceContext.Scope;
+import brave.Span;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.tracing.zipkin.ZipkinTracer;
 
 public class ZipkinTracingHandler implements BeforeHandler {
 
-	private ApiOptions apiOptions;
+    private ApiOptions apiOptions;
 
-	private ZipkinTracer zipkinTracer;
+    public ZipkinTracingHandler(ApiOptions apiOptions) {
+        this.apiOptions = apiOptions;
+    }
 
-	public ZipkinTracingHandler(ApiOptions apiOptions, ZipkinTracer zipkinTracer) {
-		this.apiOptions = apiOptions;
-		this.zipkinTracer = zipkinTracer;
-	}
-
-	@Override
-	public void handle(RoutingContext context) {
-		if (zipkinTracer == null) {
-			context.next();
-		}
-
-		HttpServerTracing tracing = zipkinTracer.httpServerTracing();
-		try (Scope scope = tracing.start(context.request()).scope()) {
-			tracing.tag("api.name", apiOptions.getApiName()).tag("app.name", apiOptions.getGateway());
-			context.addBodyEndHandler(v -> {
-				if (context.failed()) {
-					tracing.failure(context.failure());
-				} else {
-					tracing.success(context.response());
-				}
-			});
-
-			context.next();
-		}
-	}
+    @Override
+    public void handle(RoutingContext context) {
+        Span activeSpan = ZipkinTracer.activeSpan();
+        if (activeSpan != null) {
+            activeSpan.tag("api.name", apiOptions.getApiName()).tag("gateway", apiOptions.getGateway());
+        }
+        context.next();
+    }
 
 }

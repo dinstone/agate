@@ -71,11 +71,22 @@
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-consul-client</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>28.2-jre</version>
 		</dependency>
+
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-circuit-breaker</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-zipkin</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-micrometer-metrics</artifactId>
@@ -86,11 +97,6 @@
 			<version>1.3.6</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.dinstone.agate</groupId>
-			<artifactId>agate-tracing</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>io.vertx</groupId>

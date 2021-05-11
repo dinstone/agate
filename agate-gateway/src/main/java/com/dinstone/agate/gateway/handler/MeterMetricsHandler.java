@@ -30,35 +30,35 @@ import io.vertx.ext.web.RoutingContext;
 
 public class MeterMetricsHandler implements BeforeHandler {
 
-	private Counter count;
+    private Counter count;
 
-	private Counter error;
+    private Counter error;
 
-	private Timer timer;
+    private Timer timer;
 
-	public MeterMetricsHandler(ApiOptions apiOptions, MeterRegistry meterRegistry) {
-		List<Tag> tags = Arrays.asList(Tag.of("app.name", apiOptions.getGateway()));
-		this.count = meterRegistry.counter(apiOptions.getApiName() + "_count", tags);
-		this.error = meterRegistry.counter(apiOptions.getApiName() + "_error", tags);
-		this.timer = meterRegistry.timer(apiOptions.getApiName() + "_time", tags);
-	}
+    public MeterMetricsHandler(ApiOptions apiOptions, MeterRegistry meterRegistry) {
+        List<Tag> tags = Arrays.asList(Tag.of("gateway", apiOptions.getGateway()));
+        this.count = meterRegistry.counter(apiOptions.getApiName() + "_count", tags);
+        this.error = meterRegistry.counter(apiOptions.getApiName() + "_error", tags);
+        this.timer = meterRegistry.timer(apiOptions.getApiName() + "_time", tags);
+    }
 
-	@Override
-	public void handle(RoutingContext context) {
-		Sample sample = Timer.start();
-		context.addBodyEndHandler(v -> {
-			sample.stop(timer);
+    @Override
+    public void handle(RoutingContext context) {
+        Sample sample = Timer.start();
+        context.addBodyEndHandler(v -> {
+            sample.stop(timer);
 
-			count.increment();
-			if (isErrorCode(context.response().getStatusCode())) {
-				error.increment();
-			}
-		});
-		context.next();
-	}
+            count.increment();
+            if (isErrorCode(context.response().getStatusCode())) {
+                error.increment();
+            }
+        });
+        context.next();
+    }
 
-	private boolean isErrorCode(int statusCode) {
-		return statusCode < 200 || statusCode >= 400;
-	}
+    private boolean isErrorCode(int statusCode) {
+        return statusCode < 200 || statusCode >= 400;
+    }
 
 }

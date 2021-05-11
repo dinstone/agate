@@ -35,7 +35,6 @@ import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.gateway.options.RequestOptions;
-import com.dinstone.agate.tracing.ZipkinTracer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.AbstractVerticle;
@@ -43,7 +42,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
@@ -73,10 +71,6 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
     private HttpClientOptions clientOptions;
 
-    private ZipkinTracer zipkinTracer;
-
-    private HttpClient httpClient;
-
     private Router mainRouter;
 
     private String gatewayName;
@@ -102,18 +96,10 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
         }
 
         clientOptions = gatewayOptions.getClientOptions();
-        if (clientOptions == null) {
-            clientOptions = new HttpClientOptions();
-        }
-        clientOptions.setConnectTimeout(3000).setIdleTimeout(10).setMaxPoolSize(5).setMaxWaitQueueSize(5);
-
-        zipkinTracer = applicationContext.getZipkinTracer();
     }
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        httpClient = vertx.createHttpClient(clientOptions);
-
         mainRouter = createHttpServerRouter();
         vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
             if (ar.succeeded()) {
@@ -180,9 +166,8 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                 }
 
                 // before handler: tracing handler
-                if (zipkinTracer != null) {
-                    route.handler(new ZipkinTracingHandler(api, zipkinTracer));
-                }
+                route.handler(new ZipkinTracingHandler(api));
+
                 // before handler: metrics handler
                 MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
                 if (meterRegistry != null) {
@@ -193,7 +178,7 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                     route.handler(new RateLimitHandler(api));
                 }
                 // route handler
-                route.handler(new HttpProxyHandler(api, httpClient, zipkinTracer));
+                route.handler(new HttpProxyHandler(api, vertx, clientOptions));
                 // after handler : result reply handler
                 route.handler(new ResultReplyHandler(api));
                 // failure handler

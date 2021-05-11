@@ -32,16 +32,16 @@ public class Deployment {
         return cluster;
     }
 
-    public GatewayDeploy get(String appName) {
-        return deployMap.get(appName);
+    public GatewayDeploy get(String name) {
+        return deployMap.get(name);
     }
 
-    public void put(GatewayDeploy appDeploy) {
-        deployMap.put(appDeploy.getGateway(), appDeploy);
+    public void put(GatewayDeploy deploy) {
+        deployMap.put(deploy.getGateway(), deploy);
     }
 
-    public GatewayDeploy remove(String appName) {
-        return deployMap.remove(appName);
+    public GatewayDeploy remove(String name) {
+        return deployMap.remove(name);
     }
 
     public void destroy() {

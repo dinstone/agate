@@ -100,6 +100,7 @@ public class ManageVerticle extends AbstractVerticle {
         // init service id
         String clusterCode = applicationContext.getClusterCode();
         serviceId = clusterCode + "$" + serverOptions.getHost() + ":" + serverOptions.getPort();
+
         // init gateway node
         gatewayNode = new HashMap<String, String>();
         gatewayNode.put("instanceId", serviceId);
@@ -110,8 +111,7 @@ public class ManageVerticle extends AbstractVerticle {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        Future.<HttpServer> future(promise -> launch(promise)).compose(server -> regist(server))
-                .onComplete(startPromise);
+        launch().compose(server -> regist(server)).onComplete(startPromise);
     }
 
     @Override
@@ -124,15 +124,17 @@ public class ManageVerticle extends AbstractVerticle {
      * 
      * @param promise
      */
-    private void launch(Promise<HttpServer> promise) {
-        vertx.createHttpServer(serverOptions).requestHandler(createRouter()).listen(ar -> {
-            if (ar.succeeded()) {
-                LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                promise.complete(ar.result());
-            } else {
-                LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                promise.fail(ar.cause());
-            }
+    private Future<HttpServer> launch() {
+        return Future.future(promise -> {
+            vertx.createHttpServer(serverOptions).requestHandler(createRouter()).listen(ar -> {
+                if (ar.succeeded()) {
+                    LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+                    promise.complete(ar.result());
+                } else {
+                    LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+                    promise.fail(ar.cause());
+                }
+            });
         });
     }
 
@@ -173,8 +175,8 @@ public class ManageVerticle extends AbstractVerticle {
         //
         // APP start and close
         //
-        mainRouter.post("/app/start").consumes("application/json").handler(this::appStart);
-        mainRouter.delete("/app/close").consumes("application/json").handler(this::appClose);
+        mainRouter.post("/app/start").consumes("application/json").handler(this::gatewayStart);
+        mainRouter.delete("/app/close").consumes("application/json").handler(this::gatewayClose);
 
         //
         // API deploy and remove
@@ -203,9 +205,9 @@ public class ManageVerticle extends AbstractVerticle {
         };
     }
 
-    private void appStart(RoutingContext rc) {
+    private void gatewayStart(RoutingContext rc) {
         try {
-            vertx.eventBus().request(AddressConstant.APP_START, rc.getBodyAsJson(), ar -> {
+            vertx.eventBus().request(AddressConstant.GATEWAY_START, rc.getBodyAsJson(), ar -> {
                 if (ar.succeeded()) {
                     RestfulUtil.success(rc);
                 } else {
@@ -217,9 +219,9 @@ public class ManageVerticle extends AbstractVerticle {
         }
     }
 
-    private void appClose(RoutingContext rc) {
+    private void gatewayClose(RoutingContext rc) {
         try {
-            vertx.eventBus().request(AddressConstant.APP_CLOSE, rc.getBodyAsJson(), ar -> {
+            vertx.eventBus().request(AddressConstant.GATEWAY_CLOSE, rc.getBodyAsJson(), ar -> {
                 if (ar.succeeded()) {
                     RestfulUtil.success(rc);
                 } else {
