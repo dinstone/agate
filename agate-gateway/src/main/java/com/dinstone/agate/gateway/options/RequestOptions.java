@@ -149,7 +149,7 @@ public class RequestOptions {
     }
 
     private String[] toArray(String sv) {
-        if (sv == null || sv.isBlank()) {
+        if (sv == null || sv.isEmpty()) {
             return null;
         }
         return sv.split(",");

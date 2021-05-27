@@ -464,7 +464,7 @@ public class ManageService {
     private boolean existGatewayKey(GatewayEntity ge) {
         String key = "agate/gateway/" + ge.getCluster() + "/" + ge.getName();
         Optional<Value> value = keyValueClient.getValue(key);
-        return !value.isEmpty();
+        return !value.isPresent();
     }
 
     private void deleteGatewayKey(GatewayEntity ge) {
