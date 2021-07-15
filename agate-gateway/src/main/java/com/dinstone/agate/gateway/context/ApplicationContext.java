@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,10 @@ package com.dinstone.agate.gateway.context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.deploy.Deployment;
+import com.dinstone.agate.gateway.deploy.ClusterDeploy;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClientOptions;
-import io.vertx.tracing.zipkin.ZipkinTracer;
 
 public class ApplicationContext {
 
@@ -32,9 +31,7 @@ public class ApplicationContext {
 
     private String clusterCode;
 
-    private Deployment deployment;
-
-    private ZipkinTracer zipkinTracer;
+    private ClusterDeploy clusterDeploy;
 
     private ConsulClientOptions consulOptions;
 
@@ -68,29 +65,25 @@ public class ApplicationContext {
         }
 
         // deployment
-        deployment = new Deployment(clusterCode);
+        clusterDeploy = new ClusterDeploy(clusterCode);
 
         LOG.debug("init application context ended");
     }
 
     public void destroy() {
-        deployment.destroy();
+        clusterDeploy.destroy();
     }
 
     public JsonObject getConfig() {
         return config;
     }
 
-    public Deployment getDeployment() {
-        return deployment;
+    public ClusterDeploy getClusterDeploy() {
+        return clusterDeploy;
     }
 
     public String getClusterCode() {
         return clusterCode;
-    }
-
-    public ZipkinTracer getZipkinTracer() {
-        return zipkinTracer;
     }
 
     public ConsulClientOptions getConsulOptions() {

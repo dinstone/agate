@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class LaunchVerticle extends AbstractVerticle {
     private static final Logger LOG = LoggerFactory.getLogger(LaunchVerticle.class);
 
     private ApplicationContext appContext;
-    private Watch<KeyValueList> gatewaysWatch;
+    private Watch<KeyValueList> clusterWatch;
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
@@ -85,8 +85,8 @@ public class LaunchVerticle extends AbstractVerticle {
     }
 
     private void destroy() {
-        if (gatewaysWatch != null) {
-            gatewaysWatch.stop();
+        if (clusterWatch != null) {
+            clusterWatch.stop();
         }
         if (appContext != null) {
             appContext.destroy();
@@ -111,7 +111,7 @@ public class LaunchVerticle extends AbstractVerticle {
      */
     private Future<Void> watch() {
         return Future.future(p -> {
-            gatewaysWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
+            clusterWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
                     new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
                         try {
                             watchEventHandle(ar);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.dinstone.agate.gateway.options.GatewayOptions;
+import com.dinstone.agate.gateway.verticle.GatewayVerticle;
+
 /**
  * gateway deployment info.
  * 
@@ -28,21 +31,24 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class GatewayDeploy {
 
-    private Map<String, ApiDeploy> apiDeployMap = new ConcurrentHashMap<>();
+    private Map<String, ApiDeploy> apiDeployCaches = new ConcurrentHashMap<>();
 
-    private List<Deployer> apiDeployers = new CopyOnWriteArrayList<>();
+    private List<GatewayVerticle> gatewayVerticles = new CopyOnWriteArrayList<>();
+
+    private GatewayOptions gatewayOptions;
 
     private String deployId;
 
-    private String gateway;
-
-    public GatewayDeploy(String gateway) {
-        super();
-        this.gateway = gateway;
+    public GatewayDeploy(GatewayOptions gatewayOptions) {
+        this.gatewayOptions = gatewayOptions;
     }
 
-    public String getGateway() {
-        return gateway;
+    public String getGatewayName() {
+        return gatewayOptions.getGateway();
+    }
+
+    public GatewayOptions getGatewayOptions() {
+        return gatewayOptions;
     }
 
     public void setDeployId(String deployId) {
@@ -53,33 +59,41 @@ public class GatewayDeploy {
         return deployId;
     }
 
-    public List<Deployer> getApiDeployers() {
-        return apiDeployers;
+    public List<GatewayVerticle> getGatewayVerticles() {
+        return gatewayVerticles;
     }
 
-    public void clear() {
-        apiDeployers.clear();
-        apiDeployMap.clear();
+    public void regist(GatewayVerticle verticle) {
+        gatewayVerticles.add(verticle);
     }
 
-    public void regist(Deployer deployer) {
-        apiDeployers.add(deployer);
-    }
-
-    public void remove(Deployer deployer) {
-        apiDeployers.remove(deployer);
+    public void remove(GatewayVerticle verticle) {
+        gatewayVerticles.remove(verticle);
     }
 
     public boolean containApi(String apiName) {
-        return apiDeployMap.containsKey(apiName);
+        return apiDeployCaches.containsKey(apiName);
+    }
+
+    public ApiDeploy searchApi(String apiName) {
+        return apiDeployCaches.get(apiName);
     }
 
     public void registApi(ApiDeploy apiDeploy) {
-        apiDeployMap.put(apiDeploy.getName(), apiDeploy);
+        apiDeployCaches.put(apiDeploy.getApiName(), apiDeploy);
     }
 
-    public void removeApi(String apiName) {
-        apiDeployMap.remove(apiName);
+    public void removeApi(ApiDeploy apiDeploy) {
+        apiDeploy.destory();
+        apiDeployCaches.remove(apiDeploy.getApiName());
     }
 
+    public void destroy() {
+        for (ApiDeploy deploy : apiDeployCaches.values()) {
+            deploy.destory();
+        }
+        apiDeployCaches.clear();
+
+        gatewayVerticles.clear();
+    }
 }

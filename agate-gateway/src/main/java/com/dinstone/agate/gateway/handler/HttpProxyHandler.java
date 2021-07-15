@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ContextConstants;
+import com.dinstone.agate.gateway.deploy.ApiDeploy;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
 import com.dinstone.agate.gateway.options.ApiOptions;
@@ -33,13 +34,12 @@ import com.dinstone.agate.gateway.options.RoutingOptions;
 import com.dinstone.agate.gateway.spi.RouteHandler;
 
 import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -67,36 +67,11 @@ public class HttpProxyHandler implements RouteHandler {
 
     private int count;
 
-    public HttpProxyHandler(ApiOptions apiOptions, Vertx vertx, HttpClientOptions clientOptions) {
+    public HttpProxyHandler(ApiOptions apiOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
         this.apiOptions = apiOptions;
+        this.httpClient = httpClient;
+        this.circuitBreaker = circuitBreaker;
         this.backendOptions = apiOptions.getRouting();
-
-        if (clientOptions == null) {
-            clientOptions = new HttpClientOptions();
-            clientOptions.setConnectTimeout(2000);
-            clientOptions.setMaxWaitQueueSize(5);
-            clientOptions.setIdleTimeout(10);
-            clientOptions.setMaxPoolSize(5);
-            // clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-        }
-        this.httpClient = vertx.createHttpClient(clientOptions);
-
-        CircuitBreakerOptions cbOptions = new CircuitBreakerOptions();
-        // cbOptions.setFailuresRollingWindow(10000);
-        cbOptions.setMaxFailures(10);
-        // If an action is not completed before this timeout, the action is considered as a failure.
-        cbOptions.setTimeout(2000);
-        // does not succeed in time
-        cbOptions.setFallbackOnFailure(false);
-        // time spent in open state before attempting to re-try
-        cbOptions.setResetTimeout(10000);
-        this.circuitBreaker = CircuitBreaker.create(apiOptions.getApiName(), vertx, cbOptions).openHandler(v -> {
-            LOG.debug("circuit breaker {} open", circuitBreaker.name());
-        }).closeHandler(v -> {
-            LOG.debug("circuit breaker {} close", circuitBreaker.name());
-        }).halfOpenHandler(v -> {
-            LOG.debug("circuit breaker {} half", circuitBreaker.name());
-        });
     }
 
     @Override
@@ -206,7 +181,7 @@ public class HttpProxyHandler implements RouteHandler {
                 feRequest.exceptionHandler(e -> {
                     LOG.error("API:" + apiOptions.getApiName() + ", pump backend request error.", e);
                     fe2bePump.stop();
-                    beRequest.end();
+                    beRequest.reset();
                 }).endHandler(v -> {
                     beRequest.end();
                 });
@@ -249,6 +224,12 @@ public class HttpProxyHandler implements RouteHandler {
             return HttpMethod.valueOf(method.toUpperCase());
         }
         return httpMethod;
+    }
+
+    public static Handler<RoutingContext> create(ApiDeploy deploy, Vertx vertx) {
+        HttpClient httpClient = deploy.createHttpClient(vertx);
+        CircuitBreaker circuitBreaker = deploy.createCircuitBreaker(vertx);
+        return new HttpProxyHandler(deploy.getApiOptions(), httpClient, circuitBreaker);
     }
 
 }

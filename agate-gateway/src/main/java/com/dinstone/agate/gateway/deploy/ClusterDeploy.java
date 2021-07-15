@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ package com.dinstone.agate.gateway.deploy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Deployment {
+public class ClusterDeploy {
 
     private Map<String, GatewayDeploy> deployMap = new ConcurrentHashMap<>();
 
     private String cluster;
 
-    public Deployment(String cluster) {
+    public ClusterDeploy(String cluster) {
         this.cluster = cluster;
     }
 
@@ -37,11 +37,15 @@ public class Deployment {
     }
 
     public void put(GatewayDeploy deploy) {
-        deployMap.put(deploy.getGateway(), deploy);
+        deployMap.put(deploy.getGatewayName(), deploy);
     }
 
     public GatewayDeploy remove(String name) {
-        return deployMap.remove(name);
+        GatewayDeploy deploy = deployMap.remove(name);
+        if (deploy != null) {
+            deploy.destroy();
+        }
+        return deploy;
     }
 
     public void destroy() {

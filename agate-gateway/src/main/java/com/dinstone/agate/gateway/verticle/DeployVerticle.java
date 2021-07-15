@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,7 @@ import com.dinstone.agate.gateway.context.AddressConstant;
 import com.dinstone.agate.gateway.context.AgateVerticleFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.ApiDeploy;
-import com.dinstone.agate.gateway.deploy.Deployer;
-import com.dinstone.agate.gateway.deploy.Deployment;
+import com.dinstone.agate.gateway.deploy.ClusterDeploy;
 import com.dinstone.agate.gateway.deploy.GatewayDeploy;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
@@ -50,7 +49,7 @@ import io.vertx.ext.consul.Watch;
 import io.vertx.ext.consul.WatchResult;
 
 /**
- * execute the deploy command of APP and API.
+ * execute the deploy command of Gateway and API.
  * 
  * @author dinstone
  *
@@ -58,17 +57,17 @@ import io.vertx.ext.consul.WatchResult;
 public class DeployVerticle extends AbstractVerticle {
     private static final Logger LOG = LoggerFactory.getLogger(DeployVerticle.class);
 
+    private Map<String, Watch<KeyValueList>> apiWatchMap = new ConcurrentHashMap<>();
+
     private String clusterCode;
 
-    private Deployment deployment;
+    private ClusterDeploy clusterDeploy;
 
     private ConsulClientOptions consulClientOptions;
 
-    private Map<String, Watch<KeyValueList>> apiWatchMap = new ConcurrentHashMap<>();
-
     public DeployVerticle(ApplicationContext appContext) {
         this.clusterCode = appContext.getClusterCode();
-        this.deployment = appContext.getDeployment();
+        this.clusterDeploy = appContext.getClusterDeploy();
         this.consulClientOptions = new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0);
     }
 
@@ -97,25 +96,54 @@ public class DeployVerticle extends AbstractVerticle {
 
         String gatewayName = gatewayOptions.getGateway();
         // check app is start
-        if (deployment.get(gatewayName) != null) {
+        if (clusterDeploy.get(gatewayName) != null) {
             message.reply(null);
             return;
         }
-        deployment.put(new GatewayDeploy(gatewayName));
+        clusterDeploy.put(new GatewayDeploy(gatewayOptions));
 
         int instances = config().getInteger("instances", Runtime.getRuntime().availableProcessors());
         DeploymentOptions options = new DeploymentOptions().setConfig(message.body()).setInstances(instances);
-        vertx.deployVerticle(AgateVerticleFactory.verticleName(ServerVerticle.class), options, ar -> {
+        vertx.deployVerticle(AgateVerticleFactory.verticleName(GatewayVerticle.class), options, ar -> {
             if (ar.succeeded()) {
-                deployment.get(gatewayName).setDeployId(ar.result());
+                clusterDeploy.get(gatewayName).setDeployId(ar.result());
                 registApiWatch(gatewayName);
 
                 message.reply(null);
+
+                LOG.info("start gateway success : {}", gatewayName);
             } else {
-                LOG.warn("depley App[{}] failure", gatewayName, ar.cause());
+                LOG.warn("start gateway failure : {}, casue {}", gatewayName, ar.cause());
 
-                deployment.remove(gatewayName);
+                clusterDeploy.remove(gatewayName);
+                message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
+            }
+        });
+    }
 
+    private void closeGateway(Message<JsonObject> message) {
+        GatewayOptions gatewayOptions = new GatewayOptions(message.body());
+        String error = checkGatewayParams(gatewayOptions);
+        if (error != null) {
+            message.fail(400, error);
+            return;
+        }
+
+        String gatewayName = gatewayOptions.getGateway();
+        GatewayDeploy gatewayDeploy = clusterDeploy.get(gatewayName);
+        if (gatewayDeploy == null || gatewayDeploy.getDeployId() == null) {
+            message.reply(null);
+            return;
+        }
+
+        vertx.undeploy(gatewayDeploy.getDeployId(), ar -> {
+            if (ar.succeeded()) {
+                clusterDeploy.remove(gatewayName);
+                removeApiWatch(gatewayName);
+                message.reply(null);
+                LOG.info("close gateway success : {}", gatewayName);
+            } else {
+                LOG.warn("close gateway failure : {}, casue {}", gatewayName, ar.cause());
                 message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
             }
         });
@@ -207,68 +235,40 @@ public class DeployVerticle extends AbstractVerticle {
         }
     }
 
-    private void closeGateway(Message<JsonObject> message) {
-        GatewayOptions appParam = new GatewayOptions(message.body());
-        String error = checkGatewayParams(appParam);
-        if (error != null) {
-            message.fail(400, error);
-            return;
-        }
-
-        String appName = appParam.getGateway();
-        GatewayDeploy appDeploy = deployment.get(appName);
-        if (appDeploy == null || appDeploy.getDeployId() == null) {
-            message.reply(null);
-            return;
-        }
-
-        vertx.undeploy(appDeploy.getDeployId(), ar -> {
-            if (ar.succeeded()) {
-                deployment.remove(appName);
-                removeApiWatch(appName);
-
-                message.reply(null);
-            } else {
-                message.fail(500, ar.cause() == null ? "" : ar.cause().getMessage());
-            }
-        });
-    }
-
     @SuppressWarnings("rawtypes")
     private void deployApiRoute(Message<JsonObject> message) {
-        ApiOptions api = new ApiOptions(message.body());
-        String error = checkApiParam(api);
+        ApiOptions apiOptions = new ApiOptions(message.body());
+        String error = checkApiParams(apiOptions);
         if (error != null) {
             message.fail(400, error);
             return;
         }
 
-        GatewayDeploy gatewayDeploy = deployment.get(api.getGateway());
+        GatewayDeploy gatewayDeploy = clusterDeploy.get(apiOptions.getGateway());
         if (gatewayDeploy == null) {
             message.fail(503, "gateway is not start");
             return;
         }
-        if (gatewayDeploy.containApi(api.getApiName())) {
+        if (gatewayDeploy.containApi(apiOptions.getApiName())) {
             message.reply(null);
             return;
         }
 
+        GatewayOptions gatewayOptions = gatewayDeploy.getGatewayOptions();
+        ApiDeploy apiDeploy = new ApiDeploy(gatewayOptions, apiOptions);
+
         List<Future> futures = new LinkedList<Future>();
-        for (Deployer deployer : gatewayDeploy.getApiDeployers()) {
-            futures.add(deployer.deployApi(api));
+        for (GatewayVerticle deployer : gatewayDeploy.getGatewayVerticles()) {
+            futures.add(deployer.deployApi(apiDeploy));
         }
         CompositeFuture.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
-                LOG.info("deploy api success : {} / {}", api.getGateway(), api.getApiName());
+                LOG.info("deploy api success : {} / {}", apiOptions.getGateway(), apiOptions.getApiName());
 
-                ApiDeploy apiDeploy = new ApiDeploy();
-                apiDeploy.setName(api.getApiName());
-                apiDeploy.setPrefix(api.getRequest().getPrefix());
-                apiDeploy.setPath(api.getRequest().getPath());
                 gatewayDeploy.registApi(apiDeploy);
-
                 message.reply(null);
             } else {
+                LOG.warn("deploy api failure : {} / {}", apiOptions.getGateway(), apiOptions.getApiName());
                 message.fail(500, ar.cause().getMessage());
             }
         });
@@ -277,29 +277,34 @@ public class DeployVerticle extends AbstractVerticle {
     @SuppressWarnings("rawtypes")
     private void removeApiRoute(Message<JsonObject> message) {
         ApiOptions api = new ApiOptions(message.body());
-        String error = checkApiParam(api);
+        String error = checkApiParams(api);
         if (error != null) {
             message.fail(400, error);
             return;
         }
 
-        GatewayDeploy appDeploy = deployment.get(api.getGateway());
-        if (appDeploy == null || !appDeploy.containApi(api.getApiName())) {
+        GatewayDeploy gatewayDeploy = clusterDeploy.get(api.getGateway());
+        if (gatewayDeploy == null) {
+            message.fail(503, "gateway is not start");
+            return;
+        }
+        if (!gatewayDeploy.containApi(api.getApiName())) {
             message.reply(null);
             return;
         }
 
+        ApiDeploy apiDeploy = gatewayDeploy.searchApi(api.getApiName());
         List<Future> futures = new LinkedList<Future>();
-        for (Deployer deployer : appDeploy.getApiDeployers()) {
-            futures.add(deployer.removeApi(api));
+        for (GatewayVerticle deployer : gatewayDeploy.getGatewayVerticles()) {
+            futures.add(deployer.removeApi(apiDeploy));
         }
         CompositeFuture.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
                 LOG.info("remove api success : {} / {}", api.getGateway(), api.getApiName());
-
-                appDeploy.removeApi(api.getApiName());
+                gatewayDeploy.removeApi(apiDeploy);
                 message.reply(null);
             } else {
+                LOG.info("remove api failure : {} / {}", api.getGateway(), api.getApiName());
                 message.fail(500, ar.cause().getMessage());
             }
         });
@@ -318,7 +323,7 @@ public class DeployVerticle extends AbstractVerticle {
         return null;
     }
 
-    private String checkApiParam(ApiOptions apiParam) {
+    private String checkApiParams(ApiOptions apiParam) {
         if (apiParam == null) {
             return "API options is null";
         }

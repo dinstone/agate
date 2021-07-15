@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,41 +15,99 @@
  */
 package com.dinstone.agate.gateway.deploy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.GatewayOptions;
+
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+
 public class ApiDeploy {
 
-    private String name;
+    private static final Logger LOG = LoggerFactory.getLogger(ApiDeploy.class);
 
-    private String prefix;
+    private GatewayOptions gatewayOptions;
 
-    private String path;
+    private ApiOptions apiOptions;
 
-    public String getName() {
-        return name;
+    private HttpClient httpClient;
+
+    private CircuitBreaker circuitBreaker;
+
+    public ApiDeploy(GatewayOptions gatewayOptions, ApiOptions apiOptions) {
+        this.gatewayOptions = gatewayOptions;
+        this.apiOptions = apiOptions;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getApiName() {
+        return apiOptions.getApiName();
     }
 
-    public String getPrefix() {
-        return prefix;
+    public ApiOptions getApiOptions() {
+        return apiOptions;
     }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
+    public GatewayOptions getGatewayOptions() {
+        return gatewayOptions;
     }
 
-    public String getPath() {
-        return path;
+    public void destory() {
+        synchronized (this) {
+            if (httpClient != null) {
+                httpClient.close();
+            }
+            if (circuitBreaker != null) {
+                circuitBreaker.close();
+            }
+        }
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public HttpClient createHttpClient(Vertx vertx) {
+        synchronized (this) {
+            if (httpClient == null) {
+                HttpClientOptions clientOptions = gatewayOptions.getClientOptions();
+                if (clientOptions == null) {
+                    clientOptions = new HttpClientOptions();
+                    clientOptions.setConnectTimeout(2000);
+                    clientOptions.setMaxWaitQueueSize(5);
+                    clientOptions.setIdleTimeout(10);
+                    clientOptions.setMaxPoolSize(5);
+                    // clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+                }
+                httpClient = vertx.createHttpClient(clientOptions);
+            }
+            return httpClient;
+        }
     }
 
-    @Override
-    public String toString() {
-        return "ApiDeploy [name=" + name + ", prefix=" + prefix + ", path=" + path + "]";
+    public CircuitBreaker createCircuitBreaker(Vertx vertx) {
+        synchronized (this) {
+            if (circuitBreaker == null) {
+                CircuitBreakerOptions cbOptions = new CircuitBreakerOptions();
+                // cbOptions.setFailuresRollingWindow(10000);
+                cbOptions.setMaxFailures(10);
+                // If an action is not completed before this timeout, the action is considered as a failure.
+                cbOptions.setTimeout(1000);
+                // does not succeed in time
+                cbOptions.setFallbackOnFailure(false);
+                // time spent in open state before attempting to re-try
+                cbOptions.setResetTimeout(10000);
+                this.circuitBreaker = CircuitBreaker.create(apiOptions.getApiName(), vertx, cbOptions)
+                        .openHandler(v -> {
+                            LOG.debug("circuit breaker {} open", circuitBreaker.name());
+                        }).closeHandler(v -> {
+                            LOG.debug("circuit breaker {} close", circuitBreaker.name());
+                        }).halfOpenHandler(v -> {
+                            LOG.debug("circuit breaker {} half", circuitBreaker.name());
+                        });
+            }
+            return circuitBreaker;
+        }
     }
 
 }

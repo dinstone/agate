@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,10 +155,10 @@ public class ManageVerticle extends AbstractVerticle {
                     .setCheckOptions(checkOptions);
             consulClient.registerService(serviceOptions, ar -> {
                 if (ar.succeeded()) {
-                    LOG.info("gateway regist  success {}", serviceId);
+                    LOG.info("gateway service regist  success {}", serviceId);
                     promise.complete();
                 } else {
-                    LOG.error("gateway regist failed {}", serviceId);
+                    LOG.error("gateway service regist failed {}", serviceId);
                     promise.fail(ar.cause());
                 }
             });

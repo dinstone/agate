@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -207,7 +207,8 @@ public class ManageService {
         apiConfig.setRemark(apiEntity.getRemark());
         apiConfig.setStatus(apiEntity.getStatus());
 
-        apiConfig.setGateway(gatewayDao.find(apiEntity.getGwId()).getName());
+        GatewayEntity ge = gatewayDao.find(apiEntity.getGwId());
+        apiConfig.setGateway(ge.getName() + "(" + ge.getPort() + ")");
 
         RoutingConfig bc = JacksonCodec.decode(apiEntity.getRouting(), RoutingConfig.class);
         apiConfig.setRoutingConfig(bc);

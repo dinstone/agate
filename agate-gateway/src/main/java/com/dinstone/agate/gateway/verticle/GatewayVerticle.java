@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ApplicationContext;
-import com.dinstone.agate.gateway.deploy.Deployer;
+import com.dinstone.agate.gateway.deploy.ApiDeploy;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
 import com.dinstone.agate.gateway.handler.HttpProxyHandler;
 import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
@@ -42,7 +42,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.NetServerOptions;
@@ -54,14 +53,14 @@ import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.micrometer.backends.BackendRegistries;
 
 /**
- * the server is APP runtime, it proxy API to backend service.
+ * the GatewayVerticle is Gateway instance, it proxy API to backend service.
  * 
  * @author dinstone
  *
  */
-public class ServerVerticle extends AbstractVerticle implements Deployer {
+public class GatewayVerticle extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GatewayVerticle.class);
 
     private Map<String, Route> apiRouteMap = new ConcurrentHashMap<>();
 
@@ -69,13 +68,11 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
 
     private HttpServerOptions serverOptions;
 
-    private HttpClientOptions clientOptions;
-
     private Router mainRouter;
 
     private String gatewayName;
 
-    public ServerVerticle(ApplicationContext applicationContext) {
+    public GatewayVerticle(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
@@ -94,8 +91,6 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
         if (host == null || host.isEmpty() || "*".equals(host)) {
             serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
         }
-
-        clientOptions = gatewayOptions.getClientOptions();
     }
 
     @Override
@@ -106,11 +101,11 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                 // register api deployer
                 registApiDeployer();
 
-                LOG.info("server verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+                LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
                         serverOptions.getPort());
                 startPromise.complete();
             } else {
-                LOG.error("server verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
+                LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
                         serverOptions.getPort());
                 startPromise.fail(ar.cause());
             }
@@ -122,22 +117,22 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
     public void stop() throws Exception {
         removeApiDeployer();
 
-        LOG.info("server verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+        LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
                 serverOptions.getPort());
     }
 
-    @Override
-    public Future<Void> deployApi(ApiOptions api) {
-        Promise<Void> promise = Promise.promise();
+    public Future<Void> deployApi(ApiDeploy deploy) {
+        ApiOptions apiOptions = deploy.getApiOptions();
 
+        Promise<Void> promise = Promise.promise();
         context.runOnContext(ar -> {
             try {
-                if (apiRouteMap.containsKey(api.getApiName())) {
+                if (apiRouteMap.containsKey(apiOptions.getApiName())) {
                     promise.complete();
                     return;
                 }
 
-                RequestOptions feo = api.getRequest();
+                RequestOptions feo = apiOptions.getRequest();
                 // create sub router for api
                 Router subRouter = Router.router(vertx);
                 // create api route
@@ -166,29 +161,46 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
                 }
 
                 // before handler: tracing handler
-                route.handler(new ZipkinTracingHandler(api));
+                route.handler(new ZipkinTracingHandler(apiOptions));
 
                 // before handler: metrics handler
                 MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
                 if (meterRegistry != null) {
-                    route.handler(new MeterMetricsHandler(api, meterRegistry));
+                    route.handler(new MeterMetricsHandler(apiOptions, meterRegistry));
                 }
                 // before handler : rate limit handler
-                if (api.getHandlers() != null) {
-                    route.handler(new RateLimitHandler(api));
+                if (apiOptions.getHandlers() != null) {
+                    route.handler(new RateLimitHandler(apiOptions));
                 }
                 // route handler
-                route.handler(new HttpProxyHandler(api, vertx, clientOptions));
+                route.handler(HttpProxyHandler.create(deploy, vertx));
                 // after handler : result reply handler
-                route.handler(new ResultReplyHandler(api));
+                route.handler(new ResultReplyHandler(apiOptions));
                 // failure handler
-                route.failureHandler(new RestfulFailureHandler(api));
+                route.failureHandler(new RestfulFailureHandler(apiOptions));
 
                 // mount sub router
                 Route mountRoute = mountRoute("/", subRouter);
                 // cache api route
-                apiRouteMap.put(api.getApiName(), mountRoute);
+                apiRouteMap.put(apiOptions.getApiName(), mountRoute);
 
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+
+        return promise.future();
+    }
+
+    public Future<Void> removeApi(ApiDeploy deploy) {
+        Promise<Void> promise = Promise.promise();
+        context.runOnContext(ar -> {
+            try {
+                Route route = apiRouteMap.remove(deploy.getApiName());
+                if (route != null) {
+                    route.disable().remove();
+                }
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -210,31 +222,12 @@ public class ServerVerticle extends AbstractVerticle implements Deployer {
         return mainRouter.mountSubRouter(path, subRouter);
     }
 
-    @Override
-    public Future<Void> removeApi(ApiOptions api) {
-        Promise<Void> promise = Promise.promise();
-
-        context.runOnContext(ar -> {
-            try {
-                Route route = apiRouteMap.remove(api.getApiName());
-                if (route != null) {
-                    route.disable().remove();
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        });
-
-        return promise.future();
-    }
-
     private void registApiDeployer() {
-        applicationContext.getDeployment().get(gatewayName).regist(this);
+        applicationContext.getClusterDeploy().get(gatewayName).regist(this);
     }
 
     private void removeApiDeployer() {
-        applicationContext.getDeployment().get(gatewayName).remove(this);
+        applicationContext.getClusterDeploy().get(gatewayName).remove(this);
     }
 
     @SuppressWarnings("unused")

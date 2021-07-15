@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.concurrent.Callable;
 
 import com.dinstone.agate.gateway.verticle.DeployVerticle;
 import com.dinstone.agate.gateway.verticle.ManageVerticle;
-import com.dinstone.agate.gateway.verticle.ServerVerticle;
+import com.dinstone.agate.gateway.verticle.GatewayVerticle;
 import com.dinstone.agate.gateway.verticle.SystemVerticle;
 
 import io.vertx.core.Promise;
@@ -64,8 +64,8 @@ public class AgateVerticleFactory implements VerticleFactory {
             return new DeployVerticle(context);
         } else if (ManageVerticle.class.getName().equals(clazz)) {
             return new ManageVerticle(context);
-        } else if (ServerVerticle.class.getName().equals(clazz)) {
-            return new ServerVerticle(context);
+        } else if (GatewayVerticle.class.getName().equals(clazz)) {
+            return new GatewayVerticle(context);
         }
         throw new IllegalArgumentException("unsupported verticle type: " + clazz);
     }

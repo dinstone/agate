@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2020 dinstone<dinstone@163.com>
+ * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.utils.ConfigUtil;
+import com.dinstone.agate.gateway.verticle.LaunchVerticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Launcher;
@@ -47,7 +48,11 @@ public class GatewayLauncher extends Launcher {
             System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
         }
 
-        new GatewayLauncher().dispatch(args);
+        if (args != null && args.length > 0) {
+            new GatewayLauncher().dispatch(args);
+        } else {
+            new GatewayLauncher().dispatch(new String[] { "run", LaunchVerticle.class.getName() });
+        }
     }
 
     @Override
