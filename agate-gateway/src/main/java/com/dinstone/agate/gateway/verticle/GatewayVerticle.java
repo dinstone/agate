@@ -91,6 +91,9 @@ public class GatewayVerticle extends AbstractVerticle {
         if (host == null || host.isEmpty() || "*".equals(host)) {
             serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
         }
+        if (serverOptions.getIdleTimeout() == 0) {
+            serverOptions.setIdleTimeout(60);
+        }
     }
 
     @Override

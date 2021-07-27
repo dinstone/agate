@@ -23,6 +23,7 @@ import com.dinstone.agate.gateway.spi.BeforeHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 
 /**
  * rate limit handler.
@@ -58,7 +59,7 @@ public class RateLimitHandler implements BeforeHandler {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("{} rate limit than {}/s", api.getApiName(), limiter.getRate());
             }
-            rc.fail(502, new RuntimeException("rate limit"));
+            rc.fail(new HttpException(429, "too many requests, rate limit " + limiter.getRate() + "/s"));
         }
     }
 

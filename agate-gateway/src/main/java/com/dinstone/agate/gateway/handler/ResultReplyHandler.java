@@ -27,6 +27,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 
 /**
  * http route and proxy.
@@ -62,7 +63,7 @@ public class ResultReplyHandler implements AfterHandler {
             LOG.error("backend response is error", e);
 
             be2fePump.stop();
-            rc.fail(503, new RuntimeException("backend response is error", e));
+            rc.fail(new HttpException(503, "backend response is error", e));
         }).endHandler(v -> {
             try {
                 feResponse.end();
