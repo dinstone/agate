@@ -23,7 +23,6 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.deploy.ApiDeploy;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
@@ -40,12 +39,13 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.httpproxy.ProxyRequest;
+import io.vertx.httpproxy.ProxyResponse;
 
 /**
  * http route and proxy.
@@ -53,9 +53,9 @@ import io.vertx.ext.web.RoutingContext;
  * @author dinstone
  *
  */
-public class HttpProxyHandler implements RouteHandler {
+public class HttpProxyHandler2 implements RouteHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(HttpProxyHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HttpProxyHandler2.class);
 
 	private final HttpClient httpClient;
 
@@ -67,7 +67,7 @@ public class HttpProxyHandler implements RouteHandler {
 
 	private int count;
 
-	public HttpProxyHandler(ApiOptions apiOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
+	public HttpProxyHandler2(ApiOptions apiOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
 		this.apiOptions = apiOptions;
 		this.httpClient = httpClient;
 		this.circuitBreaker = circuitBreaker;
@@ -80,7 +80,8 @@ public class HttpProxyHandler implements RouteHandler {
 			circuitBreaker.<Void>executeWithFallback(promise -> {
 				routing(rc).onComplete(promise);
 			}, t -> {
-				rc.fail(504, t); // gateway time-out
+				// gateway time-out
+				rc.fail(504, t);
 				return null;
 			});
 		} else {
@@ -89,7 +90,26 @@ public class HttpProxyHandler implements RouteHandler {
 	}
 
 	private Future<Void> routing(RoutingContext rc) {
-		HttpServerRequest feRequest = rc.request().pause();
+		Promise<Void> promise = Promise.promise();
+
+		HttpServerRequest serverRequest = rc.request();
+		ProxyRequest proxyRequest = ProxyRequest.reverseProxy(serverRequest);
+
+		// Encoding check
+		Boolean chunked = HttpUtil.isChunked(serverRequest.headers());
+		if (chunked == null) {
+			rc.fail(400);
+			promise.fail("bad request");
+			return promise.future();
+		}
+
+		// locate url
+		String originUrl = loadbalanceUrl(rc.request());
+		if (originUrl == null) {
+			rc.fail(503);
+			promise.fail("service unavailable");
+			return promise.future();
+		}
 
 		Map<String, String> pathParams = new HashMap<>();
 		MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
@@ -111,42 +131,40 @@ public class HttpProxyHandler implements RouteHandler {
 			}
 		}
 
-		// locate url
-		String requestUrl = loadbalanceUrl(feRequest);
 		// replace param for url
 		if (!pathParams.isEmpty()) {
 			for (Entry<String, String> e : pathParams.entrySet()) {
-				requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
+				originUrl = originUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
 			}
 		}
 		// set query params
 		if (!queryParams.isEmpty()) {
-			QueryCoder queryCoder = new QueryCoder(requestUrl);
+			QueryCoder queryCoder = new QueryCoder(originUrl);
 			for (Entry<String, String> e : queryParams) {
 				queryCoder.addParam(e.getKey(), e.getValue());
 			}
-			requestUrl = queryCoder.uri();
-		} else if (feRequest.query() != null) {
+			originUrl = queryCoder.uri();
+		} else if (serverRequest.query() != null) {
 			// copy query frontend params to backend params
-			QueryCoder queryCoder = new QueryCoder(requestUrl);
+			QueryCoder queryCoder = new QueryCoder(originUrl);
 			for (Entry<String, String> kve : rc.queryParams().entries()) {
 				queryCoder.addParam(kve.getKey(), kve.getValue());
 			}
-			requestUrl = queryCoder.uri();
+			originUrl = queryCoder.uri();
 		}
 
 		// create backend request
 		RequestOptions options = new RequestOptions();
 		// set url
-		options.setAbsoluteURI(requestUrl);
+		options.setAbsoluteURI(originUrl);
 		// set method
-		options.setMethod(method(feRequest.method()));
+		options.setMethod(method(serverRequest.method()));
 		// set timeout
 		if (backendOptions.getTimeout() > 0) {
 			options.setTimeout(backendOptions.getTimeout());
 		}
 		// set headers
-		for (Entry<String, String> e : feRequest.headers()) {
+		for (Entry<String, String> e : serverRequest.headers()) {
 			if (e.getKey().equalsIgnoreCase(HttpHeaders.HOST.toString())) {
 				continue;
 			}
@@ -158,37 +176,23 @@ public class HttpProxyHandler implements RouteHandler {
 			}
 		}
 
-		Promise<Void> promise = Promise.promise();
-
-		// create http request
-		httpClient.request(options).onSuccess(beRequest -> {
-			// response handler
-			beRequest.response().onComplete(ar -> {
+		httpClient.request(options).onSuccess(clientRequest -> {
+			proxyRequest.setURI(options.getURI());
+			proxyRequest.setMethod(method(serverRequest.method()));
+			proxyRequest.send(clientRequest).onComplete(ar -> {
 				if (ar.succeeded()) {
-					HttpClientResponse beResponse = ar.result().pause();
-					rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
-					rc.next();
-
+					ProxyResponse proxyResponse = ar.result();
+					proxyResponse.send().onFailure(t -> {
+						// service error
+						LOG.error("API:" + apiOptions.getApiName() + ", pipe backend request error.", t);
+					});
 					promise.complete();
 				} else {
-					// tracing.failure(ar.cause());
-					rc.fail(503, ar.cause()); // Service Unavailable
+					// service unavailable
+					rc.fail(503, ar.cause());
 					promise.fail(ar.cause());
 				}
 			});
-
-			// transport body and send request
-			if (HttpUtil.hasBody(beRequest.getMethod())) {
-				feRequest.pipe().to(beRequest).onFailure(e -> {
-					// service unavailable
-					LOG.error("API:" + apiOptions.getApiName() + ", pump backend request error.", e);
-					beRequest.reset();
-					rc.fail(503, e);
-					promise.fail(e);
-				});
-			} else {
-				beRequest.end();
-			}
 		}).onFailure(t -> {
 			rc.fail(502, t);// bad gateway
 			promise.fail(t);
@@ -196,6 +200,17 @@ public class HttpProxyHandler implements RouteHandler {
 
 		return promise.future();
 	}
+
+//	 private void handleProxyRequest(ProxyRequest proxyRequest, HttpClientRequest inboundRequest, Handler<AsyncResult<ProxyResponse>> handler) {
+//		    ((ProxyRequestImpl)proxyRequest).send(inboundRequest, ar2 -> {
+//		      if (ar2.succeeded()) {
+//		        handler.handle(ar2);
+//		      } else {
+//		        proxyRequest.outboundRequest().response().setStatusCode(502).end();
+//		        handler.handle(Future.failedFuture(ar2.cause()));
+//		      }
+//		    });
+//		  }
 
 	private String findParamValue(RoutingContext rc, ParamOptions param) {
 		if (ParamType.PATH == param.getFeParamType()) {
@@ -211,6 +226,10 @@ public class HttpProxyHandler implements RouteHandler {
 
 	private String loadbalanceUrl(HttpServerRequest inRequest) {
 		List<String> urls = backendOptions.getUrls();
+		if (urls == null || urls.size() == 0) {
+			return null;
+		}
+
 		if (count++ < 0) {
 			count = 0;
 		}
@@ -230,7 +249,7 @@ public class HttpProxyHandler implements RouteHandler {
 	public static Handler<RoutingContext> create(ApiDeploy deploy, Vertx vertx) {
 		HttpClient httpClient = deploy.createHttpClient(vertx);
 		CircuitBreaker circuitBreaker = deploy.createCircuitBreaker(vertx);
-		return new HttpProxyHandler(deploy.getApiOptions(), httpClient, circuitBreaker);
+		return new HttpProxyHandler2(deploy.getApiOptions(), httpClient, circuitBreaker);
 	}
 
 }

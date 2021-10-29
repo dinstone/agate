@@ -22,10 +22,11 @@ import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.streams.Pump;
+import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.HttpException;
 
@@ -37,54 +38,47 @@ import io.vertx.ext.web.handler.HttpException;
  */
 public class ResultReplyHandler implements AfterHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
 
-    // private BackendOptions backendOptions;
+	// private BackendOptions backendOptions;
 
-    public ResultReplyHandler(ApiOptions apiOptions) {
-        // backendOptions = apiOptions.getBackend();
-    }
+	public ResultReplyHandler(ApiOptions apiOptions) {
+		// backendOptions = apiOptions.getBackend();
+	}
 
-    @Override
-    public void handle(RoutingContext rc) {
-        HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
-        HttpServerResponse feResponse = rc.response();
-        feResponse.setStatusCode(beResponse.statusCode());
-        feResponse.headers().addAll(beResponse.headers());
+	@Override
+	public void handle(RoutingContext rc) {
+		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
+		HttpServerResponse feResponse = rc.response();
+		feResponse.setStatusCode(beResponse.statusCode());
+		feResponse.headers().addAll(beResponse.headers());
 
-        long len = getContentLength(beResponse);
-        if (len == 0) {
-            feResponse.end();
-            return;
-        }
+		long len = getContentLength(beResponse);
+		if (len == 0) {
+			feResponse.end();
+			return;
+		}
 
-        Pump be2fePump = Pump.pump(beResponse, feResponse).start();
-        beResponse.exceptionHandler(e -> {
-            LOG.error("backend response is error", e);
+		Pipe<Buffer> pipe = beResponse.pipe();
+		pipe.to(feResponse).onFailure(t -> {
+			LOG.error("backend response is error", t);
+			rc.fail(new HttpException(503, "backend response is error", t));
+		});
 
-            be2fePump.stop();
-            rc.fail(new HttpException(503, "backend response is error", e));
-        }).endHandler(v -> {
-            try {
-                feResponse.end();
-            } catch (Exception e) {
-                LOG.warn("route backend service error", e);
-            }
-        });
-    }
+	}
 
-    private long getContentLength(HttpClientResponse response) {
-        String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
-        if ("chunked".equalsIgnoreCase(tc)) {
-            return -1;
-        }
+	private long getContentLength(HttpClientResponse response) {
+		String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
+		if ("chunked".equalsIgnoreCase(tc)) {
+			return -1;
+		}
 
-        try {
-            return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
-        } catch (Exception e) {
-            // ignore
-        }
-        return -1;
-    }
+		try {
+			return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
+		} catch (Exception e) {
+			// ignore
+		}
+		return -1;
+	}
 
 }

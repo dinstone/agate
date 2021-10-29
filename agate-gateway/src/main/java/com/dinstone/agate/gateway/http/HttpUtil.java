@@ -15,6 +15,9 @@
  */
 package com.dinstone.agate.gateway.http;
 
+import java.util.List;
+
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 
 public class HttpUtil {
@@ -26,5 +29,22 @@ public class HttpUtil {
 	public static boolean hasBody(HttpMethod method) {
 		return method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE
 				|| method == HttpMethod.PATCH || method == HttpMethod.TRACE;
+	}
+
+	public static Boolean isChunked(MultiMap headers) {
+		List<String> te = headers.getAll("transfer-encoding");
+		if (te != null) {
+			boolean chunked = false;
+			for (String val : te) {
+				if (val.equals("chunked")) {
+					chunked = true;
+				} else {
+					return null;
+				}
+			}
+			return chunked;
+		} else {
+			return false;
+		}
 	}
 }

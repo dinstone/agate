@@ -52,7 +52,7 @@ public class SpringJdbcTest {
 		System.out.println(un);
 
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-//		dataSource.setDriverClass("org.sqlite.JDBC");
+		dataSource.setDriverClass(org.sqlite.JDBC.class);
 		dataSource.setUrl("jdbc:sqlite:config.db");
 		dataSource.setUsername("root");
 		dataSource.setPassword("root");

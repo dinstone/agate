@@ -48,11 +48,10 @@ public class GatewayLauncher extends Launcher {
             System.setProperty("vertx.logger-delegate-factory-class-name", SLF4JLogDelegateFactory.class.getName());
         }
 
-        if (args != null && args.length > 0) {
-            new GatewayLauncher().dispatch(args);
-        } else {
-            new GatewayLauncher().dispatch(new String[] { "run", LaunchVerticle.class.getName() });
+        if (args == null || args.length == 0) {
+            args = new String[] { "run", LaunchVerticle.class.getName() };
         }
+        new GatewayLauncher().dispatch(args);
     }
 
     @Override
