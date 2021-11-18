@@ -166,13 +166,14 @@ public class HttpProxyHandler implements RouteHandler {
 			beRequest.response().onComplete(ar -> {
 				if (ar.succeeded()) {
 					HttpClientResponse beResponse = ar.result().pause();
+					rc.put(ContextConstants.BACKEND_REQUEST, beRequest);
 					rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
 					rc.next();
 
 					promise.complete();
 				} else {
-					// tracing.failure(ar.cause());
-					rc.fail(503, ar.cause()); // Service Unavailable
+					// Service Unavailable
+					rc.fail(503, ar.cause());
 					promise.fail(ar.cause());
 				}
 			});

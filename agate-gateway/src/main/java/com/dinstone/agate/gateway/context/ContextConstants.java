@@ -19,5 +19,5 @@ public class ContextConstants {
 
 	public static final String BACKEND_RESPONSE = "backend.response";
 
-	public static final String BACKEND_TRACING = "backend.tracing";
+	public static final String BACKEND_REQUEST = "backend.request";
 }

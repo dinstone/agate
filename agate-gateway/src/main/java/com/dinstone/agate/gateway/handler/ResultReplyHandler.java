@@ -23,12 +23,12 @@ import com.dinstone.agate.gateway.options.ApiOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
 
 /**
  * http route and proxy.
@@ -48,6 +48,7 @@ public class ResultReplyHandler implements AfterHandler {
 
 	@Override
 	public void handle(RoutingContext rc) {
+		HttpClientRequest beRequest = rc.get(ContextConstants.BACKEND_REQUEST);
 		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
 		HttpServerResponse feResponse = rc.response();
 		feResponse.setStatusCode(beResponse.statusCode());
@@ -62,7 +63,8 @@ public class ResultReplyHandler implements AfterHandler {
 		Pipe<Buffer> pipe = beResponse.pipe();
 		pipe.to(feResponse).onFailure(t -> {
 			LOG.error("backend response is error", t);
-			rc.fail(new HttpException(503, "backend response is error", t));
+			beRequest.reset();
+			feResponse.reset();
 		});
 
 	}
