@@ -32,64 +32,71 @@ import io.vertx.core.json.JsonObject;
 
 public class EventbusTest {
 
-	private static final Logger LOG = LoggerFactory.getLogger(EventbusTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EventbusTest.class);
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
-		JsonObject json = getJsonFromFile("src/main/resources/config.json");
+        JsonObject json = getJsonFromFile("src/main/resources/config.json");
 
-		Vertx vertx = Vertx.vertx();
+        Vertx vertx = Vertx.vertx();
 
-		vertx.eventBus().registerDefaultCodec(GatewayOptions.class, new MessageCodec<GatewayOptions, GatewayOptions>() {
+        vertx.eventBus().registerDefaultCodec(GatewayOptions.class, new MessageCodec<GatewayOptions, GatewayOptions>() {
 
-			@Override
-			public void encodeToWire(Buffer buffer, GatewayOptions s) {
-				// TODO Auto-generated method stub
-			}
+            @Override
+            public void encodeToWire(Buffer buffer, GatewayOptions s) {
+                // TODO Auto-generated method stub
+            }
 
-			@Override
-			public GatewayOptions decodeFromWire(int pos, Buffer buffer) {
-				// TODO Auto-generated method stub
-				return null;
-			}
+            @Override
+            public GatewayOptions decodeFromWire(int pos, Buffer buffer) {
+                // TODO Auto-generated method stub
+                return null;
+            }
 
-			@Override
-			public GatewayOptions transform(GatewayOptions s) {
-				// TODO Auto-generated method stub
-				return null;
-			}
+            @Override
+            public GatewayOptions transform(GatewayOptions s) {
+                // TODO Auto-generated method stub
+                return null;
+            }
 
-			@Override
-			public String name() {
-				return "app";
-			}
+            @Override
+            public String name() {
+                return "app";
+            }
 
-			@Override
-			public byte systemCodecID() {
-				return -1;
-			}
+            @Override
+            public byte systemCodecID() {
+                return -1;
+            }
 
-		});
-		vertx.eventBus().send("test", new GatewayOptions());
+        });
 
-		System.out.println("ok");
-	}
+        vertx.eventBus().consumer("test").handler(m -> {
+            System.out.println(m.body());
+        });
 
-	static JsonObject getJsonFromFile(String jsonFile) {
-		if (jsonFile != null) {
-			try (Scanner scanner = new Scanner(new File(jsonFile), "UTF-8").useDelimiter("\\A")) {
-				String sconf = scanner.next();
-				try {
-					return new JsonObject(sconf);
-				} catch (DecodeException e) {
-					LOG.error("Configuration file " + sconf + " does not contain a valid JSON object");
-				}
-			} catch (FileNotFoundException e) {
-				LOG.error("unkown know file " + jsonFile, e);
-			}
-		}
+        vertx.eventBus().send("test", new GatewayOptions());
 
-		return null;
-	}
+        System.out.println("ok");
+        
+        vertx.close();
+    }
+
+    static JsonObject getJsonFromFile(String jsonFile) {
+        if (jsonFile != null) {
+            try (Scanner scanner = new Scanner(new File(jsonFile), "UTF-8").useDelimiter("\\A")) {
+                String sconf = scanner.next();
+                try {
+                    return new JsonObject(sconf);
+                } catch (DecodeException e) {
+                    LOG.error("Configuration file " + sconf + " does not contain a valid JSON object");
+                }
+            } catch (FileNotFoundException e) {
+                LOG.error("unkown know file " + jsonFile, e);
+            }
+        }
+
+        return null;
+    }
 
 }
