@@ -17,23 +17,23 @@ package com.dinstone.agate.manager.model;
 
 import java.util.Date;
 
-public class GatewayEntity {
+public class RouteEntity {
 
 	private Integer id;
 
-	private String code;
+	private Integer gwId;
 
 	private String name;
 
 	private String remark;
 
-	private String host;
+	private String request;
 
-	private Integer port;
+	private String response;
 
-	private String serverConfig;
+	private String routing;
 
-	private String clientConfig;
+	private String handlers;
 
 	private int status;
 
@@ -47,6 +47,14 @@ public class GatewayEntity {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public Integer getGwId() {
+		return gwId;
+	}
+
+	public void setGwId(Integer gwId) {
+		this.gwId = gwId;
 	}
 
 	public String getName() {
@@ -65,44 +73,36 @@ public class GatewayEntity {
 		this.remark = remark;
 	}
 
-	public String getCode() {
-		return code;
+	public String getRequest() {
+		return request;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
+	public void setRequest(String request) {
+		this.request = request;
 	}
 
-	public String getHost() {
-		return host;
+	public String getResponse() {
+		return response;
 	}
 
-	public void setHost(String host) {
-		this.host = host;
+	public void setResponse(String response) {
+		this.response = response;
 	}
 
-	public Integer getPort() {
-		return port;
+	public String getRouting() {
+		return routing;
 	}
 
-	public void setPort(Integer port) {
-		this.port = port;
+	public void setRouting(String routing) {
+		this.routing = routing;
 	}
 
-	public String getServerConfig() {
-		return serverConfig;
+	public String getHandlers() {
+		return handlers;
 	}
 
-	public void setServerConfig(String serverConfig) {
-		this.serverConfig = serverConfig;
-	}
-
-	public String getClientConfig() {
-		return clientConfig;
-	}
-
-	public void setClientConfig(String clientConfig) {
-		this.clientConfig = clientConfig;
+	public void setHandlers(String handlers) {
+		this.handlers = handlers;
 	}
 
 	public int getStatus() {

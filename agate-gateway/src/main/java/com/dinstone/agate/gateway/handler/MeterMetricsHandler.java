@@ -18,7 +18,7 @@ package com.dinstone.agate.gateway.handler;
 import java.util.Arrays;
 import java.util.List;
 
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.spi.BeforeHandler;
 
 import io.micrometer.core.instrument.Counter;
@@ -36,11 +36,11 @@ public class MeterMetricsHandler implements BeforeHandler {
 
     private Timer timer;
 
-    public MeterMetricsHandler(ApiOptions apiOptions, MeterRegistry meterRegistry) {
-        List<Tag> tags = Arrays.asList(Tag.of("gateway", apiOptions.getGateway()));
-        this.count = meterRegistry.counter(apiOptions.getApiName() + "_count", tags);
-        this.error = meterRegistry.counter(apiOptions.getApiName() + "_error", tags);
-        this.timer = meterRegistry.timer(apiOptions.getApiName() + "_time", tags);
+    public MeterMetricsHandler(RouteOptions routeOptions, MeterRegistry meterRegistry) {
+        List<Tag> tags = Arrays.asList(Tag.of("gateway", routeOptions.getGateway()));
+        this.count = meterRegistry.counter(routeOptions.getRoute() + "_count", tags);
+        this.error = meterRegistry.counter(routeOptions.getRoute() + "_error", tags);
+        this.timer = meterRegistry.timer(routeOptions.getRoute() + "_time", tags);
     }
 
     @Override

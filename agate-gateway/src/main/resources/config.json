@@ -1,6 +1,6 @@
 {
 	"gateway": {
-		"cluster": "default"
+		"cluster": "product"
 	},
 	"vertx": {
 		"workerPoolSize": 4,

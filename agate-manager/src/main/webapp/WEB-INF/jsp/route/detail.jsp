@@ -7,7 +7,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Agate Manager API</title>
+<title>Agate Manager Route</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="${contextPath}/img/favicon.ico">
@@ -33,8 +33,8 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/view/api/list?arId=${api.arId}">APIs</a></li>
-						<li>API Detail</li>
+						<li><a href="${contextPath}/view/route/list?arId=${api.arId}">Routes</a></li>
+						<li>Route Detail</li>
 					</ul>
 				</div>
 				<div class="row">
@@ -54,7 +54,7 @@
 									<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" value="${gateway.name}" disabled="disabled">
 								</div>
 								<div class="form-group">
-									<label>API Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}" disabled="disabled">
+									<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}" disabled="disabled">
 								</div>
 								<div class="form-group">
 									<label>Remark</label>

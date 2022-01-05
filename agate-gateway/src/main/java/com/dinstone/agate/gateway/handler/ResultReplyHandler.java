@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ContextConstants;
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.spi.AfterHandler;
 
 import io.vertx.core.buffer.Buffer;
@@ -42,7 +42,7 @@ public class ResultReplyHandler implements AfterHandler {
 
 	// private BackendOptions backendOptions;
 
-	public ResultReplyHandler(ApiOptions apiOptions) {
+	public ResultReplyHandler(RouteOptions routeOptions) {
 		// backendOptions = apiOptions.getBackend();
 	}
 

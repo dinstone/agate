@@ -27,55 +27,55 @@ import com.dinstone.agate.manager.model.ClusterEntity;
 @Component
 public class ClusterDao {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
-    public boolean clusterNameExist(String code) {
-        String sql = "select count(1) from t_cluster where code=?";
-        Integer count = jdbcTemplate.queryForObject(sql, new Object[] { code }, Integer.class);
-        return count != null && count > 0;
-    }
+	public boolean clusterNameExist(String code) {
+		String sql = "select count(1) from t_cluster where code=?";
+		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { code }, Integer.class);
+		return count != null && count > 0;
+	}
 
-    public void create(ClusterEntity entity) {
-        String sql = "insert into t_cluster(code,name,createtime,updatetime) values(?,?,?,?)";
-        jdbcTemplate.update(sql,
-                new Object[] { entity.getCode(), entity.getName(), entity.getCreateTime(), entity.getUpdateTime() });
-    }
+	public void create(ClusterEntity entity) {
+		String sql = "insert into t_cluster(code,name,createtime,updatetime) values(?,?,?,?)";
+		jdbcTemplate.update(sql,
+				new Object[] { entity.getCode(), entity.getName(), entity.getCreateTime(), entity.getUpdateTime() });
+	}
 
-    public void update(ClusterEntity entity) {
-        String sql = "update t_cluster set code=?,name=?,updatetime=? where id=?";
-        jdbcTemplate.update(sql,
-                new Object[] { entity.getCode(), entity.getName(), entity.getUpdateTime(), entity.getId() });
-    }
+	public void update(ClusterEntity entity) {
+		String sql = "update t_cluster set name=?,updatetime=? where id=?";
+		jdbcTemplate.update(sql,
+				new Object[] { entity.getCode(), entity.getName(), entity.getUpdateTime(), entity.getId() });
+	}
 
-    public List<ClusterEntity> list() {
-        String sql = "select * from t_cluster";
-        return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ClusterEntity.class));
-    }
+	public List<ClusterEntity> list() {
+		String sql = "select * from t_cluster";
+		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ClusterEntity.class));
+	}
 
-    public ClusterEntity find(Integer id) {
-        String sql = "select * from t_cluster where id=?";
-        List<ClusterEntity> apps = jdbcTemplate.query(sql, new Object[] { id },
-                BeanPropertyRowMapper.newInstance(ClusterEntity.class));
-        if (!apps.isEmpty()) {
-            return apps.get(0);
-        }
-        return null;
-    }
+	public ClusterEntity find(Integer id) {
+		String sql = "select * from t_cluster where id=?";
+		List<ClusterEntity> apps = jdbcTemplate.query(sql, new Object[] { id },
+				BeanPropertyRowMapper.newInstance(ClusterEntity.class));
+		if (!apps.isEmpty()) {
+			return apps.get(0);
+		}
+		return null;
+	}
 
-    public ClusterEntity find(String code) {
-        String sql = "select * from t_cluster where code=?";
-        List<ClusterEntity> apps = jdbcTemplate.query(sql, new Object[] { code },
-                BeanPropertyRowMapper.newInstance(ClusterEntity.class));
-        if (!apps.isEmpty()) {
-            return apps.get(0);
-        }
-        return null;
-    }
+	public ClusterEntity find(String code) {
+		String sql = "select * from t_cluster where code=?";
+		List<ClusterEntity> apps = jdbcTemplate.query(sql, new Object[] { code },
+				BeanPropertyRowMapper.newInstance(ClusterEntity.class));
+		if (!apps.isEmpty()) {
+			return apps.get(0);
+		}
+		return null;
+	}
 
-    public void delete(Integer id) {
-        String sql = "delete from t_cluster where id=?";
-        jdbcTemplate.update(sql, new Object[] { id });
-    }
+	public void delete(Integer id) {
+		String sql = "delete from t_cluster where id=?";
+		jdbcTemplate.update(sql, new Object[] { id });
+	}
 
 }

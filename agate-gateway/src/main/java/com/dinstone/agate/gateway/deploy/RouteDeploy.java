@@ -18,7 +18,7 @@ package com.dinstone.agate.gateway.deploy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 
 import io.vertx.circuitbreaker.CircuitBreaker;
@@ -27,29 +27,29 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 
-public class ApiDeploy {
+public class RouteDeploy {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApiDeploy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RouteDeploy.class);
 
     private GatewayOptions gatewayOptions;
 
-    private ApiOptions apiOptions;
+    private RouteOptions routeOptions;
 
     private HttpClient httpClient;
 
     private CircuitBreaker circuitBreaker;
 
-    public ApiDeploy(GatewayOptions gatewayOptions, ApiOptions apiOptions) {
+    public RouteDeploy(GatewayOptions gatewayOptions, RouteOptions routeOptions) {
         this.gatewayOptions = gatewayOptions;
-        this.apiOptions = apiOptions;
+        this.routeOptions = routeOptions;
     }
 
-    public String getApiName() {
-        return apiOptions.getApiName();
+    public String getRoute() {
+        return routeOptions.getRoute();
     }
 
-    public ApiOptions getApiOptions() {
-        return apiOptions;
+    public RouteOptions getRouteOptions() {
+        return routeOptions;
     }
 
     public GatewayOptions getGatewayOptions() {
@@ -97,7 +97,7 @@ public class ApiDeploy {
                 cbOptions.setFallbackOnFailure(false);
                 // time spent in open state before attempting to re-try
                 cbOptions.setResetTimeout(10000);
-                this.circuitBreaker = CircuitBreaker.create(apiOptions.getApiName(), vertx, cbOptions)
+                this.circuitBreaker = CircuitBreaker.create(routeOptions.getRoute(), vertx, cbOptions)
                         .openHandler(v -> {
                             LOG.debug("circuit breaker {} open", circuitBreaker.name());
                         }).closeHandler(v -> {

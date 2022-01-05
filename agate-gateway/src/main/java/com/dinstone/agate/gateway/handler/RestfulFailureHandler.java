@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.http.RestfulUtil;
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.spi.FailureHandler;
 
 import io.vertx.ext.web.RoutingContext;
@@ -27,15 +27,15 @@ import io.vertx.ext.web.RoutingContext;
 public class RestfulFailureHandler implements FailureHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
 
-	private ApiOptions api;
+	private RouteOptions routeOptions;
 
-	public RestfulFailureHandler(ApiOptions api) {
-		this.api = api;
+	public RestfulFailureHandler(RouteOptions routeOptions) {
+		this.routeOptions = routeOptions;
 	}
 
 	@Override
 	public void handle(RoutingContext rc) {
-		LOG.error("request [{}]-[{}] error: {}", api.getApiName(), rc.request().path(), rc.failure());
+		LOG.error("request [{}]-[{}] error: {}", routeOptions.getRoute(), rc.request().path(), rc.failure());
 
 		int statusCode = rc.statusCode();
 		if (statusCode == -1) {

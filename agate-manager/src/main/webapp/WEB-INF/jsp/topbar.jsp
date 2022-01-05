@@ -32,14 +32,5 @@
 				<li><a data-value="slate" href="#"><i class="whitespace"></i> Slate</a></li>
 			</ul>
 		</div>
-		<!-- theme selector ends -->
-		<ul class="collapse navbar-collapse nav navbar-nav top-menu">
-			<li class="dropdown"><a href="#" data-toggle="dropdown"><i class="glyphicon glyphicon-globe"></i> Environment <span class="caret"></span></a>
-				<ul class="dropdown-menu" role="menu">
-					<li><a href="#">Test</a></li>
-					<li><a href="#">Release</a></li>
-					<li><a href="#">Product</a></li>
-				</ul></li>
-		</ul>
 	</div>
 </div>

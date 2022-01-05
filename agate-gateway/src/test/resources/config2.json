@@ -1,6 +1,6 @@
 {
 	"cluster": {
-		"code": "default",
+		"code": "product",
 		"env": "release"
 	},
 	"vertx": {
@@ -13,7 +13,7 @@
 		"system.instances": 2
 	},
 	"manage": {
-		"port": 5555
+		"port": 6464
 	},
 	"consul": {
 		"host": "127.0.0.1",

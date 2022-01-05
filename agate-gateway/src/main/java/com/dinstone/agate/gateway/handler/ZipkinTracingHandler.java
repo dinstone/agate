@@ -15,7 +15,7 @@
  */
 package com.dinstone.agate.gateway.handler;
 
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.spi.BeforeHandler;
 
 import brave.Span;
@@ -24,19 +24,19 @@ import io.vertx.tracing.zipkin.ZipkinTracer;
 
 public class ZipkinTracingHandler implements BeforeHandler {
 
-    private ApiOptions apiOptions;
+	private RouteOptions routeOptions;
 
-    public ZipkinTracingHandler(ApiOptions apiOptions) {
-        this.apiOptions = apiOptions;
-    }
+	public ZipkinTracingHandler(RouteOptions routeOptions) {
+		this.routeOptions = routeOptions;
+	}
 
-    @Override
-    public void handle(RoutingContext context) {
-        Span activeSpan = ZipkinTracer.activeSpan();
-        if (activeSpan != null) {
-            activeSpan.tag("api.name", apiOptions.getApiName()).tag("gateway", apiOptions.getGateway());
-        }
-        context.next();
-    }
+	@Override
+	public void handle(RoutingContext context) {
+		Span activeSpan = ZipkinTracer.activeSpan();
+		if (activeSpan != null) {
+			activeSpan.tag("route.name", routeOptions.getRoute()).tag("gateway", routeOptions.getGateway());
+		}
+		context.next();
+	}
 
 }

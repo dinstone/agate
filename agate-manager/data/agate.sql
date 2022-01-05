@@ -13,31 +13,32 @@ CREATE UNIQUE INDEX i_code_name ON t_cluster (
 
 CREATE TABLE t_gateway (
     id           INTEGER  PRIMARY KEY AUTOINCREMENT,
+    code		 STRING   NOT NULL REFERENCES t_cluster (code),
     name         STRING   NOT NULL,
-    cluster      STRING   NOT NULL,
     remark       STRING,
     host         STRING,
     port         INT      NOT NULL,
     serverConfig STRING,
     clientConfig STRING,
+    routeConfig STRING,
     status       INT      NOT NULL DEFAULT (0),
     createTime   DATETIME NOT NULL,
     updateTime   DATETIME NOT NULL
 );
 
 CREATE UNIQUE INDEX i_cluster_name ON t_gateway (
-    cluster,
+    code,
     name
 );
 
 CREATE UNIQUE INDEX i_cluster_port ON t_gateway (
-    cluster,
+    code,
     port
 );
 
-CREATE TABLE t_api (
-    arId      INTEGER  PRIMARY KEY AUTOINCREMENT,
-    gwId      INTEGER  NOT NULL,
+CREATE TABLE t_route (
+    id      INTEGER  PRIMARY KEY AUTOINCREMENT,
+    gwId      INTEGER  NOT NULL REFERENCES t_gateway (id),
     name       STRING   NOT NULL,
     remark     STRING,
     status     INT      NOT NULL DEFAULT (0),

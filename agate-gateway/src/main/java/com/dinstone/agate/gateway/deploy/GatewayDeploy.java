@@ -31,7 +31,7 @@ import com.dinstone.agate.gateway.verticle.GatewayVerticle;
  */
 public class GatewayDeploy {
 
-    private Map<String, ApiDeploy> apiDeployCaches = new ConcurrentHashMap<>();
+    private Map<String, RouteDeploy> routeDeployCaches = new ConcurrentHashMap<>();
 
     private List<GatewayVerticle> gatewayVerticles = new CopyOnWriteArrayList<>();
 
@@ -71,28 +71,28 @@ public class GatewayDeploy {
         gatewayVerticles.remove(verticle);
     }
 
-    public boolean containApi(String apiName) {
-        return apiDeployCaches.containsKey(apiName);
+    public boolean containRoute(String route) {
+        return routeDeployCaches.containsKey(route);
     }
 
-    public ApiDeploy searchApi(String apiName) {
-        return apiDeployCaches.get(apiName);
+    public RouteDeploy searchRoute(String route) {
+        return routeDeployCaches.get(route);
     }
 
-    public void registApi(ApiDeploy apiDeploy) {
-        apiDeployCaches.put(apiDeploy.getApiName(), apiDeploy);
+    public void registRouteDeploy(RouteDeploy routeDeploy) {
+        routeDeployCaches.put(routeDeploy.getRoute(), routeDeploy);
     }
 
-    public void removeApi(ApiDeploy apiDeploy) {
-        apiDeploy.destory();
-        apiDeployCaches.remove(apiDeploy.getApiName());
+    public void removeRouteDeploy(RouteDeploy routeDeploy) {
+        routeDeploy.destory();
+        routeDeployCaches.remove(routeDeploy.getRoute());
     }
 
     public void destroy() {
-        for (ApiDeploy deploy : apiDeployCaches.values()) {
+        for (RouteDeploy deploy : routeDeployCaches.values()) {
             deploy.destory();
         }
-        apiDeployCaches.clear();
+        routeDeployCaches.clear();
 
         gatewayVerticles.clear();
     }

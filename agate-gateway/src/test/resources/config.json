@@ -1,7 +1,6 @@
 {
 	"gateway": {
-		"cluster": "default",
-		"envCode": "test"
+		"cluster": "product"
 	},
 	"tracing": {
 		"serviceName": "agate-gateway",
@@ -20,7 +19,6 @@
 		"system.instances": 2
 	},
 	"manage": {
-		"host": "localhost",
 		"port": 5454
 	},
 	"consul": {

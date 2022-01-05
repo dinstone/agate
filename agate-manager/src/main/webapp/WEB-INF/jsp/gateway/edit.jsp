@@ -57,7 +57,7 @@
 								<form role="form" action="/view/gateway/save" method="post">
 									<input name="action" value="${action}" type="hidden"> <input name="id" value="${gateway.id}" type="hidden">
 									<div class="form-group">
-										<label>Cluster (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <select name="cluster" class="form-control">
+										<label>Cluster (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <select name="code" class="form-control">
 											<c:forEach items="${clusters}" var="cluster">
 												<option value="${cluster.code}">${cluster.name}</option>
 											</c:forEach>

@@ -18,7 +18,7 @@ package com.dinstone.agate.gateway.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.spi.BeforeHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
@@ -35,12 +35,12 @@ public class RateLimitHandler implements BeforeHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
-    private RateLimiter limiter;
+    private RateLimiter rateLimiter;
 
-    private ApiOptions api;
+    private RouteOptions routeOptions;
 
-    public RateLimitHandler(ApiOptions api) {
-        this.api = api;
+    public RateLimitHandler(RouteOptions routeOptions) {
+        this.routeOptions = routeOptions;
         // if (api.getHandlers().getPermitsPerSecond() > 0) {
         // limiter = RateLimiter.create(api.getHandlers().getPermitsPerSecond());
         // }
@@ -48,18 +48,18 @@ public class RateLimitHandler implements BeforeHandler {
 
     @Override
     public void handle(RoutingContext rc) {
-        if (limiter == null) {
+        if (rateLimiter == null) {
             rc.next();
             return;
         }
 
-        if (limiter.tryAcquire()) {
+        if (rateLimiter.tryAcquire()) {
             rc.next();
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("{} rate limit than {}/s", api.getApiName(), limiter.getRate());
+                LOG.debug("{} rate limit than {}/s", routeOptions.getRoute(), rateLimiter.getRate());
             }
-            rc.fail(new HttpException(429, "too many requests, rate limit " + limiter.getRate() + "/s"));
+            rc.fail(new HttpException(429, "too many requests, rate limit " + rateLimiter.getRate() + "/s"));
         }
     }
 

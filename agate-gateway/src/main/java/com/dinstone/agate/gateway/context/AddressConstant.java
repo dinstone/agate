@@ -17,14 +17,14 @@ package com.dinstone.agate.gateway.context;
 
 public interface AddressConstant {
 
-    String GATEWAY_START = "gateway:start";
-    String GATEWAY_CLOSE = "gateway:close";
+	String GATEWAY_START = "gateway:start";
+	String GATEWAY_CLOSE = "gateway:close";
 
-    String API_DEPLOY = "api:deploy";
-    String API_REMOVE = "api:remove";
+	String ROUTE_DEPLOY = "route:deploy";
+	String ROUTE_REMOVE = "route:remove";
 
-    String APM_METRICS = "apm.metrics";
+	String APM_METRICS = "apm.metrics";
 
-    String CIRCUIT_BREAKER = "vertx.circuit-breaker";
+	String CIRCUIT_BREAKER = "vertx.circuit-breaker";
 
 }

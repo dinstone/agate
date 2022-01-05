@@ -105,7 +105,7 @@ public class LaunchVerticle extends AbstractVerticle {
     }
 
     /**
-     * Watch api config and deploy
+     * Watch config and deploy
      * 
      * @return
      */

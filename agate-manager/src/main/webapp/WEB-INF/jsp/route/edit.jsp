@@ -72,12 +72,12 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/view/api/list">API Routes</a></li>
+						<li><a href="${contextPath}/view/route/list">Routes</a></li>
 						<c:if test="${action == 'create'}">
-							<li>API Create</li>
+							<li>Route Create</li>
 						</c:if>
 						<c:if test="${action == 'update'}">
-							<li>API Update</li>
+							<li>Route Update</li>
 						</c:if>
 					</ul>
 				</div>
@@ -86,7 +86,7 @@
 						<c:if test="${!empty error}">
 							<div id="tip" class="alert alert-info">${error}</div>
 						</c:if>
-						<form action="/view/api/save" method="post">
+						<form action="/view/route/save" method="post">
 							<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
 							<div class="panel panel-default">
 								<div class="panel-heading">
@@ -103,7 +103,7 @@
 										</select>
 									</div>
 									<div class="form-group">
-										<label>API Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
+										<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
 									</div>
 									<div class="form-group">
 										<label>Remark</label>

@@ -23,10 +23,10 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.deploy.ApiDeploy;
+import com.dinstone.agate.gateway.deploy.RouteDeploy;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
-import com.dinstone.agate.gateway.options.ApiOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.options.RoutingOptions;
@@ -59,19 +59,19 @@ public class HttpProxyHandler2 implements RouteHandler {
 
 	private final HttpClient httpClient;
 
-	private final ApiOptions apiOptions;
+	private final RouteOptions routeOptions;
 
-	private final RoutingOptions backendOptions;
+	private final RoutingOptions routingOptions;
 
 	private final CircuitBreaker circuitBreaker;
 
 	private int count;
 
-	public HttpProxyHandler2(ApiOptions apiOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
-		this.apiOptions = apiOptions;
+	public HttpProxyHandler2(RouteOptions routeOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
+		this.routeOptions = routeOptions;
 		this.httpClient = httpClient;
 		this.circuitBreaker = circuitBreaker;
-		this.backendOptions = apiOptions.getRouting();
+		this.routingOptions = routeOptions.getRouting();
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class HttpProxyHandler2 implements RouteHandler {
 		MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
 		MultiMap headerParams = MultiMap.caseInsensitiveMultiMap();
 		// parse params from frontend request
-		List<ParamOptions> params = backendOptions.getParams();
+		List<ParamOptions> params = routingOptions.getParams();
 		if (params != null) {
 			for (ParamOptions param : params) {
 				if (ParamType.PATH == param.getBeParamType()) {
@@ -160,8 +160,8 @@ public class HttpProxyHandler2 implements RouteHandler {
 		// set method
 		options.setMethod(method(serverRequest.method()));
 		// set timeout
-		if (backendOptions.getTimeout() > 0) {
-			options.setTimeout(backendOptions.getTimeout());
+		if (routingOptions.getTimeout() > 0) {
+			options.setTimeout(routingOptions.getTimeout());
 		}
 		// set headers
 		for (Entry<String, String> e : serverRequest.headers()) {
@@ -184,7 +184,7 @@ public class HttpProxyHandler2 implements RouteHandler {
 					ProxyResponse proxyResponse = ar.result();
 					proxyResponse.send().onFailure(t -> {
 						// service error
-						LOG.error("API:" + apiOptions.getApiName() + ", pipe backend request error.", t);
+						LOG.error("route:" + routeOptions.getRoute() + ", pipe backend request error.", t);
 					});
 					promise.complete();
 				} else {
@@ -225,7 +225,7 @@ public class HttpProxyHandler2 implements RouteHandler {
 	}
 
 	private String loadbalanceUrl(HttpServerRequest inRequest) {
-		List<String> urls = backendOptions.getUrls();
+		List<String> urls = routingOptions.getUrls();
 		if (urls == null || urls.size() == 0) {
 			return null;
 		}
@@ -239,17 +239,17 @@ public class HttpProxyHandler2 implements RouteHandler {
 	}
 
 	private HttpMethod method(HttpMethod httpMethod) {
-		String method = backendOptions.getMethod();
+		String method = routingOptions.getMethod();
 		if (method != null && !method.isEmpty()) {
 			return HttpMethod.valueOf(method.toUpperCase());
 		}
 		return httpMethod;
 	}
 
-	public static Handler<RoutingContext> create(ApiDeploy deploy, Vertx vertx) {
+	public static Handler<RoutingContext> create(RouteDeploy deploy, Vertx vertx) {
 		HttpClient httpClient = deploy.createHttpClient(vertx);
 		CircuitBreaker circuitBreaker = deploy.createCircuitBreaker(vertx);
-		return new HttpProxyHandler2(deploy.getApiOptions(), httpClient, circuitBreaker);
+		return new HttpProxyHandler2(deploy.getRouteOptions(), httpClient, circuitBreaker);
 	}
 
 }

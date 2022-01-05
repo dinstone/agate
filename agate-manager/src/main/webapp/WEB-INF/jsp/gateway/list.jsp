@@ -46,7 +46,7 @@
 					<div class="nav-canvas">
 						<div class="nav-sm nav nav-stacked"></div>
 						<ul class="nav nav-pills nav-stacked main-menu">
-							<li><a class="ajax-link" href="${contextPath}/view/api/list"><i class="glyphicon glyphicon-align-justify"></i><span> API Routes</span></a></li>
+							<li><a class="ajax-link" href="${contextPath}/view/route/list"><i class="glyphicon glyphicon-align-justify"></i><span> Routes</span></a></li>
 							<li class="active"><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
 							<li><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
 						</ul>
@@ -85,14 +85,14 @@
 											<th rowspan="1" colspan="1" style="width: 99px;">Endpoint</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Operation</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Actions</th>
 										</tr>
 									</thead>
 									<tbody id="appList">
 										<c:forEach items="${gateways}" var="gateway">
 											<tr class="line">
 												<td><a href="${contextPath}/view/gateway/detail?id=${gateway.id}">${gateway.name}</a></td>
-												<td>${gateway.cluster}</td>
+												<td>${gateway.code}</td>
 												<td>${gateway.host}:${gateway.port}</td>
 												<td>${gateway.remark}</td>
 												<c:if test="${gateway.status > 0}">

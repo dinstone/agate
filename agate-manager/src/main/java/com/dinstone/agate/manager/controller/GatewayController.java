@@ -34,97 +34,97 @@ import com.dinstone.agate.manager.service.ManageService;
 @RequestMapping("/view/gateway")
 public class GatewayController {
 
-    @Autowired
-    private ManageService manageService;
+	@Autowired
+	private ManageService manageService;
 
-    @Autowired
-    private ClusterService clusterService;
+	@Autowired
+	private ClusterService clusterService;
 
-    @RequestMapping("/list")
-    public ModelAndView list(HttpServletRequest request) {
-        ModelAndView mav = new ModelAndView("gateway/list");
-        List<GatewayEntity> gateways = manageService.gatewayList();
-        return mav.addObject("gateways", gateways);
-    }
+	@RequestMapping("/list")
+	public ModelAndView list(HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView("gateway/list");
+		List<GatewayEntity> gateways = manageService.gatewayList();
+		return mav.addObject("gateways", gateways);
+	}
 
-    @RequestMapping("/create")
-    public ModelAndView create(HttpServletRequest request) {
-        List<ClusterEntity> clusters = clusterService.clusterList();
+	@RequestMapping("/create")
+	public ModelAndView create(HttpServletRequest request) {
+		List<ClusterEntity> clusters = clusterService.clusterList();
 
-        ModelAndView mav = new ModelAndView("gateway/edit");
-        return mav.addObject("action", "create").addObject("clusters", clusters);
-    }
+		ModelAndView mav = new ModelAndView("gateway/edit");
+		return mav.addObject("action", "create").addObject("clusters", clusters);
+	}
 
-    @RequestMapping("/update")
-    public ModelAndView update(Integer id, HttpServletRequest request) {
-        List<ClusterEntity> clusters = clusterService.clusterList();
-        try {
-            GatewayEntity appEntity = manageService.getGatewayById(id);
-            ModelAndView mav = new ModelAndView("gateway/edit").addObject("gateway", appEntity);
-            return mav.addObject("action", "update").addObject("clusters", clusters);
-        } catch (Exception e) {
-            return new ModelAndView("gateway/list");
-        }
-    }
+	@RequestMapping("/update")
+	public ModelAndView update(Integer id, HttpServletRequest request) {
+		List<ClusterEntity> clusters = clusterService.clusterList();
+		try {
+			GatewayEntity appEntity = manageService.getGatewayById(id);
+			ModelAndView mav = new ModelAndView("gateway/edit").addObject("gateway", appEntity);
+			return mav.addObject("action", "update").addObject("clusters", clusters);
+		} catch (Exception e) {
+			return new ModelAndView("gateway/list");
+		}
+	}
 
-    @RequestMapping("/save")
-    public ModelAndView save(GatewayEntity entity, String action, HttpServletRequest request) {
-        try {
-            if ("create".equals(action)) {
-                manageService.createGateway(entity);
-            } else {
-                manageService.updateGateway(entity);
-            }
-        } catch (BusinessException e) {
-            ModelAndView mav = new ModelAndView("forward:/view/gateway/" + action);
+	@RequestMapping("/save")
+	public ModelAndView save(GatewayEntity entity, String action, HttpServletRequest request) {
+		try {
+			if ("create".equals(action)) {
+				manageService.createGateway(entity);
+			} else {
+				manageService.updateGateway(entity);
+			}
+		} catch (BusinessException e) {
+			ModelAndView mav = new ModelAndView("forward:/view/gateway/" + action);
 
-            List<ClusterEntity> clusters = clusterService.clusterList();
-            mav.addObject("error", e.getMessage()).addObject("clusters", clusters);
-            return mav.addObject("gateway", entity).addObject("action", action);
-        }
-        return new ModelAndView("forward:/view/gateway/list");
-    }
+			List<ClusterEntity> clusters = clusterService.clusterList();
+			mav.addObject("error", e.getMessage()).addObject("clusters", clusters);
+			return mav.addObject("gateway", entity).addObject("action", action);
+		}
+		return new ModelAndView("forward:/view/gateway/list");
+	}
 
-    @RequestMapping("/detail")
-    public ModelAndView detail(Integer id) {
-        ModelAndView mav = new ModelAndView("gateway/detail");
-        try {
-            GatewayEntity gateway = manageService.getGatewayById(id);
-            ClusterEntity cluster = clusterService.getClusterByCode(gateway.getCluster());
-            mav.addObject("cluster", cluster);
-            mav.addObject("gateway", gateway);
-            mav.addObject("action", "detail");
-        } catch (Exception e) {
-            mav.addObject("error", e.getMessage());
-        }
-        return mav;
-    }
+	@RequestMapping("/detail")
+	public ModelAndView detail(Integer id) {
+		ModelAndView mav = new ModelAndView("gateway/detail");
+		try {
+			GatewayEntity gateway = manageService.getGatewayById(id);
+			ClusterEntity cluster = clusterService.getClusterByCode(gateway.getCode());
+			mav.addObject("cluster", cluster);
+			mav.addObject("gateway", gateway);
+			mav.addObject("action", "detail");
+		} catch (Exception e) {
+			mav.addObject("error", e.getMessage());
+		}
+		return mav;
+	}
 
-    @RequestMapping("/delete")
-    public ModelAndView delete(Integer id) {
-        try {
-            manageService.deleteGateway(id);
-        } catch (BusinessException e) {
-        }
-        return new ModelAndView("forward:/view/gateway/list");
-    }
+	@RequestMapping("/delete")
+	public ModelAndView delete(Integer id) {
+		try {
+			manageService.deleteGateway(id);
+		} catch (BusinessException e) {
+		}
+		return new ModelAndView("forward:/view/gateway/list");
+	}
 
-    @RequestMapping("/start")
-    public ModelAndView start(Integer id) {
-        try {
-            manageService.startGateway(id);
-        } catch (BusinessException e) {
-        }
-        return new ModelAndView("forward:/view/gateway/list");
-    }
+	@RequestMapping("/start")
+	public ModelAndView start(Integer id) {
+		try {
+			manageService.startGateway(id);
+		} catch (BusinessException e) {
+		}
+		return new ModelAndView("forward:/view/gateway/list");
+	}
 
-    @RequestMapping("/close")
-    public ModelAndView close(Integer id) {
-        try {
-            manageService.closeGateway(id);
-        } catch (BusinessException e) {
-        }
-        return new ModelAndView("forward:/view/gateway/list");
-    }
+	@RequestMapping("/close")
+	public ModelAndView close(Integer id) {
+		try {
+			manageService.closeGateway(id);
+		} catch (BusinessException e) {
+		}
+		return new ModelAndView("forward:/view/gateway/list");
+	}
 
 }
