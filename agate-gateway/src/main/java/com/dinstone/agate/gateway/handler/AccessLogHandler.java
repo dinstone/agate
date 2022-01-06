@@ -122,7 +122,7 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 		HttpVersion version = context.request().version();
 		String remote = getClientAddress(context.request().remoteAddress());
 
-		context.addBodyEndHandler(v -> log(context, timestamp, remote, version, method, uri));
+		context.addEndHandler(v -> log(context, timestamp, remote, version, method, uri));
 
 		context.next();
 	}

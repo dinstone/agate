@@ -35,7 +35,9 @@ public class RestfulFailureHandler implements FailureHandler {
 
 	@Override
 	public void handle(RoutingContext rc) {
-		LOG.error("request [{}]-[{}] error: {}", routeOptions.getRoute(), rc.request().path(), rc.failure());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("request [{}]-[{}] error: {}", routeOptions.getRoute(), rc.request().path(), rc.failure());
+		}
 
 		int statusCode = rc.statusCode();
 		if (statusCode == -1) {

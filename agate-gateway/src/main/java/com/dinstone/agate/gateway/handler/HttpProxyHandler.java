@@ -27,17 +27,14 @@ import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.deploy.RouteDeploy;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
-import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
+import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.RoutingOptions;
 import com.dinstone.agate.gateway.spi.RouteHandler;
 
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
@@ -63,32 +60,16 @@ public class HttpProxyHandler implements RouteHandler {
 
 	private final RoutingOptions routingOptions;
 
-	private final CircuitBreaker circuitBreaker;
-
 	private int count;
 
-	public HttpProxyHandler(RouteOptions routeOptions, HttpClient httpClient, CircuitBreaker circuitBreaker) {
+	public HttpProxyHandler(RouteOptions routeOptions, HttpClient httpClient) {
 		this.routeOptions = routeOptions;
 		this.httpClient = httpClient;
-		this.circuitBreaker = circuitBreaker;
 		this.routingOptions = routeOptions.getRouting();
 	}
 
 	@Override
 	public void handle(RoutingContext rc) {
-		if (circuitBreaker != null) {
-			circuitBreaker.<Void>executeWithFallback(promise -> {
-				routing(rc).onComplete(promise);
-			}, t -> {
-				rc.fail(504, t); // gateway time-out
-				return null;
-			});
-		} else {
-			routing(rc);
-		}
-	}
-
-	private Future<Void> routing(RoutingContext rc) {
 		HttpServerRequest feRequest = rc.request().pause();
 
 		Map<String, String> pathParams = new HashMap<>();
@@ -158,8 +139,6 @@ public class HttpProxyHandler implements RouteHandler {
 			}
 		}
 
-		Promise<Void> promise = Promise.promise();
-
 		// create http request
 		httpClient.request(options).onSuccess(beRequest -> {
 			// response handler
@@ -169,12 +148,9 @@ public class HttpProxyHandler implements RouteHandler {
 					rc.put(ContextConstants.BACKEND_REQUEST, beRequest);
 					rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
 					rc.next();
-
-					promise.complete();
 				} else {
 					// Service Unavailable
 					rc.fail(503, ar.cause());
-					promise.fail(ar.cause());
 				}
 			});
 
@@ -182,20 +158,17 @@ public class HttpProxyHandler implements RouteHandler {
 			if (HttpUtil.hasBody(beRequest.getMethod())) {
 				feRequest.pipe().to(beRequest).onFailure(e -> {
 					// service unavailable
-					LOG.error("route:" + routeOptions.getRoute() + ", pump backend request error.", e);
+					LOG.warn("route:" + routeOptions.getRoute() + ", pump backend request error.", e);
 					beRequest.reset();
 					rc.fail(503, e);
-					promise.fail(e);
 				});
 			} else {
 				beRequest.end();
 			}
 		}).onFailure(t -> {
 			rc.fail(502, t);// bad gateway
-			promise.fail(t);
 		});
 
-		return promise.future();
 	}
 
 	private String findParamValue(RoutingContext rc, ParamOptions param) {
@@ -230,8 +203,8 @@ public class HttpProxyHandler implements RouteHandler {
 
 	public static Handler<RoutingContext> create(RouteDeploy deploy, Vertx vertx) {
 		HttpClient httpClient = deploy.createHttpClient(vertx);
-		CircuitBreaker circuitBreaker = deploy.createCircuitBreaker(vertx);
-		return new HttpProxyHandler(deploy.getRouteOptions(), httpClient, circuitBreaker);
+		RouteOptions routeOptions = deploy.getRouteOptions();
+		return new HttpProxyHandler(routeOptions, httpClient);
 	}
 
 }

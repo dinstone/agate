@@ -96,7 +96,7 @@ public class RouteDeploy {
                 // does not succeed in time
                 cbOptions.setFallbackOnFailure(false);
                 // time spent in open state before attempting to re-try
-                cbOptions.setResetTimeout(10000);
+                cbOptions.setResetTimeout(5000);
                 this.circuitBreaker = CircuitBreaker.create(routeOptions.getRoute(), vertx, cbOptions)
                         .openHandler(v -> {
                             LOG.debug("circuit breaker {} open", circuitBreaker.name());

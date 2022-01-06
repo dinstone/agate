@@ -62,7 +62,9 @@ public class ResultReplyHandler implements AfterHandler {
 
 		Pipe<Buffer> pipe = beResponse.pipe();
 		pipe.to(feResponse).onFailure(t -> {
-			LOG.error("backend response is error", t);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("pipe from backend to front error", t);
+			}
 			beRequest.reset();
 			feResponse.reset();
 		});

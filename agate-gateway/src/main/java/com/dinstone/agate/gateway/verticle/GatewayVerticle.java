@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.RouteDeploy;
 import com.dinstone.agate.gateway.handler.AccessLogHandler;
+import com.dinstone.agate.gateway.handler.CircuitBreakerHandler;
 import com.dinstone.agate.gateway.handler.HttpProxyHandler;
 import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
 import com.dinstone.agate.gateway.handler.RateLimitHandler;
@@ -175,6 +176,9 @@ public class GatewayVerticle extends AbstractVerticle {
 				if (routeOptions.getHandlers() != null) {
 					route.handler(new RateLimitHandler(routeOptions));
 				}
+				// CircuitBreaker handler
+				route.handler(CircuitBreakerHandler.create(deploy, vertx));
+				
 				// route handler
 				route.handler(HttpProxyHandler.create(deploy, vertx));
 				// after handler : result reply handler
