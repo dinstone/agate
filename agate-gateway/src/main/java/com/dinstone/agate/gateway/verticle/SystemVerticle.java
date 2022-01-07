@@ -47,8 +47,12 @@ public class SystemVerticle extends AbstractVerticle {
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
 		vertx.eventBus().consumer(AddressConstant.APM_METRICS, message -> {
-			String baseName = (String) message.body();
-			message.reply(metricsService.getMetricsSnapshot(baseName));
+			if (message.body() instanceof String) {
+				String baseName = (String) message.body();
+				message.reply(metricsService.getMetricsSnapshot(baseName));
+			} else {
+				message.reply(metricsService.getMetricsSnapshot());
+			}
 		});
 
 		startPromise.complete();

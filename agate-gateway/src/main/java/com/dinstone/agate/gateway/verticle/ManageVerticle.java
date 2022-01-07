@@ -264,12 +264,8 @@ public class ManageVerticle extends AbstractVerticle {
 
 	private void metrics(RoutingContext rc) {
 		try {
-			String message = rc.request().getParam("mn");
-			if (message == null) {
-				RestfulUtil.failure(rc, "mn is null");
-				return;
-			}
-			vertx.eventBus().request(AddressConstant.APM_METRICS, message, ar -> {
+			String name = rc.request().getParam("name");
+			vertx.eventBus().request(AddressConstant.APM_METRICS, name, ar -> {
 				if (ar.succeeded()) {
 					RestfulUtil.success(rc, ar.result().body());
 				} else {

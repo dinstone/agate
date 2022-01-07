@@ -34,7 +34,7 @@ public class ZipkinTracingHandler implements BeforeHandler {
 	public void handle(RoutingContext context) {
 		Span activeSpan = ZipkinTracer.activeSpan();
 		if (activeSpan != null) {
-			activeSpan.tag("route.name", routeOptions.getRoute()).tag("gateway", routeOptions.getGateway());
+			activeSpan.tag("route.name", routeOptions.getRoute()).tag("gateway.name", routeOptions.getGateway());
 		}
 		context.next();
 	}
