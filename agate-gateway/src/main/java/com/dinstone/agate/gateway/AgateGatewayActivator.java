@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2022 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.verticle.LaunchVerticle;
 
-public class GatewayActivator {
+public class AgateGatewayActivator {
 
-	private static final Logger LOG = LoggerFactory.getLogger(GatewayActivator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AgateGatewayActivator.class);
 
 	public static void main(String[] args) {
 		// launch application activator
-		GatewayActivator activator = new GatewayActivator();
+		AgateGatewayActivator activator = new AgateGatewayActivator();
 		try {
 			long s = System.currentTimeMillis();
 			activator.start();
@@ -41,11 +41,11 @@ public class GatewayActivator {
 	}
 
 	public void start() throws Exception {
-		GatewayLauncher.main(new String[] { "run", LaunchVerticle.class.getName() });
+		AgateGatewayLauncher.main(new String[] { "run", LaunchVerticle.class.getName() });
 	}
 
 	public void stop() {
-		GatewayLauncher.main(new String[] { "stop", LaunchVerticle.class.getName() });
+		AgateGatewayLauncher.main(new String[] { "stop", LaunchVerticle.class.getName() });
 	}
 
 }

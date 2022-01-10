@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2022 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package com.dinstone.agate.gateway;
 
-class LauncherTest {
+class AgateGatewayLauncherTest2 {
 
     public static void main(String[] args) throws Exception {
-        GatewayLauncher.main(new String[] { "run", "com.dinstone.agate.gateway.verticle.LaunchVerticle" });
+        AgateGatewayLauncher.main(new String[] { "run", "com.dinstone.agate.gateway.verticle.LaunchVerticle",
+                "-conf=src/test/resources/config2.json" });
     }
 
 }

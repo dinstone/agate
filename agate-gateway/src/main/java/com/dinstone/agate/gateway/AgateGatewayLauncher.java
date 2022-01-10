@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2022 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxJmxMetricsOptions;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 
-public class GatewayLauncher extends Launcher {
+public class AgateGatewayLauncher extends Launcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GatewayLauncher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AgateGatewayLauncher.class);
 
     private static final String DEFAULT_GATEWAY_CONFIG = "config.json";
 
@@ -51,7 +51,7 @@ public class GatewayLauncher extends Launcher {
         if (args == null || args.length == 0) {
             args = new String[] { "run", LaunchVerticle.class.getName() };
         }
-        new GatewayLauncher().dispatch(args);
+        new AgateGatewayLauncher().dispatch(args);
     }
 
     @Override

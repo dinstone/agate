@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.dinstone.agate</groupId>
 		<artifactId>agate</artifactId>
-		<version>0.8.0</version>
+		<version>0.9.0</version>
 	</parent>
 	<artifactId>agate-manager</artifactId>
 	<packaging>jar</packaging>

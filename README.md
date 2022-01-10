@@ -9,7 +9,6 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 - Proxy: /(?<url>.*)
 
 # Feature
-- BlackWhiteList
 - Logging
 - RateLimit
 - Tracing
@@ -17,7 +16,8 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 - Security
 - CircuitBreaker
 - GrayDeployment
-- Routing
+- Routing: Http URL Proxy
+- Routing: Http Microservice Discovery
 
 # System Architecture
 ![System Architecture](https://github.com/dinstone/agate/wiki/imgs/arch00.png)

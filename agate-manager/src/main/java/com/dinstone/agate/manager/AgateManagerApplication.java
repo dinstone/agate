@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019~2021 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2022 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ManagerApplication {
+public class AgateManagerApplication {
 
-	public static void main(String[] args) {
-		try {
-			SpringApplication.run(ManagerApplication.class, args);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public static void main(String[] args) {
+        try {
+            SpringApplication.run(AgateManagerApplication.class, args);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }
