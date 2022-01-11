@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway;
 
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import com.dinstone.agate.gateway.verticle.LaunchVerticle;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Launcher;
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.SLF4JLogDelegateFactory;
@@ -110,6 +112,12 @@ public class AgateGatewayLauncher extends Launcher {
     private MicrometerMetricsOptions metricsOptions() {
         VertxJmxMetricsOptions jmxo = new VertxJmxMetricsOptions().setEnabled(true);
         return new MicrometerMetricsOptions().setEnabled(true).setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
+    }
+
+    public void afterStartingVertx(Vertx vertx) {
+        vertx.exceptionHandler(t -> {
+            LOG.warn("default exception handler", t);
+        });
     }
 
     @Override

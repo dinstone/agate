@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.verticle;
 
 import java.util.Map;
@@ -171,12 +172,13 @@ public class GatewayVerticle extends AbstractVerticle {
                 if (meterRegistry != null) {
                     route.handler(new MeterMetricsHandler(routeOptions, meterRegistry));
                 }
-                // before handler : rate limit handler
+
                 if (routeOptions.getHandlers() != null) {
+                    // before handler : rate limit handler
                     route.handler(new RateLimitHandler(routeOptions));
+                    // before handler: circuit breaker handler
+                    route.handler(CircuitBreakerHandler.create(deploy, vertx));
                 }
-                // before handler: circuit breaker handler
-                route.handler(CircuitBreakerHandler.create(deploy, vertx));
 
                 // routing handler
                 route.handler(HttpProxyHandler.create(deploy, vertx));

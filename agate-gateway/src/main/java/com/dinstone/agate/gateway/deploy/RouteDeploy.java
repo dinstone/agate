@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.deploy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.GatewayOptions;
+import com.dinstone.agate.gateway.options.RouteOptions;
 
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
@@ -73,10 +74,11 @@ public class RouteDeploy {
                 HttpClientOptions clientOptions = gatewayOptions.getClientOptions();
                 if (clientOptions == null) {
                     clientOptions = new HttpClientOptions();
+                    clientOptions.setKeepAlive(true);
                     clientOptions.setConnectTimeout(2000);
-                    clientOptions.setMaxWaitQueueSize(5);
+                    // clientOptions.setMaxWaitQueueSize(1000);
                     clientOptions.setIdleTimeout(10);
-                    clientOptions.setMaxPoolSize(5);
+                    clientOptions.setMaxPoolSize(100);
                     // clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
                 }
                 httpClient = vertx.createHttpClient(clientOptions);
@@ -92,19 +94,19 @@ public class RouteDeploy {
                 // cbOptions.setFailuresRollingWindow(10000);
                 cbOptions.setMaxFailures(10);
                 // If an action is not completed before this timeout, the action is considered as a failure.
-                cbOptions.setTimeout(1000);
+                cbOptions.setTimeout(3000);
                 // does not succeed in time
                 cbOptions.setFallbackOnFailure(false);
                 // time spent in open state before attempting to re-try
                 cbOptions.setResetTimeout(5000);
                 this.circuitBreaker = CircuitBreaker.create(routeOptions.getRoute(), vertx, cbOptions)
-                        .openHandler(v -> {
-                            LOG.debug("circuit breaker {} open", circuitBreaker.name());
-                        }).closeHandler(v -> {
-                            LOG.debug("circuit breaker {} close", circuitBreaker.name());
-                        }).halfOpenHandler(v -> {
-                            LOG.debug("circuit breaker {} half", circuitBreaker.name());
-                        });
+                    .openHandler(v -> {
+                        LOG.debug("circuit breaker {} open", circuitBreaker.name());
+                    }).closeHandler(v -> {
+                        LOG.debug("circuit breaker {} close", circuitBreaker.name());
+                    }).halfOpenHandler(v -> {
+                        LOG.debug("circuit breaker {} half", circuitBreaker.name());
+                    });
             }
             return circuitBreaker;
         }

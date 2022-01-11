@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.handler;
 
 import org.slf4j.Logger;
@@ -34,55 +35,59 @@ import io.vertx.ext.web.RoutingContext;
  * http route and proxy.
  *
  * @author dinstone
- *
  */
 public class ResultReplyHandler implements AfterHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
 
-	// private BackendOptions backendOptions;
+    // private BackendOptions backendOptions;
 
-	public ResultReplyHandler(RouteOptions routeOptions) {
-		// backendOptions = apiOptions.getBackend();
-	}
+    public ResultReplyHandler(RouteOptions routeOptions) {
+        // backendOptions = apiOptions.getBackend();
+    }
 
-	@Override
-	public void handle(RoutingContext rc) {
-		HttpClientRequest beRequest = rc.get(ContextConstants.BACKEND_REQUEST);
-		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
-		HttpServerResponse feResponse = rc.response();
-		feResponse.setStatusCode(beResponse.statusCode());
-		feResponse.headers().addAll(beResponse.headers());
+    @Override
+    public void handle(RoutingContext rc) {
+        HttpClientRequest beRequest = rc.get(ContextConstants.BACKEND_REQUEST);
+        HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
 
-		long len = getContentLength(beResponse);
-		if (len == 0) {
-			feResponse.end();
-			return;
-		}
+        HttpServerResponse feResponse = rc.response();
+        feResponse.setStatusCode(beResponse.statusCode());
+        feResponse.headers().addAll(beResponse.headers());
 
-		Pipe<Buffer> pipe = beResponse.pipe();
-		pipe.to(feResponse).onFailure(t -> {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("pipe from backend to front error", t);
-			}
-			beRequest.reset();
-			feResponse.reset();
-		});
+        long len = getContentLength(beResponse);
+        if (len == 0) {
+            feResponse.end();
+            return;
+        }
 
-	}
+        // beResponse.exceptionHandler(t -> {
+        // if (LOG.isDebugEnabled()) {
+        // LOG.debug("pipe from backend to front error", t);
+        // }
+        // beRequest.reset();
+        // });
 
-	private long getContentLength(HttpClientResponse response) {
-		String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
-		if ("chunked".equalsIgnoreCase(tc)) {
-			return -1;
-		}
+        Pipe<Buffer> pipe = beResponse.pipe();
+        pipe.endOnFailure(false).endOnSuccess(true);
+        pipe.to(feResponse).onFailure(t -> {
+            pipe.close();
+        });
 
-		try {
-			return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
-		} catch (Exception e) {
-			// ignore
-		}
-		return -1;
-	}
+    }
+
+    private long getContentLength(HttpClientResponse response) {
+        String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
+        if ("chunked".equalsIgnoreCase(tc)) {
+            return -1;
+        }
+
+        try {
+            return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
+        } catch (Exception e) {
+            // ignore
+        }
+        return -1;
+    }
 
 }
