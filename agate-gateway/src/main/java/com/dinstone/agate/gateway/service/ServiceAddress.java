@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package com.dinstone.agate.gateway;
+package com.dinstone.agate.gateway.service;
 
-import com.dinstone.agate.gateway.context.AgateVerticleFactory;
-import com.dinstone.agate.gateway.verticle.LaunchVerticle;
+public interface ServiceAddress {
 
-class AgateGatewayLauncherTest {
-
-    public static void main(String[] args) throws Exception {
-        AgateGatewayLauncher.main(new String[] { "run", AgateVerticleFactory.verticleName(LaunchVerticle.class) });
-    }
+    String getUrl();
 
 }

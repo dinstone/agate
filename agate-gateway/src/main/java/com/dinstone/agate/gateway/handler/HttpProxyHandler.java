@@ -32,17 +32,20 @@ import com.dinstone.agate.gateway.options.ParamOptions;
 import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.RoutingOptions;
+import com.dinstone.agate.gateway.service.Loadbalancer;
 import com.dinstone.agate.gateway.spi.RouteHandler;
 
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -56,21 +59,32 @@ public class HttpProxyHandler implements RouteHandler {
 
     private final HttpClient httpClient;
 
+    private final Loadbalancer loadbalancer;
+
     private final RouteOptions routeOptions;
 
     private final RoutingOptions routingOptions;
 
-    private int count;
-
-    public HttpProxyHandler(RouteOptions routeOptions, HttpClient httpClient) {
+    public HttpProxyHandler(RouteOptions routeOptions, HttpClient httpClient, Loadbalancer loadbalancer) {
         this.routeOptions = routeOptions;
+        this.loadbalancer = loadbalancer;
         this.httpClient = httpClient;
         this.routingOptions = routeOptions.getRouting();
     }
 
     @Override
     public void handle(RoutingContext rc) {
-        HttpServerRequest feRequest = rc.request().pause();
+        HttpServerRequest feRequest = rc.request();
+        // pause frontend request
+        Pipe<Buffer> bodyPipe = createPipe(feRequest);
+
+        // locate url
+        String requestUrl = loadbalancer.choose();
+        if (requestUrl == null) {
+            // Service Unavailable
+            rc.fail(501, new IllegalStateException("No servers available for service"));
+            return;
+        }
 
         Map<String, String> pathParams = new HashMap<>();
         MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
@@ -92,8 +106,6 @@ public class HttpProxyHandler implements RouteHandler {
             }
         }
 
-        // locate url
-        String requestUrl = loadbalanceUrl(feRequest);
         // replace param for url
         if (!pathParams.isEmpty()) {
             for (Entry<String, String> e : pathParams.entrySet()) {
@@ -116,7 +128,7 @@ public class HttpProxyHandler implements RouteHandler {
             requestUrl = queryCoder.uri();
         }
 
-        // create backend request
+        // create backend request options
         RequestOptions options = new RequestOptions();
         // set url
         options.setAbsoluteURI(requestUrl);
@@ -139,7 +151,7 @@ public class HttpProxyHandler implements RouteHandler {
             }
         }
 
-        // create http request
+        // create backend request and send body
         httpClient.request(options).onSuccess(beRequest -> {
             // response handler
             beRequest.response().onComplete(ar -> {
@@ -155,8 +167,8 @@ public class HttpProxyHandler implements RouteHandler {
             });
 
             // transport body and send request
-            if (HttpUtil.hasBody(beRequest.getMethod())) {
-                feRequest.pipe().to(beRequest).onFailure(e -> {
+            if (bodyPipe != null) {
+                bodyPipe.to(beRequest).onFailure(e -> {
                     // service unavailable
                     LOG.warn("route:" + routeOptions.getRoute() + ", pump backend request error.", e);
                     beRequest.reset();
@@ -171,6 +183,15 @@ public class HttpProxyHandler implements RouteHandler {
 
     }
 
+    private Pipe<Buffer> createPipe(HttpServerRequest feRequest) {
+        // transport body and send request
+        if (HttpUtil.hasBody(feRequest.method())) {
+            return feRequest.pipe();
+        }
+
+        return null;
+    }
+
     private String findParamValue(RoutingContext rc, ParamOptions param) {
         if (ParamType.PATH == param.getFeParamType()) {
             return rc.pathParam(param.getFeParamName());
@@ -183,20 +204,6 @@ public class HttpProxyHandler implements RouteHandler {
         return null;
     }
 
-    private String loadbalanceUrl(HttpServerRequest inRequest) {
-        List<String> urls = routingOptions.getUrls();
-        if (urls.size() == 1) {
-            return urls.get(0);
-        }
-
-        if (count++ < 0) {
-            count = 0;
-        }
-
-        int index = count % urls.size();
-        return urls.get(index);
-    }
-
     private HttpMethod method(HttpMethod httpMethod) {
         String method = routingOptions.getMethod();
         if (method != null && !method.isEmpty()) {
@@ -206,9 +213,10 @@ public class HttpProxyHandler implements RouteHandler {
     }
 
     public static Handler<RoutingContext> create(RouteDeploy deploy, Vertx vertx) {
+        Loadbalancer loadbalancer = deploy.createLoadbalancer(vertx);
         HttpClient httpClient = deploy.createHttpClient(vertx);
         RouteOptions routeOptions = deploy.getRouteOptions();
-        return new HttpProxyHandler(routeOptions, httpClient);
+        return new HttpProxyHandler(routeOptions, httpClient, loadbalancer);
     }
 
 }

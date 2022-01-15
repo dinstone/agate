@@ -126,10 +126,9 @@ public class GatewayVerticle extends AbstractVerticle {
     }
 
     public Future<Void> deployRoute(RouteDeploy deploy) {
-        RouteOptions routeOptions = deploy.getRouteOptions();
-
         Promise<Void> promise = Promise.promise();
         context.runOnContext(ar -> {
+            RouteOptions routeOptions = deploy.getRouteOptions();
             try {
                 if (routeRouteMap.containsKey(routeOptions.getRoute())) {
                     promise.complete();

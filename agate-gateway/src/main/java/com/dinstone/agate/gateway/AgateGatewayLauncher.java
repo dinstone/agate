@@ -19,6 +19,8 @@ package com.dinstone.agate.gateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.context.AgateVerticleFactory;
+import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.utils.ConfigUtil;
 import com.dinstone.agate.gateway.verticle.LaunchVerticle;
 
@@ -41,6 +43,8 @@ public class AgateGatewayLauncher extends Launcher {
 
     private JsonObject config;
 
+    private ApplicationContext appContext;
+
     public static void main(String[] args) {
         // disable DnsResolver
         System.setProperty("vertx.disableDnsResolver", "true");
@@ -51,7 +55,7 @@ public class AgateGatewayLauncher extends Launcher {
         }
 
         if (args == null || args.length == 0) {
-            args = new String[] { "run", LaunchVerticle.class.getName() };
+            args = new String[] { "run", AgateVerticleFactory.verticleName(LaunchVerticle.class) };
         }
         new AgateGatewayLauncher().dispatch(args);
     }
@@ -118,6 +122,24 @@ public class AgateGatewayLauncher extends Launcher {
         vertx.exceptionHandler(t -> {
             LOG.warn("default exception handler", t);
         });
+
+        try {
+            appContext = new ApplicationContext(config);
+            // regist agate verticle factory
+            vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
+        } catch (RuntimeException e) {
+            vertx.close();
+            throw e;
+        }
+    }
+
+    @Override
+    public void afterStoppingVertx() {
+        super.afterStoppingVertx();
+
+        if (appContext != null) {
+            appContext.destroy();
+        }
     }
 
     @Override

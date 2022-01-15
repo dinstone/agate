@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway;
+
+import com.dinstone.agate.gateway.context.AgateVerticleFactory;
+import com.dinstone.agate.gateway.verticle.LaunchVerticle;
 
 class AgateGatewayLauncherTest2 {
 
     public static void main(String[] args) throws Exception {
-        AgateGatewayLauncher.main(new String[] { "run", "com.dinstone.agate.gateway.verticle.LaunchVerticle",
+        AgateGatewayLauncher.main(new String[] { "run", AgateVerticleFactory.verticleName(LaunchVerticle.class),
                 "-conf=src/test/resources/config2.json" });
     }
 

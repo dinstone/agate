@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.deploy;
 
 import java.util.List;
@@ -27,7 +28,6 @@ import com.dinstone.agate.gateway.verticle.GatewayVerticle;
  * gateway deployment info.
  * 
  * @author dinstone
- *
  */
 public class GatewayDeploy {
 
@@ -84,7 +84,6 @@ public class GatewayDeploy {
     }
 
     public void removeRouteDeploy(RouteDeploy routeDeploy) {
-        routeDeploy.destory();
         routeDeployCaches.remove(routeDeploy.getRoute());
     }
 

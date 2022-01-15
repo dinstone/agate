@@ -19,8 +19,14 @@ package com.dinstone.agate.gateway.deploy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.gateway.options.RouteOptions;
+import com.dinstone.agate.gateway.service.DiscoveryServiceAddressListSupplier;
+import com.dinstone.agate.gateway.service.FixedServiceAddressListSupplier;
+import com.dinstone.agate.gateway.service.Loadbalancer;
+import com.dinstone.agate.gateway.service.RoundRobinLoadBalancer;
+import com.dinstone.agate.gateway.service.ServiceAddressListSupplier;
 
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
@@ -32,15 +38,22 @@ public class RouteDeploy {
 
     private static final Logger LOG = LoggerFactory.getLogger(RouteDeploy.class);
 
+    private ApplicationContext appContext;
+
     private GatewayOptions gatewayOptions;
 
     private RouteOptions routeOptions;
 
-    private HttpClient httpClient;
-
     private CircuitBreaker circuitBreaker;
 
-    public RouteDeploy(GatewayOptions gatewayOptions, RouteOptions routeOptions) {
+    private Loadbalancer loadBalancer;
+
+    private HttpClient httpClient;
+
+    private ServiceAddressListSupplier supplier;
+
+    public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
+        this.appContext = appContext;
         this.gatewayOptions = gatewayOptions;
         this.routeOptions = routeOptions;
     }
@@ -64,6 +77,9 @@ public class RouteDeploy {
             }
             if (circuitBreaker != null) {
                 circuitBreaker.close();
+            }
+            if(supplier!=null) {
+                supplier.close();
             }
         }
     }
@@ -109,6 +125,23 @@ public class RouteDeploy {
                     });
             }
             return circuitBreaker;
+        }
+    }
+
+    public Loadbalancer createLoadbalancer(Vertx vertx) {
+        synchronized (this) {
+            if (loadBalancer == null) {
+                // service discovery
+                if (routeOptions.getRouting().getType() == 1) {
+                    supplier = new DiscoveryServiceAddressListSupplier(vertx, appContext, routeOptions);
+                    loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
+                } else {
+                    supplier = new FixedServiceAddressListSupplier(routeOptions);
+                    loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
+                }
+            }
+
+            return loadBalancer;
         }
     }
 

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.verticle;
 
 import java.util.HashMap;
@@ -43,23 +44,22 @@ import io.vertx.ext.consul.WatchResult;
  * launch the verticles and init gateway context.
  * 
  * @author dinstone
- *
  */
 public class LaunchVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(LaunchVerticle.class);
 
     private ApplicationContext appContext;
+
     private Watch<KeyValueList> clusterWatch;
+
+    public LaunchVerticle(ApplicationContext context) {
+        this.appContext = context;
+    }
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        // init application context
         JsonObject config = config();
-        appContext = new ApplicationContext(config);
-
-        // regist verticle factory
-        vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
 
         // system verticle
         DeploymentOptions svdOptions = new DeploymentOptions().setConfig(config).setInstances(1);
@@ -88,9 +88,6 @@ public class LaunchVerticle extends AbstractVerticle {
         if (clusterWatch != null) {
             clusterWatch.stop();
         }
-        if (appContext != null) {
-            appContext.destroy();
-        }
     }
 
     private Future<String> deploy(String verticleName, DeploymentOptions deployOptions) {
@@ -112,13 +109,13 @@ public class LaunchVerticle extends AbstractVerticle {
     private Future<Void> watch() {
         return Future.future(p -> {
             clusterWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
-                    new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
-                        try {
-                            watchEventHandle(ar);
-                        } catch (Exception e) {
-                            LOG.warn("handle gateway watch event error", e);
-                        }
-                    }).start();
+                new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
+                    try {
+                        watchEventHandle(ar);
+                    } catch (Exception e) {
+                        LOG.warn("handle gateway watch event error", e);
+                    }
+                }).start();
             p.complete();
         });
     }

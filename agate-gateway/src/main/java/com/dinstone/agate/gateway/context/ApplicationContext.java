@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.context;
 
 import org.slf4j.Logger;
@@ -20,7 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.deploy.ClusterDeploy;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.consul.ConsulClient;
 import io.vertx.ext.consul.ConsulClientOptions;
 
 public class ApplicationContext {
@@ -35,10 +38,16 @@ public class ApplicationContext {
 
     private ConsulClientOptions consulOptions;
 
-    public ApplicationContext(JsonObject config) throws Exception {
+    private ConsulClient consulClient;
+
+    public ApplicationContext(JsonObject config) {
         this.config = config;
 
-        init();
+        try {
+            init();
+        } catch (Exception e) {
+            throw new RuntimeException("init application context error", e);
+        }
     }
 
     private void init() throws Exception {
@@ -88,6 +97,15 @@ public class ApplicationContext {
 
     public ConsulClientOptions getConsulOptions() {
         return consulOptions;
+    }
+
+    public ConsulClient getConsulClient(Vertx vertx) {
+        synchronized (this) {
+            if (consulClient == null) {
+                consulClient = ConsulClient.create(vertx, consulOptions);
+            }
+        }
+        return consulClient;
     }
 
 }

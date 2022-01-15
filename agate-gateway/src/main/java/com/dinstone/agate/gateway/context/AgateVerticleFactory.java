@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.context;
 
 import java.util.concurrent.Callable;
 
 import com.dinstone.agate.gateway.verticle.DeployVerticle;
-import com.dinstone.agate.gateway.verticle.ManageVerticle;
 import com.dinstone.agate.gateway.verticle.GatewayVerticle;
+import com.dinstone.agate.gateway.verticle.LaunchVerticle;
+import com.dinstone.agate.gateway.verticle.ManageVerticle;
 import com.dinstone.agate.gateway.verticle.SystemVerticle;
 
 import io.vertx.core.Promise;
@@ -29,6 +31,7 @@ import io.vertx.core.spi.VerticleFactory;
 public class AgateVerticleFactory implements VerticleFactory {
 
     private static final String AGATE_PREFIX = "agate";
+
     private ApplicationContext context;
 
     public AgateVerticleFactory(ApplicationContext context) {
@@ -66,6 +69,8 @@ public class AgateVerticleFactory implements VerticleFactory {
             return new ManageVerticle(context);
         } else if (GatewayVerticle.class.getName().equals(clazz)) {
             return new GatewayVerticle(context);
+        } else if (LaunchVerticle.class.getName().equals(clazz)) {
+            return new LaunchVerticle(context);
         }
         throw new IllegalArgumentException("unsupported verticle type: " + clazz);
     }
