@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.utils;
 
 import java.io.FileInputStream;
@@ -28,46 +29,52 @@ import io.vertx.core.json.JsonObject;
 
 public class ConfigUtil {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ConfigUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigUtil.class);
 
-	/**
-	 * load config resource from classpath or file system.
-	 * 
-	 * @param resourceLocation
-	 * @return
-	 */
-	public static JsonObject loadConfig(String resourceLocation) {
-		InputStream resourceStream = getResourceStream(resourceLocation);
-		if (resourceStream == null) {
-			try {
-				resourceStream = new FileInputStream(resourceLocation);
-			} catch (FileNotFoundException e) {
-				LOG.error("file not found from " + resourceLocation, e);
-				throw new RuntimeException("failed to load config : " + resourceLocation, e);
-			}
-		}
+    /**
+     * load config resource from file path or class path.
+     * 
+     * @param resourceLocation
+     * @return
+     */
+    public static JsonObject loadConfig(String resourceLocation) {
+        InputStream resourceStream = null;
+        try {
+            resourceStream = new FileInputStream(resourceLocation);
+        } catch (FileNotFoundException e) {
+            LOG.warn("file not found from file path: {}", resourceLocation);
+        }
 
-		try (Scanner scanner = new Scanner(resourceStream, "UTF-8").useDelimiter("\\A")) {
-			return new JsonObject(scanner.next());
-		} catch (Exception e) {
-			LOG.error("failed to load config : " + resourceLocation, e);
-			throw new RuntimeException("failed to load config : " + resourceLocation, e);
-		} finally {
-			if (resourceStream != null) {
-				try {
-					resourceStream.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-	}
+        if (resourceStream == null) {
+            resourceStream = getResourceStream(resourceLocation);
+        }
 
-	private static InputStream getResourceStream(String resource) {
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		if (classLoader == null) {
-			classLoader = ConfigUtil.class.getClassLoader();
-		}
-		return classLoader.getResourceAsStream(resource);
-	}
+        if (resourceStream == null) {
+            LOG.warn("file not found from class path:", resourceLocation);
+            throw new RuntimeException("failed to load config : " + resourceLocation);
+        }
+
+        try (Scanner scanner = new Scanner(resourceStream, "UTF-8").useDelimiter("\\A")) {
+            return new JsonObject(scanner.next());
+        } catch (Exception e) {
+            LOG.error("failed to load config : " + resourceLocation, e);
+            throw new RuntimeException("failed to load config : " + resourceLocation, e);
+        } finally {
+            if (resourceStream != null) {
+                try {
+                    resourceStream.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    private static InputStream getResourceStream(String resource) {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        if (classLoader == null) {
+            classLoader = ConfigUtil.class.getClassLoader();
+        }
+        return classLoader.getResourceAsStream(resource);
+    }
 
 }

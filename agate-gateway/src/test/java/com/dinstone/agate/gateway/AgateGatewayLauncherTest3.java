@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.options;
 
-import io.vertx.core.json.JsonObject;
+package com.dinstone.agate.gateway;
 
-public class HandlersOptions {
+class AgateGatewayLauncherTest3 {
 
-    public HandlersOptions(JsonObject value) {
-        fromJson(value);
-    }
-
-    public void fromJson(JsonObject value) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public JsonObject toJson() {
-        // TODO Auto-generated method stub
-        return null;
+    public static void main(String[] args) throws Exception {
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                System.out.println("arg[" + i + "] = " + args[i]);
+            }
+        }
+        AgateGatewayLauncher.main(args);
     }
 
 }

@@ -172,7 +172,7 @@ public class GatewayVerticle extends AbstractVerticle {
                     route.handler(new MeterMetricsHandler(routeOptions, meterRegistry));
                 }
 
-                if (routeOptions.getHandlers() != null) {
+                if (routeOptions.getFilters() != null) {
                     // before handler : rate limit handler
                     route.handler(new RateLimitHandler(routeOptions));
                     // before handler: circuit breaker handler

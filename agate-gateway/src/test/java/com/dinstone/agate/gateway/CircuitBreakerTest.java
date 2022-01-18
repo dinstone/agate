@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +26,15 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 class CircuitBreakerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerTest.class);
 
-    private int count = 0;
+    private static int count = 0;
 
-    @Test
-    void test(Vertx vertx, VertxTestContext testContext) {
+    public static void main(String[] args) {
         CircuitBreakerOptions breakerOptions = new CircuitBreakerOptions();
         // cbOptions.setFailuresRollingWindow(10000);
         breakerOptions.setMaxFailures(10);
@@ -49,6 +47,7 @@ class CircuitBreakerTest {
 
         String breakerName = "test";
 
+        Vertx vertx = Vertx.vertx();
         CircuitBreaker circuitBreaker = createCircuitBreaker(vertx, breakerName, breakerOptions);
 
         for (int i = 0; i < 100; i++) {
@@ -74,7 +73,7 @@ class CircuitBreakerTest {
 
     }
 
-    private Future<Void> dosomething() {
+    private static Future<Void> dosomething() {
         Promise<Void> promise = Promise.promise();
         LOG.info("dosomething {}", count++);
         if (count % 2 == 0) {
@@ -89,7 +88,8 @@ class CircuitBreakerTest {
         return promise.future();
     }
 
-    private CircuitBreaker createCircuitBreaker(Vertx vertx, String breakerName, CircuitBreakerOptions cbOptions) {
+    private static CircuitBreaker createCircuitBreaker(Vertx vertx, String breakerName,
+            CircuitBreakerOptions cbOptions) {
         return CircuitBreaker.create(breakerName, vertx, cbOptions).openHandler(v -> {
             LOG.debug("circuit breaker {} open", breakerName);
         }).closeHandler(v -> {

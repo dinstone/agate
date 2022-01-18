@@ -126,7 +126,6 @@
 	<modules>
 		<module>agate-gateway</module>
 		<module>agate-manager</module>
-		<module>agate-tracing</module>
 	</modules>
 	<name>agate</name>
 	<inceptionYear>2020~2022</inceptionYear>

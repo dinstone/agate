@@ -33,6 +33,8 @@ import io.vertx.core.logging.SLF4JLogDelegateFactory;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxJmxMetricsOptions;
+import io.vertx.micrometer.impl.VertxMetricsFactoryImpl;
+import io.vertx.tracing.zipkin.ZipkinTracerFactory;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 
 public class AgateGatewayLauncher extends Launcher {
@@ -65,6 +67,8 @@ public class AgateGatewayLauncher extends Launcher {
         // config from command line
         if (!config.isEmpty()) {
             this.config = config;
+        } else if (System.getProperty("config") != null) {
+            this.config = ConfigUtil.loadConfig(System.getProperty("config"));
         } else {
             this.config = ConfigUtil.loadConfig(DEFAULT_GATEWAY_CONFIG);
         }
@@ -110,12 +114,14 @@ public class AgateGatewayLauncher extends Launcher {
         if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
             options.setServiceName("agate-gateway");
         }
+        options.setFactory(new ZipkinTracerFactory());
         return options;
     }
 
     private MicrometerMetricsOptions metricsOptions() {
         VertxJmxMetricsOptions jmxo = new VertxJmxMetricsOptions().setEnabled(true);
-        return new MicrometerMetricsOptions().setEnabled(true).setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
+        return new MicrometerMetricsOptions().setFactory(new VertxMetricsFactoryImpl()).setEnabled(true)
+            .setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
     }
 
     public void afterStartingVertx(Vertx vertx) {

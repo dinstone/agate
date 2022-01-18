@@ -1,0 +1,18 @@
+{
+	"gateway": {
+		"cluster": "product"
+	},
+	"vertx": {
+		"workerPoolSize": 4,
+		"eventLoopPoolSize": 4,
+		"blockedThreadCheckInterval": 1000
+	},
+	"verticle": {
+		"manage.instances": 1,
+		"system.instances": 1
+	},
+	"consul": {
+		"host": "agate-consul",
+		"port": 8500
+	}
+}

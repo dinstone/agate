@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.dinstone.agate.gateway.options;
 
-package com.dinstone.agate.gateway.service;
+import io.vertx.core.json.JsonObject;
 
-public class DefaultServiceAddress implements ServiceAddress {
+public class FiltersOptions {
 
-    private String url;
-
-    public DefaultServiceAddress(String url) {
-        this.url = url;
+    public FiltersOptions(JsonObject value) {
+        fromJson(value);
     }
 
-    @Override
-    public String getUrl() {
-        return url;
+    public void fromJson(JsonObject value) {
+        // TODO Auto-generated method stub
+
     }
 
-    @Override
-    public String toString() {
-        return "DefaultServiceAddress [url=" + url + "]";
+    public JsonObject toJson() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

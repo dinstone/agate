@@ -8,9 +8,10 @@ services:
     # restart: always
     ports:
       - 5454:5454
-      - 8002:8002
+      - 4004:4004
     volumes:
-      - ~/docker/agate/gateway/logs:/agate/gateway/logs
+      - ./gateway/logs:/agate/gateway/logs
+      - ./gateway/config.json:/agate/gateway/config.json
     depends_on:
       - consul
   
@@ -22,15 +23,17 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ~/docker/agate/manager/logs:/agate/manager/logs
+      - ./manager/logs:/agate/manager/logs
+      - ./manager/data:/agate/manager/data
+      - ./manager/application.properties:/agate/manager/application.properties
     depends_on:
       - consul
   
   consul:
     image: consul
-    container_name: consul
+    container_name: agate-consul
     # restart: always
     ports:
       - 8500:8500
     volumes:
-      - ~/docker/agate/consul:/consul/data
+      - ./consul:/consul/data
