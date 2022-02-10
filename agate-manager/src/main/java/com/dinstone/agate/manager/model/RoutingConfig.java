@@ -13,50 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.model;
 
 import java.util.List;
 
 public class RoutingConfig {
 
-	private Integer timeout;
+    /** 0:http reverse proxy; 1:http service discovery 2:grpc discovery */
+    private int type;
 
-	private String method;
+    private Integer timeout;
 
-	private List<String> urls;
+    private String method;
 
-	private List<ParamConfig> params;
+    private List<String> urls;
 
-	public Integer getTimeout() {
-		return timeout;
-	}
+    private List<ParamConfig> params;
 
-	public void setTimeout(Integer timeout) {
-		this.timeout = timeout;
-	}
+    public int getType() {
+        return type;
+    }
 
-	public String getMethod() {
-		return method;
-	}
+    public void setType(int type) {
+        this.type = type;
+    }
 
-	public void setMethod(String method) {
-		this.method = method;
-	}
+    public Integer getTimeout() {
+        return timeout;
+    }
 
-	public List<String> getUrls() {
-		return urls;
-	}
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
+    }
 
-	public void setUrls(List<String> urls) {
-		this.urls = urls;
-	}
+    public String getMethod() {
+        return method;
+    }
 
-	public List<ParamConfig> getParams() {
-		return params;
-	}
+    public void setMethod(String method) {
+        this.method = method;
+    }
 
-	public void setParams(List<ParamConfig> params) {
-		this.params = params;
-	}
+    public List<String> getUrls() {
+        return urls;
+    }
+
+    public void setUrls(List<String> urls) {
+        this.urls = urls;
+    }
+
+    public List<ParamConfig> getParams() {
+        return params;
+    }
+
+    public void setParams(List<ParamConfig> params) {
+        this.params = params;
+    }
 
 }

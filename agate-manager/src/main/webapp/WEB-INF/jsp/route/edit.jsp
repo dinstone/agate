@@ -146,6 +146,21 @@
 								</div>
 								<div class="panel-body">
 									<div class="form-group">
+										<label>Routing Type</label>
+										<div class="input-group">
+											<c:choose>
+												<c:when test="${api.routingConfig.type==0}">
+													<input type="radio" value="0" name="routingConfig.type" checked="checked"> Http Reverse Proxy 
+													<input type="radio" value="1" name="routingConfig.type"> Http Service Discovery
+												</c:when>
+												<c:otherwise>
+													<input type="radio" value="0" name="routingConfig.type"> Http Reverse Proxy 
+													<input type="radio" value="1" name="routingConfig.type" checked="checked"> Http Service Discovery
+												</c:otherwise>
+											</c:choose>
+										</div>
+									</div>
+									<div class="form-group">
 										<label>Routing Method (Http Method)</label> <select name="routingConfig.method" class="form-control">
 											<option></option>
 											<option value="GET">GET</option>
