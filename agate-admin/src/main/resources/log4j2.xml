@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Properties>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="ALL_FILE">detail.log</Property>
+        <Property name="ERROR_FILE">error.log</Property>
+        <Property name="ACCESS_FILE">access.log</Property>
+    </Properties>
+    <Appenders>
+        <Console name="console-appender" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}][%level{length=1}][%t] %l - %m%n" />
+        </Console>
+
+        <RollingFile name="all-appender" fileName="${LOG_DIR}/${ALL_FILE}" filePattern="${LOG_DIR}/$${date:yyyy-MM}/${ALL_FILE}.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}][%level{length=1}][%t] %l - %m%n" />
+            <TimeBasedTriggeringPolicy modulate="true" interval="1" />
+        </RollingFile>
+        <RollingFile name="error-appender" fileName="${LOG_DIR}/${ERROR_FILE}" filePattern="${LOG_DIR}/$${date:yyyy-MM}/${ERROR_FILE}.%d{yyyy-MM-dd}">
+            <ThresholdFilter level="ERROR" />
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}][%level{length=1}][%t] %l - %m%n" />
+            <TimeBasedTriggeringPolicy modulate="true" interval="1" />
+        </RollingFile>
+        <RollingFile name="access-appender" fileName="${LOG_DIR}/${ACCESS_FILE}" filePattern="${LOG_DIR}/$${date:yyyy-MM}/${ACCESS_FILE}.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="%m%n" />
+            <TimeBasedTriggeringPolicy modulate="true" interval="1" />
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.dinstone.agate.gateway.handler.AccessLogHandler" level="info" additivity="false">
+            <AppenderRef ref="access-appender" />
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="console-appender" />
+            <AppenderRef ref="all-appender" />
+            <AppenderRef ref="error-appender" />
+        </Root>
+    </Loggers>
+</Configuration>  
