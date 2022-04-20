@@ -1,8 +1,10 @@
 
-package io.agate.admin;
+package io.agate.admin.bootstrap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -25,6 +27,8 @@ import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 
+@Component
+@Scope("prototype")
 public class WebServerVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebServerVerticle.class);
@@ -130,7 +134,7 @@ public class WebServerVerticle extends AbstractVerticle {
             json.put("cause", e.getMessage());
             writeJsonResponse(rc, json);
         }
-    
+
     }
 
     private void login(RoutingContext rc) {
