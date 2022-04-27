@@ -53,7 +53,7 @@
 <script type="text/javascript">
 	$.ajax({
 		type : 'GET',
-		url : '/api/account',
+		url : '/api/account/info',
 		contentType : 'application/json',
 		success : function(data) {
 			if (data && data.code === 1 && data.result) {

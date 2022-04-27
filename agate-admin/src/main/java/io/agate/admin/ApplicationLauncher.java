@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import io.agate.admin.bootstrap.VertxBootstrap;
+import io.agate.admin.bootstrap.ApplicationBootstrap;
 
 @SpringBootApplication
 public class ApplicationLauncher implements ApplicationRunner {
@@ -45,7 +45,7 @@ public class ApplicationLauncher implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        VertxBootstrap bootstrap = applicationContext.getBean(VertxBootstrap.class);
+        ApplicationBootstrap bootstrap = new ApplicationBootstrap(applicationContext);
         try {
             bootstrap.start();
             // add shutdown hook

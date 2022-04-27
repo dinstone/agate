@@ -5,29 +5,24 @@ import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.file.FileSystemOptions;
 
-@Component
-public class VertxBootstrap {
+public class ApplicationBootstrap {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VertxBootstrap.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationBootstrap.class);
 
-    @Autowired
     private ApplicationContext applicationContext;
 
     private Vertx vertx;
 
-    // public VertxBootstrap(ApplicationContext applicationContext) {
-    // super();
-    // this.applicationContext = applicationContext;
-    // }
+    public ApplicationBootstrap(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     public void start() throws Exception {
         VertxOptions options = new VertxOptions().setBlockedThreadCheckInterval(10000000).setEventLoopPoolSize(2)
