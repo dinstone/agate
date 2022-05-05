@@ -54,7 +54,7 @@ public class WebServerVerticle extends AbstractVerticle {
             rc.response().setStatusCode(404).sendFile("webroot/404.html");
         });
 
-        mainRouter.route().handler(LoggerHandler.create()).handler(BodyHandler.create());
+        mainRouter.route().handler(LoggerHandler.create());
         // allRoute.handler(ResponseTimeHandler.create());
 
         RouterBuilder uacRouterBuilder = RouterBuilder.create(vertx);

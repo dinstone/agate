@@ -7,14 +7,15 @@
 <link rel="shortcut icon" href="/img/favicon.ico">
 <link id="bs-css" href="/bcs/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/charisma.app.css" rel="stylesheet">
-<link href="https://unpkg.com/bootstrap-table@1.20.0/dist/bootstrap-table.min.css" rel="stylesheet">
+<link href="/css/bootstrap-table.min.css" rel="stylesheet">
 <script src="/bcs/js/jquery.min.js"></script>
 <script src="/bcs/js/bootstrap.min.js"></script>
-<script src="/js/jquery.cookie.js"></script>
+<script src="/js/bootstrap-table.min.js"></script>
+<script src="/js/jquery.validate.js"></script>
 <script src="/js/jquery.history.js"></script>
+<script src="/js/jquery.cookie.js"></script>
 <script src="/js/autosize.min.js"></script>
 <script src="/js/charisma.app.js"></script>
-<script src="https://unpkg.com/bootstrap-table@1.20.0/dist/bootstrap-table.min.js"></script>
 </head>
 <body>
 	<div class="navbar navbar-default" role="navigation">
@@ -54,9 +55,9 @@
 					<div class="nav-canvas">
 						<div class="nav-sm nav nav-stacked"></div>
 						<ul class="nav nav-pills nav-stacked main-menu">
-							<li><a id="routes" class="ajax-link" href="/view/route/list.html"><i class="glyphicon glyphicon-align-justify"></i><span> Routes</span></a></li>
-							<li><a id="gateways" class="ajax-link" href="/view/gateway/list.html"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
-							<li><a id="clusters" class="ajax-link" href="/view/cluster/list.html"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
+							<li><a id="routes" class="ajax-link" href="/view/route/list.html"><i class="glyphicon glyphicon-list"></i><span> Routes</span></a></li>
+							<li><a id="gateways" class="ajax-link" href="/view/gateway/list.html"><i class="glyphicon glyphicon-random"></i><span> Gateways</span></a></li>
+							<li><a id="clusters" class="ajax-link" href="/view/cluster/list.html"><i class="glyphicon glyphicon-magnet"></i><span> Clusters</span></a></li>
 						</ul>
 					</div>
 				</div>
@@ -77,12 +78,10 @@
 </body>
 <script type="text/javascript">
 	$(document).ready(function() {
-
 		// init main menu
 		initMainMenu();
 
 		initContent();
-
 	});
 
 	function initMainMenu() {

@@ -1,7 +1,7 @@
 <section>
 	<div>
 		<ul class="breadcrumb">
-			<li><a href="${contextPath}/">Home</a></li>
+			<li><a href="/">Home</a></li>
 			<li>Routes</li>
 		</ul>
 	</div>
@@ -16,7 +16,7 @@
 							</h4>
 						</div>
 						<div class="col-md-3">
-							<a class="btn btn-default" href="${contextPath}/view/route/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create API
+							<a class="btn btn-default" href="/view/route/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create API
 							</a>
 						</div>
 					</div>
@@ -36,12 +36,12 @@
 						<tbody>
 							<tr class="line">
 								<td>${api.gateway}</td>
-								<td><a href="${contextPath}/view/route/detail?apiId=${api.arId}">${api.name}</a></td>
+								<td><a href="/view/route/detail?apiId=${api.arId}">${api.name}</a></td>
 								<td>${api.requestConfig.path}</td>
 								<td>${api.remark}</td>
 								<td>Closed</td>
-								<td><a class="btn btn-default" href="${contextPath}/view/route/start?apiId=${api.arId}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
-											Update</span></a> <a class="btn btn-default" href="${contextPath}/view/route/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+								<td><a class="btn btn-default" href="/view/route/start?apiId=${api.arId}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="/view/route/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
+											Update</span></a> <a class="btn btn-default" href="/view/route/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
 							</tr>
 						</tbody>
 					</table>
