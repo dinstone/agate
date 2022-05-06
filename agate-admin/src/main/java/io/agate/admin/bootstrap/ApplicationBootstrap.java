@@ -2,6 +2,7 @@
 package io.agate.admin.bootstrap;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +37,20 @@ public class ApplicationBootstrap {
 
     public void stop() {
         if (vertx != null) {
-            vertx.close().onComplete(v -> {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            vertx.close().onComplete(ar -> {
                 LOG.info("agate admin web server stopped");
+                if (ar.succeeded()) {
+                    future.complete(true);
+                } else {
+                    future.complete(false);
+                }
             });
+            
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+            }
         }
     }
 

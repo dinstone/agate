@@ -23,11 +23,11 @@ public class ApplicationLauncher implements ApplicationRunner {
     private ApplicationContext applicationContext;
 
     public static void main(String[] args) {
+        String implementationVersion = ApplicationLauncher.class.getPackage().getImplementationVersion();
+        LOG.info("agate admin application {} is starting...", implementationVersion);
+
         ConfigurableApplicationContext context = null;
         try {
-            String implementationVersion = ApplicationLauncher.class.getPackage().getImplementationVersion();
-            LOG.info("agate admin application {} is starting...", implementationVersion);
-
             context = SpringApplication.run(ApplicationLauncher.class, args);
         } catch (Exception e) {
             LOG.error("agate admin application start error", e);
