@@ -26,7 +26,7 @@ public class ApplicationBootstrap {
     }
 
     public void start() throws Exception {
-        VertxOptions options = new VertxOptions().setBlockedThreadCheckInterval(10000000).setEventLoopPoolSize(2)
+        VertxOptions options = new VertxOptions().setEventLoopPoolSize(4)
             .setWorkerPoolSize(4).setFileSystemOptions(new FileSystemOptions().setFileCachingEnabled(false));
         vertx = Vertx.vertx(options);
 
