@@ -32,7 +32,7 @@
 				<ul class="dropdown-menu">
 					<li><a href="#">Profile</a></li>
 					<li class="divider"></li>
-					<li><a href="/logout" id="logout">Logout</a></li>
+					<li><a href="/uac/authen/logout" id="logout">Logout</a></li>
 				</ul>
 			</div>
 			<!-- user dropdown ends -->
@@ -134,22 +134,24 @@
 		}
 		// load content template
 		loadTemplate(hash);
-
-		window.location.hash = hash;
+		//window.location.hash = hash;
 	}
 
 	function loadTemplate(hash) {
-
 		// remove class
 		$('.main-menu').find('.active').removeClass('active');
 
 		// add class
 		$menu = $('a[id=' + hash + ']');
 		$menu.closest('li').addClass('active');
-		var path = $menu.attr('href');
 
+		var path = $menu.attr('href');
 		// load html
-		$('#content').load(path, function(response, status, xhr) {
+		$('#content').load(path, function() {
+			// scroll to top
+			$('html,body').animate({
+				scrollTop : 0
+			}, 0);
 		});
 	}
 </script>

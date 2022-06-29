@@ -19,7 +19,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.LoggerHandler;
-import io.vertx.ext.web.handler.RedirectAuthHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
@@ -49,6 +48,9 @@ public class WebServerVerticle extends AbstractVerticle {
     private Router createHttpRouter() {
         Router mainRouter = Router.router(vertx);
         // error handler
+        mainRouter.errorHandler(401, rc -> {
+            rc.response().setStatusCode(401).sendFile("webroot/401.html");
+        });
         mainRouter.errorHandler(404, rc -> {
             rc.response().setStatusCode(404).sendFile("webroot/404.html");
         });
@@ -70,26 +72,21 @@ public class WebServerVerticle extends AbstractVerticle {
         // session handler
         SessionHandler sessionHandler = createSessionHandler();
         // check authen handler
-        RedirectAuthHandler authenHandler = createCheckAuthHandler();
+        CheckAuthenHandler checkHandler = CheckAuthenHandler.create();
         // user access control
         mainRouter.route("/uac/*").handler(sessionHandler);
         mainRouter.mountSubRouter("/uac/", uacRouterBuilder.build());
         // api request handler
-        mainRouter.route("/api/*").handler(sessionHandler).handler(authenHandler);
+        mainRouter.route("/api/*").handler(sessionHandler).handler(checkHandler);
         mainRouter.mountSubRouter("/api/", apiRouterBuilder.build());
 
         // view handler
-        mainRouter.route("/view/*").handler(sessionHandler).handler(authenHandler);
+        mainRouter.route("/view/*").handler(sessionHandler).handler(checkHandler);
 
         // static handler
-        mainRouter.route().handler(StaticHandler.create().setCachingEnabled(false).setIndexPage("index.html"));
+        mainRouter.route().handler(StaticHandler.create().setCachingEnabled(true).setMaxAgeSeconds(300));
 
         return mainRouter;
-    }
-
-    private RedirectAuthHandler createCheckAuthHandler() {
-        RedirectAuthHandler authHandler = RedirectAuthHandler.create(null, "/302.html");
-        return authHandler;
     }
 
     private SessionHandler createSessionHandler() {

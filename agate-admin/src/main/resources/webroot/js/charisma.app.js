@@ -60,7 +60,7 @@ $(document).ready(
 		});
 
 		$.ajaxSetup({
-			error: function(jqXHR, textStatus, errorThrown) {
+			error: function(jqXHR, textStatus) {
 				var msg = textStatus || "unkown error!";
 				switch (jqXHR.status) {
 					case (500):
@@ -68,6 +68,7 @@ $(document).ready(
 						break;
 					case (401):
 						msg = "session is invalid, please login again.";
+						window.location.href = "/index.html";
 						break;
 					case (403):
 						msg = "your are forbidden, please link admin.";
@@ -79,7 +80,7 @@ $(document).ready(
 						msg = "request timeout, please try again later.";
 						break;
 				}
-				window.location.href = "/index.html";
+				console.info(msg);
 			}
 		});
 
