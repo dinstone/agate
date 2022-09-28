@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.spi;
+package com.dinstone.agate.gateway.handler;
 
-import io.vertx.core.Handler;
-import io.vertx.ext.web.RoutingContext;
-
-public interface AfterHandler extends Handler<RoutingContext> {
+public interface FailureHandler extends OperationHandler {
 
 }

@@ -151,7 +151,7 @@ public class DeployVerticle extends AbstractVerticle {
         Watch<KeyValueList> routeWatch = Watch.keyPrefix("agate/route/" + gatewayName, vertx, clientOptions);
         routeWatch.setHandler(ar -> {
             try {
-                watchEventHandle(ar);
+                watchRouteEventHandle(ar);
             } catch (Exception e) {
                 LOG.warn("handle route watch event error", e);
             }
@@ -159,7 +159,7 @@ public class DeployVerticle extends AbstractVerticle {
         gatewayRouteWatchs.put(gatewayName, routeWatch);
     }
 
-    private void watchEventHandle(WatchResult<KeyValueList> wr) {
+    private void watchRouteEventHandle(WatchResult<KeyValueList> wr) {
         if (!wr.succeeded()) {
             LOG.warn("route watch event error", wr.cause());
             return;

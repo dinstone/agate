@@ -111,7 +111,7 @@ public class LaunchVerticle extends AbstractVerticle {
             clusterWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
                 new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
                     try {
-                        watchEventHandle(ar);
+                        watchGatewayEventHandle(ar);
                     } catch (Exception e) {
                         LOG.warn("handle gateway watch event error", e);
                     }
@@ -120,7 +120,7 @@ public class LaunchVerticle extends AbstractVerticle {
         });
     }
 
-    private void watchEventHandle(WatchResult<KeyValueList> wr) {
+    private void watchGatewayEventHandle(WatchResult<KeyValueList> wr) {
         if (!wr.succeeded()) {
             LOG.warn("gateway watch event error", wr.cause());
             return;

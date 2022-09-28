@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ContextConstants;
+import com.dinstone.agate.gateway.handler.FilteringHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.spi.AfterHandler;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
@@ -36,7 +36,7 @@ import io.vertx.ext.web.RoutingContext;
  *
  * @author dinstone
  */
-public class ResultReplyHandler implements AfterHandler {
+public class ResultReplyHandler implements FilteringHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
 

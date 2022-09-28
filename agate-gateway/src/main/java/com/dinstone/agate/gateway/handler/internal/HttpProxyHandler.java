@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ContextConstants;
-import com.dinstone.agate.gateway.deploy.RouteDeploy;
+import com.dinstone.agate.gateway.handler.RoutingHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
 import com.dinstone.agate.gateway.options.ParamOptions;
@@ -33,11 +33,8 @@ import com.dinstone.agate.gateway.options.ParamType;
 import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.options.RoutingOptions;
 import com.dinstone.agate.gateway.service.Loadbalancer;
-import com.dinstone.agate.gateway.spi.RouteHandler;
 
-import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
@@ -53,7 +50,7 @@ import io.vertx.ext.web.RoutingContext;
  * 
  * @author dinstone
  */
-public class HttpProxyHandler implements RouteHandler {
+public class HttpProxyHandler implements RoutingHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpProxyHandler.class);
 
@@ -210,13 +207,6 @@ public class HttpProxyHandler implements RouteHandler {
             return HttpMethod.valueOf(method.toUpperCase());
         }
         return httpMethod;
-    }
-
-    public static Handler<RoutingContext> create(RouteDeploy deploy, Vertx vertx) {
-        Loadbalancer loadbalancer = deploy.createLoadbalancer(vertx);
-        HttpClient httpClient = deploy.createHttpClient(vertx);
-        RouteOptions routeOptions = deploy.getRouteOptions();
-        return new HttpProxyHandler(routeOptions, httpClient, loadbalancer);
     }
 
 }

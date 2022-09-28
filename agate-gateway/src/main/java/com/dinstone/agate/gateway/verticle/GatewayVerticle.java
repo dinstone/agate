@@ -24,21 +24,16 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.RouteDeploy;
-import com.dinstone.agate.gateway.handler.AccessLogHandler;
-import com.dinstone.agate.gateway.handler.CircuitBreakerHandler;
-import com.dinstone.agate.gateway.handler.HttpProxyHandler;
-import com.dinstone.agate.gateway.handler.MeterMetricsHandler;
-import com.dinstone.agate.gateway.handler.RateLimitHandler;
-import com.dinstone.agate.gateway.handler.RestfulFailureHandler;
-import com.dinstone.agate.gateway.handler.ResultReplyHandler;
-import com.dinstone.agate.gateway.handler.ZipkinTracingHandler;
+import com.dinstone.agate.gateway.handler.FailureHandler;
+import com.dinstone.agate.gateway.handler.OperationHandler;
+import com.dinstone.agate.gateway.handler.internal.AccessLogHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.gateway.options.RequestOptions;
 import com.dinstone.agate.gateway.options.RouteOptions;
+import com.dinstone.agate.gateway.plugin.RoutePlugin;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -52,7 +47,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.micrometer.backends.BackendRegistries;
 
 /**
  * the GatewayVerticle is Gateway instance, it route request to backend service.
@@ -106,11 +100,11 @@ public class GatewayVerticle extends AbstractVerticle {
                 registDeployer();
 
                 LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
+                        serverOptions.getPort());
                 startPromise.complete();
             } else {
                 LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
+                        serverOptions.getPort());
                 startPromise.fail(ar.cause());
             }
         });
@@ -122,7 +116,7 @@ public class GatewayVerticle extends AbstractVerticle {
         removeDeployer();
 
         LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-            serverOptions.getPort());
+                serverOptions.getPort());
     }
 
     public Future<Void> deployRoute(RouteDeploy deploy) {
@@ -135,63 +129,77 @@ public class GatewayVerticle extends AbstractVerticle {
                     return;
                 }
 
-                RequestOptions feo = routeOptions.getRequest();
+                RequestOptions requestOptions = routeOptions.getRequest();
                 // create sub router
                 Router subRouter = Router.router(vertx);
                 // create route
                 Route route = null;
-                if (HttpUtil.pathIsRegex(feo.getPath())) {
-                    route = subRouter.routeWithRegex(feo.getPath());
+                if (HttpUtil.pathIsRegex(requestOptions.getPath())) {
+                    route = subRouter.routeWithRegex(requestOptions.getPath());
                 } else {
-                    route = subRouter.route(feo.getPath());
+                    route = subRouter.route(requestOptions.getPath());
                 }
                 // method
-                String method = feo.getMethod();
+                String method = requestOptions.getMethod();
                 if (method != null && method.length() > 0) {
                     route.method(HttpMethod.valueOf(method.toUpperCase()));
                 }
                 // consumes
-                if (feo.getConsumes() != null) {
-                    for (String consume : feo.getConsumes()) {
+                if (requestOptions.getConsumes() != null) {
+                    for (String consume : requestOptions.getConsumes()) {
                         route.consumes(consume);
                     }
                 }
                 // produces
-                if (feo.getProduces() != null) {
-                    for (String produce : feo.getProduces()) {
+                if (requestOptions.getProduces() != null) {
+                    for (String produce : requestOptions.getProduces()) {
                         route.produces(produce);
                     }
                 }
 
-                // before handler: tracing handler
-                route.handler(new ZipkinTracingHandler(routeOptions));
-
-                // before handler: metrics handler
-                MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
-                if (meterRegistry != null) {
-                    route.handler(new MeterMetricsHandler(routeOptions, meterRegistry));
-                }
-
-                if (routeOptions.getFilters() != null) {
-                    // before handler : rate limit handler
-                    route.handler(new RateLimitHandler(routeOptions));
-                    // before handler: circuit breaker handler
-                    route.handler(CircuitBreakerHandler.create(deploy, vertx));
-                }
-
-                // routing handler
-                route.handler(HttpProxyHandler.create(deploy, vertx));
-
-                // after handler : result reply handler
-                route.handler(new ResultReplyHandler(routeOptions));
+                // // before handler: tracing handler
+                // route.handler(new ZipkinTracingHandler(routeOptions));
+                //
+                // // before handler: metrics handler
+                // MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
+                // if (meterRegistry != null) {
+                // route.handler(new MeterMetricsHandler(routeOptions, meterRegistry));
+                // }
+                //
+                // if (routeOptions.getPlugins() != null) {
+                // // before handler : rate limit handler
+                // route.handler(new RateLimitHandler(routeOptions));
+                // // before handler: circuit breaker handler
+                // route.handler(CircuitBreakerHandler.create(deploy, vertx));
+                // }
+                //
+                // // routing handler
+                // route.handler(HttpProxyHandler.create(deploy, vertx));
+                //
+                // // after handler : result reply handler
+                // route.handler(new ResultReplyHandler(routeOptions));
 
                 // failure handler
-                route.failureHandler(new RestfulFailureHandler(routeOptions));
+                // route.failureHandler(new RestfulFailureHandler(routeOptions));
 
+                for (RoutePlugin routePlugin : deploy.getRoutePlugins()) {
+                    OperationHandler handler = routePlugin.createHandler(vertx);
+                    if (handler instanceof FailureHandler) {
+                        route.failureHandler(handler);
+                    } else {
+                        route.handler(handler);
+                    }
+                }
+
+                String mountPoint = "/";
+                String prefix = requestOptions.getPrefix();
+                if (prefix != null && prefix.startsWith("/")) {
+                    mountPoint = prefix;
+                }
                 // mount sub router
-                Route mountRoute = mountRoute("/", subRouter);
+                Route mountedRoute = mountRouter(mountPoint, subRouter);
                 // cache route
-                routeRouteMap.put(routeOptions.getRoute(), mountRoute);
+                routeRouteMap.put(routeOptions.getRoute(), mountedRoute);
 
                 promise.complete();
             } catch (Exception e) {
@@ -222,12 +230,13 @@ public class GatewayVerticle extends AbstractVerticle {
     /**
      * mount sub router to main router
      * 
-     * @param path
+     * @param mountPoint
      * @param subRouter
+     * 
      * @return
      */
-    private Route mountRoute(String path, Router subRouter) {
-        return mainRouter.mountSubRouter(path, subRouter);
+    private Route mountRouter(String mountPoint, Router subRouter) {
+        return mainRouter.mountSubRouter(mountPoint, subRouter);
     }
 
     private void registDeployer() {
@@ -241,7 +250,7 @@ public class GatewayVerticle extends AbstractVerticle {
     @SuppressWarnings("unused")
     private SessionHandler sessionHandler() {
         return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
-            .setNagHttps(false);
+                .setNagHttps(false);
     }
 
     private Router createHttpServerRouter() {
@@ -258,7 +267,7 @@ public class GatewayVerticle extends AbstractVerticle {
         });
         mainRouter.errorHandler(406, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(),
-                "can’t provide a response with a content type matching Accept header");
+                    "can’t provide a response with a content type matching Accept header");
         });
         mainRouter.errorHandler(415, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");

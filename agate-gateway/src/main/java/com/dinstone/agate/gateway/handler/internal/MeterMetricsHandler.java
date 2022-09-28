@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import java.util.Arrays;
 import java.util.List;
 
+import com.dinstone.agate.gateway.handler.FilteringHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.spi.BeforeHandler;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -28,7 +28,7 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Timer.Sample;
 import io.vertx.ext.web.RoutingContext;
 
-public class MeterMetricsHandler implements BeforeHandler {
+public class MeterMetricsHandler implements FilteringHandler {
 
     private Counter count;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -23,7 +23,8 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.Handler;
+import com.dinstone.agate.gateway.handler.FilteringHandler;
+
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpVersion;
@@ -31,7 +32,7 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.LoggerFormat;
 
-public class AccessLogHandler implements Handler<RoutingContext> {
+public class AccessLogHandler implements FilteringHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogHandler.class);
 
@@ -59,17 +60,17 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 
         String versionCode;
         switch (version) {
-            case HTTP_1_0:
-                versionCode = "HTTP/1.0";
-                break;
-            case HTTP_1_1:
-                versionCode = "HTTP/1.1";
-                break;
-            case HTTP_2:
-                versionCode = "HTTP/2.0";
-                break;
-            default:
-                versionCode = "-";
+        case HTTP_1_0:
+            versionCode = "HTTP/1.0";
+            break;
+        case HTTP_1_1:
+            versionCode = "HTTP/1.1";
+            break;
+        case HTTP_2:
+            versionCode = "HTTP/2.0";
+            break;
+        default:
+            versionCode = "-";
         }
 
         int status = context.response().getStatusCode();
@@ -79,27 +80,26 @@ public class AccessLogHandler implements Handler<RoutingContext> {
 
         String message = null;
         switch (format) {
-            case SHORT:
-                message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri,
-                    versionCode, status, contentLength, costTime);
-                break;
-            case TINY:
-                message = String.format("[%s] %s %s %d %d - %d", accessTime, method, uri, status, contentLength,
-                    costTime);
-                break;
-            default:
-                final MultiMap headers = context.request().headers();
-                // as per RFC1945 the header is referer but it is not mandatory some
-                // implementations use referrer
-                String referrer = headers.contains("referrer") ? headers.get("referrer") : headers.get("referer");
-                referrer = referrer == null ? "-" : referrer;
+        case SHORT:
+            message = String.format("%s - [%s] %s %s %s %d %d - %d", remoteClient, accessTime, method, uri, versionCode,
+                    status, contentLength, costTime);
+            break;
+        case TINY:
+            message = String.format("[%s] %s %s %d %d - %d", accessTime, method, uri, status, contentLength, costTime);
+            break;
+        default:
+            final MultiMap headers = context.request().headers();
+            // as per RFC1945 the header is referer but it is not mandatory some
+            // implementations use referrer
+            String referrer = headers.contains("referrer") ? headers.get("referrer") : headers.get("referer");
+            referrer = referrer == null ? "-" : referrer;
 
-                String userAgent = context.request().headers().get("user-agent");
-                userAgent = userAgent == null ? "-" : userAgent;
+            String userAgent = context.request().headers().get("user-agent");
+            userAgent = userAgent == null ? "-" : userAgent;
 
-                message = String.format("%s - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" - %d", remoteClient, accessTime,
-                    method, uri, versionCode, status, contentLength, referrer, userAgent, costTime);
-                break;
+            message = String.format("%s - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\" - %d", remoteClient, accessTime, method,
+                    uri, versionCode, status, contentLength, referrer, userAgent, costTime);
+            break;
         }
         doLog(status, message);
     }

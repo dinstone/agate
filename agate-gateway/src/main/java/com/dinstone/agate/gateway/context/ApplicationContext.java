@@ -16,10 +16,17 @@
 
 package com.dinstone.agate.gateway.context;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.deploy.ClusterDeploy;
+import com.dinstone.agate.gateway.options.RouteOptions;
+import com.dinstone.agate.gateway.plugin.PluginOptions;
+import com.dinstone.agate.gateway.plugin.RoutePlugin;
+import com.dinstone.agate.gateway.plugin.internal.HttpProxyPlugin;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -29,6 +36,8 @@ import io.vertx.ext.consul.ConsulClientOptions;
 public class ApplicationContext {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
+
+    private final Map<String, Class<? extends RoutePlugin>> PLUGIN_MAP = new HashMap<>();
 
     private JsonObject config;
 
@@ -76,7 +85,26 @@ public class ApplicationContext {
         // deployment
         clusterDeploy = new ClusterDeploy(clusterCode);
 
+        regist("HttpProxyPlugin", HttpProxyPlugin.class);
+
         LOG.debug("init application context ended");
+    }
+
+    private void regist(String pluginName, Class<? extends RoutePlugin> pluginClass) {
+        PLUGIN_MAP.put(pluginName, pluginClass);
+    }
+
+    public RoutePlugin createPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
+        try {
+            Class<? extends RoutePlugin> pc = PLUGIN_MAP.get(pluginOptions.getPlugin());
+            if (pc != null) {
+                return pc.getConstructor(RouteOptions.class, PluginOptions.class).newInstance(routeOptions,
+                        pluginOptions);
+            }
+        } catch (Exception e) {
+            LOG.warn("plugin instance error", e);
+        }
+        return null;
     }
 
     public void destroy() {

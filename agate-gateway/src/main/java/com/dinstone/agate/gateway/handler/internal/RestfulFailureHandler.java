@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.handler.FailureHandler;
 import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.spi.FailureHandler;
 
 import io.vertx.ext.web.RoutingContext;
 

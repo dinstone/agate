@@ -16,6 +16,13 @@
 
 package com.dinstone.agate.gateway.options;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import com.dinstone.agate.gateway.plugin.PluginOptions;
+
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class RouteOptions {
@@ -29,12 +36,12 @@ public class RouteOptions {
     // ====================
     private RequestOptions request;
 
-    private RoutingOptions routing;
+    private RoutingOptions routings;
 
     private ResponseOptions response;
 
     // ====================
-    private FiltersOptions filters;
+    private PluginOptions[] plugins;
 
     public RouteOptions(JsonObject json) {
         fromJson(json);
@@ -73,11 +80,11 @@ public class RouteOptions {
     }
 
     public RoutingOptions getRouting() {
-        return routing;
+        return routings;
     }
 
     public void setRouting(RoutingOptions backend) {
-        this.routing = backend;
+        this.routings = backend;
     }
 
     public ResponseOptions getResponse() {
@@ -88,12 +95,12 @@ public class RouteOptions {
         this.response = response;
     }
 
-    public FiltersOptions getFilters() {
-        return filters;
+    public PluginOptions[] getPlugins() {
+        return plugins;
     }
 
-    public void setFilters(FiltersOptions options) {
-        this.filters = options;
+    public void setPlugins(PluginOptions[] plugins) {
+        this.plugins = plugins;
     }
 
     public JsonObject toJson() {
@@ -108,14 +115,14 @@ public class RouteOptions {
         if (request != null) {
             json.put("request", request.toJson());
         }
-        if (routing != null) {
-            json.put("routing", routing.toJson());
+        if (routings != null) {
+            json.put("routings", routings.toJson());
         }
         if (response != null) {
             json.put("response", response.toJson());
         }
-        if (filters != null) {
-            json.put("filters", filters.toJson());
+        if (plugins != null) {
+            json.put("plugins", Arrays.asList(plugins));
         }
 
         return json;
@@ -124,41 +131,47 @@ public class RouteOptions {
     public void fromJson(JsonObject json) {
         for (java.util.Map.Entry<String, Object> member : json) {
             switch (member.getKey()) {
-                case "gateway":
-                    if (member.getValue() instanceof String) {
-                        this.setGateway((String) member.getValue());
-                    }
-                    break;
-                case "cluster":
-                    if (member.getValue() instanceof String) {
-                        this.setCluster((String) member.getValue());
-                    }
-                    break;
-                case "route":
-                    if (member.getValue() instanceof String) {
-                        this.setRoute((String) member.getValue());
-                    }
-                    break;
-                case "request":
-                    if (member.getValue() instanceof JsonObject) {
-                        this.setRequest(new RequestOptions((JsonObject) member.getValue()));
-                    }
-                    break;
-                case "routing":
-                    if (member.getValue() instanceof JsonObject) {
-                        this.setRouting(new RoutingOptions((JsonObject) member.getValue()));
-                    }
-                    break;
-                case "response":
-                    if (member.getValue() instanceof JsonObject) {
-                        this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
-                    }
-                    break;
-                case "filters":
-                    if (member.getValue() instanceof JsonObject) {
-                        this.setFilters(new FiltersOptions((JsonObject) member.getValue()));
-                    }
-                    break;
+            case "gateway":
+                if (member.getValue() instanceof String) {
+                    this.setGateway((String) member.getValue());
+                }
+                break;
+            case "cluster":
+                if (member.getValue() instanceof String) {
+                    this.setCluster((String) member.getValue());
+                }
+                break;
+            case "route":
+                if (member.getValue() instanceof String) {
+                    this.setRoute((String) member.getValue());
+                }
+                break;
+            case "request":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setRequest(new RequestOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "routings":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setRouting(new RoutingOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "response":
+                if (member.getValue() instanceof JsonObject) {
+                    this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
+                }
+                break;
+            case "plugins":
+                if (member.getValue() instanceof JsonArray) {
+                    List<PluginOptions> pol = new ArrayList<>();
+                    ((JsonArray) member.getValue()).forEach(m -> {
+                        if (m instanceof JsonObject) {
+                            pol.add(new PluginOptions((JsonObject) m));
+                        }
+                    });
+                    this.setPlugins(pol.toArray(new PluginOptions[0]));
+                }
+                break;
             }
         }
     }

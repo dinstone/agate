@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.dinstone.agate.gateway.handler.FilteringHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.spi.BeforeHandler;
 import com.google.common.util.concurrent.RateLimiter;
 
 import io.vertx.ext.web.RoutingContext;
@@ -31,19 +31,17 @@ import io.vertx.ext.web.handler.HttpException;
  * @author dinstone
  *
  */
-public class RateLimitHandler implements BeforeHandler {
+public class RateLimitHandler implements FilteringHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
-    private RateLimiter rateLimiter;
-
     private RouteOptions routeOptions;
 
-    public RateLimitHandler(RouteOptions routeOptions) {
+    private RateLimiter rateLimiter;
+
+    public RateLimitHandler(RouteOptions routeOptions, RateLimiter rateLimiter) {
         this.routeOptions = routeOptions;
-        // if (api.getHandlers().getPermitsPerSecond() > 0) {
-        // limiter = RateLimiter.create(api.getHandlers().getPermitsPerSecond());
-        // }
+        this.rateLimiter = rateLimiter;
     }
 
     @Override

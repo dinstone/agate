@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.handler;
+package com.dinstone.agate.gateway.handler.internal;
 
+import com.dinstone.agate.gateway.handler.FilteringHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.spi.BeforeHandler;
 
 import brave.Span;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.tracing.zipkin.ZipkinTracer;
 
-public class ZipkinTracingHandler implements BeforeHandler {
+public class ZipkinTracingHandler implements FilteringHandler {
 
 	private RouteOptions routeOptions;
 

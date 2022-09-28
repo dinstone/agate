@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.gateway.context;
+package com.dinstone.agate.gateway.plugin;
 
-public interface AddressConstant {
+import com.dinstone.agate.gateway.handler.OperationHandler;
+import com.dinstone.agate.gateway.options.RouteOptions;
 
-	String GATEWAY_START = "gateway:start";
-	String GATEWAY_CLOSE = "gateway:close";
+import io.vertx.core.Vertx;
 
-	String ROUTE_DEPLOY = "route:deploy";
-	String ROUTE_REMOVE = "route:remove";
-	String ROUTE_RELOAD = "route:reload";
+public abstract class RoutePlugin {
 
-	String APM_METRICS = "apm.metrics";
+    protected RouteOptions routeOptions;
+    protected PluginOptions pluginOptions;
 
-	String CIRCUIT_BREAKER = "vertx.circuit-breaker";
+    public RoutePlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
+        this.routeOptions = routeOptions;
+        this.pluginOptions = pluginOptions;
+    }
 
+    public abstract OperationHandler createHandler(Vertx vertx);
+
+    public void destory() {
+    }
 }

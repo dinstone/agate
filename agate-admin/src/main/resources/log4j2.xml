@@ -26,7 +26,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="com.dinstone.agate.gateway.handler.AccessLogHandler" level="info" additivity="false">
+        <Logger name="io.vertx.ext.web.handler.impl.LoggerHandlerImpl" level="info" additivity="false">
             <AppenderRef ref="access-appender" />
         </Logger>
 
