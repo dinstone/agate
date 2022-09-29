@@ -32,9 +32,9 @@ public class RoundRobinLoadBalancer implements Loadbalancer {
 
     private RouteOptions routeOptions;
 
-    private ServiceAddressListSupplier supplier;
+    private ServiceAddressSupplier supplier;
 
-    public RoundRobinLoadBalancer(RouteOptions routeOptions, ServiceAddressListSupplier supplier) {
+    public RoundRobinLoadBalancer(RouteOptions routeOptions, ServiceAddressSupplier supplier) {
         this.routeOptions = routeOptions;
         this.supplier = supplier;
     }
@@ -43,7 +43,7 @@ public class RoundRobinLoadBalancer implements Loadbalancer {
     public String choose() {
         List<ServiceAddress> serviceAddresses = supplier.get();
         if (serviceAddresses.isEmpty()) {
-            LOG.warn("No servers available for service: " + routeOptions.getRoute());
+            LOG.warn("No available servers for route: " + routeOptions.getRoute());
             return null;
         }
 

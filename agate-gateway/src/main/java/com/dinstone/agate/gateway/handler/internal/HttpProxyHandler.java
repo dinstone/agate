@@ -24,7 +24,6 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.context.ContextConstants;
 import com.dinstone.agate.gateway.handler.RoutingHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.QueryCoder;
@@ -41,6 +40,7 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.RoutingContext;
@@ -153,10 +153,13 @@ public class HttpProxyHandler implements RoutingHandler {
             // response handler
             beRequest.response().onComplete(ar -> {
                 if (ar.succeeded()) {
-                    HttpClientResponse beResponse = ar.result().pause();
-                    rc.put(ContextConstants.BACKEND_REQUEST, beRequest);
-                    rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
-                    rc.next();
+                    // HttpClientResponse beResponse = ar.result().pause();
+                    // rc.put(ContextConstants.BACKEND_REQUEST, beRequest);
+                    // rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
+                    // rc.next();
+
+                    processResponse(rc, ar.result());
+
                 } else {
                     // Service Unavailable
                     rc.fail(503, ar.cause());
@@ -178,6 +181,38 @@ public class HttpProxyHandler implements RoutingHandler {
             rc.fail(502, t);// bad gateway
         });
 
+    }
+
+    private void processResponse(RoutingContext rc, HttpClientResponse beResponse) {
+        HttpServerResponse feResponse = rc.response();
+        feResponse.setStatusCode(beResponse.statusCode());
+        feResponse.headers().addAll(beResponse.headers());
+
+        long len = getContentLength(beResponse);
+        if (len == 0) {
+            feResponse.end();
+            return;
+        }
+
+        Pipe<Buffer> pipe = beResponse.pipe();
+        pipe.endOnFailure(false).endOnSuccess(true);
+        pipe.to(feResponse).onFailure(t -> {
+            pipe.close();
+        });
+    }
+
+    private long getContentLength(HttpClientResponse response) {
+        String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
+        if ("chunked".equalsIgnoreCase(tc)) {
+            return -1;
+        }
+
+        try {
+            return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
+        } catch (Exception e) {
+            // ignore
+        }
+        return -1;
     }
 
     private Pipe<Buffer> createPipe(HttpServerRequest feRequest) {

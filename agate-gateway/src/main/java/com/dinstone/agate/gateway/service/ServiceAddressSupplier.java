@@ -19,7 +19,7 @@ package com.dinstone.agate.gateway.service;
 import java.util.List;
 import java.util.function.Supplier;
 
-public interface ServiceAddressListSupplier extends Supplier<List<ServiceAddress>> {
+public interface ServiceAddressSupplier extends Supplier<List<ServiceAddress>> {
 
     public String getServiceId();
 

@@ -27,6 +27,7 @@ import com.dinstone.agate.gateway.deploy.RouteDeploy;
 import com.dinstone.agate.gateway.handler.FailureHandler;
 import com.dinstone.agate.gateway.handler.OperationHandler;
 import com.dinstone.agate.gateway.handler.internal.AccessLogHandler;
+import com.dinstone.agate.gateway.handler.internal.RestfulFailureHandler;
 import com.dinstone.agate.gateway.http.HttpUtil;
 import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.GatewayOptions;
@@ -44,7 +45,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 
@@ -157,31 +157,7 @@ public class GatewayVerticle extends AbstractVerticle {
                     }
                 }
 
-                // // before handler: tracing handler
-                // route.handler(new ZipkinTracingHandler(routeOptions));
-                //
-                // // before handler: metrics handler
-                // MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
-                // if (meterRegistry != null) {
-                // route.handler(new MeterMetricsHandler(routeOptions, meterRegistry));
-                // }
-                //
-                // if (routeOptions.getPlugins() != null) {
-                // // before handler : rate limit handler
-                // route.handler(new RateLimitHandler(routeOptions));
-                // // before handler: circuit breaker handler
-                // route.handler(CircuitBreakerHandler.create(deploy, vertx));
-                // }
-                //
-                // // routing handler
-                // route.handler(HttpProxyHandler.create(deploy, vertx));
-                //
-                // // after handler : result reply handler
-                // route.handler(new ResultReplyHandler(routeOptions));
-
-                // failure handler
-                // route.failureHandler(new RestfulFailureHandler(routeOptions));
-
+                // add handler
                 for (RoutePlugin routePlugin : deploy.getRoutePlugins()) {
                     OperationHandler handler = routePlugin.createHandler(vertx);
                     if (handler instanceof FailureHandler) {
@@ -255,7 +231,7 @@ public class GatewayVerticle extends AbstractVerticle {
 
     private Router createHttpServerRouter() {
         Router mainRouter = Router.router(vertx);
-        // error handler
+        // client error handler
         mainRouter.errorHandler(400, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(), "can’t accept an empty body");
         });
@@ -273,8 +249,25 @@ public class GatewayVerticle extends AbstractVerticle {
             RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");
         });
 
-        mainRouter.route().handler(new AccessLogHandler());
-        mainRouter.route().handler(ResponseTimeHandler.create());
+        // server error handler
+        mainRouter.errorHandler(500, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "gateway internal error");
+        });
+        mainRouter.errorHandler(501, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "gateway can't handle error");
+        });
+        mainRouter.errorHandler(502, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "no live upstream error");
+        });
+        mainRouter.errorHandler(503, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "gateway unavailable error");
+        });
+        mainRouter.errorHandler(504, rc -> {
+            RestfulUtil.exception(rc, rc.statusCode(), "connect upstream timeout error");
+        });
+
+        mainRouter.route().order(Integer.MIN_VALUE).handler(new AccessLogHandler());
+        mainRouter.route().order(Integer.MAX_VALUE).failureHandler(new RestfulFailureHandler());
         return mainRouter;
     }
 

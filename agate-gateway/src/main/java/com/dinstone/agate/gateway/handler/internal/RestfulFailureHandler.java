@@ -20,32 +20,25 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.handler.FailureHandler;
 import com.dinstone.agate.gateway.http.RestfulUtil;
-import com.dinstone.agate.gateway.options.RouteOptions;
 
 import io.vertx.ext.web.RoutingContext;
 
 public class RestfulFailureHandler implements FailureHandler {
-	private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
 
-	private RouteOptions routeOptions;
+    @Override
+    public void handle(RoutingContext rc) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("request [{}] error: {}", rc.request().path(), rc.failure());
+        }
 
-	public RestfulFailureHandler(RouteOptions routeOptions) {
-		this.routeOptions = routeOptions;
-	}
-
-	@Override
-	public void handle(RoutingContext rc) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("request [{}]-[{}] error: {}", routeOptions.getRoute(), rc.request().path(), rc.failure());
-		}
-
-		int statusCode = rc.statusCode();
-		if (statusCode == -1) {
-			statusCode = 500;
-		}
-		if (!rc.response().ended()) {
-			RestfulUtil.exception(rc, statusCode, rc.failure());
-		}
-	}
+        int statusCode = rc.statusCode();
+        if (statusCode == -1) {
+            statusCode = 500;
+        }
+        if (!rc.response().ended()) {
+            RestfulUtil.exception(rc, statusCode, rc.failure());
+        }
+    }
 
 }

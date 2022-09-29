@@ -20,18 +20,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.dinstone.agate.gateway.options.RouteOptions;
+import com.dinstone.agate.gateway.plugin.PluginOptions;
 
-public class FixedServiceAddressListSupplier implements ServiceAddressListSupplier {
+public class FixedServiceAddressSupplier implements ServiceAddressSupplier {
 
     private final List<ServiceAddress> addresses = new ArrayList<ServiceAddress>();
 
     private final String serviceId;
 
-    public FixedServiceAddressListSupplier(RouteOptions routeOptions) {
+    public FixedServiceAddressSupplier(RouteOptions routeOptions, PluginOptions pluginOptions) {
         this.serviceId = routeOptions.getRoute();
 
-        for (String url : routeOptions.getRouting().getUrls()) {
-            addresses.add(new DefaultServiceAddress(url));
+        for (Object url : pluginOptions.getOptions().getJsonArray("urls")) {
+            addresses.add(new DefaultServiceAddress(url.toString()));
         }
     }
 

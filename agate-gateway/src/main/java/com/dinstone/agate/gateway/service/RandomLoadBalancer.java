@@ -30,9 +30,9 @@ public class RandomLoadBalancer implements Loadbalancer {
 
     private RouteOptions routeOptions;
 
-    private ServiceAddressListSupplier supplier;
+    private ServiceAddressSupplier supplier;
 
-    public RandomLoadBalancer(RouteOptions routeOptions, ServiceAddressListSupplier supplier) {
+    public RandomLoadBalancer(RouteOptions routeOptions, ServiceAddressSupplier supplier) {
         this.routeOptions = routeOptions;
         this.supplier = supplier;
     }

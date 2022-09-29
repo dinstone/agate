@@ -31,7 +31,7 @@ public class RestfulFailurePlugin extends RoutePlugin {
 
     @Override
     public OperationHandler createHandler(Vertx vertx) {
-        return new RestfulFailureHandler(routeOptions);
+        return new RestfulFailureHandler();
     }
 
 }

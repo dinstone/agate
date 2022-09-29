@@ -20,11 +20,11 @@ import com.dinstone.agate.gateway.handler.internal.HttpProxyHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.plugin.PluginOptions;
 import com.dinstone.agate.gateway.plugin.RoutePlugin;
-import com.dinstone.agate.gateway.service.DiscoveryServiceAddressListSupplier;
-import com.dinstone.agate.gateway.service.FixedServiceAddressListSupplier;
+import com.dinstone.agate.gateway.service.ConsulServiceAddressSupplier;
+import com.dinstone.agate.gateway.service.FixedServiceAddressSupplier;
 import com.dinstone.agate.gateway.service.Loadbalancer;
 import com.dinstone.agate.gateway.service.RoundRobinLoadBalancer;
-import com.dinstone.agate.gateway.service.ServiceAddressListSupplier;
+import com.dinstone.agate.gateway.service.ServiceAddressSupplier;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -35,7 +35,8 @@ public class HttpProxyPlugin extends RoutePlugin {
     private HttpClient httpClient;
 
     private Loadbalancer loadBalancer;
-    private ServiceAddressListSupplier supplier;
+
+    private ServiceAddressSupplier supplier;
 
     public HttpProxyPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
         super(routeOptions, pluginOptions);
@@ -64,11 +65,11 @@ public class HttpProxyPlugin extends RoutePlugin {
         synchronized (this) {
             if (loadBalancer == null) {
                 // service discovery
-                if (routeOptions.getRouting().getType() == 1) {
-                    supplier = new DiscoveryServiceAddressListSupplier(vertx, null, routeOptions);
+                if (pluginOptions.getOptions().getInteger("type", 0) == 1) {
+                    supplier = new ConsulServiceAddressSupplier(vertx, routeOptions, pluginOptions);
                     loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
                 } else {
-                    supplier = new FixedServiceAddressListSupplier(routeOptions);
+                    supplier = new FixedServiceAddressSupplier(routeOptions, pluginOptions);
                     loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
                 }
             }

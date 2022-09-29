@@ -24,19 +24,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.options.RouteOptions;
+import com.dinstone.agate.gateway.plugin.PluginOptions;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClient;
+import io.vertx.ext.consul.ConsulClientOptions;
 import io.vertx.ext.consul.Service;
 import io.vertx.ext.consul.ServiceList;
 
-public class DiscoveryServiceAddressListSupplier implements ServiceAddressListSupplier {
+public class ConsulServiceAddressSupplier implements ServiceAddressSupplier {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryServiceAddressListSupplier.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsulServiceAddressSupplier.class);
 
     private List<ServiceAddress> addresses = new CopyOnWriteArrayList<>();
 
@@ -48,11 +50,15 @@ public class DiscoveryServiceAddressListSupplier implements ServiceAddressListSu
 
     private ConsulClient consulClient;
 
-    public DiscoveryServiceAddressListSupplier(Vertx vertx, ApplicationContext appContext, RouteOptions routeOptions) {
+    private PluginOptions pluginOptions;
+
+    public ConsulServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
         this.vertx = vertx;
         this.routeOptions = routeOptions;
+        this.pluginOptions = pluginOptions;
 
-        this.consulClient = appContext.getConsulClient(vertx);
+        ConsulClientOptions consulOptions = getConsulOptions(pluginOptions);
+        this.consulClient = ConsulClient.create(vertx, consulOptions);
 
         refresh();
 
@@ -61,20 +67,30 @@ public class DiscoveryServiceAddressListSupplier implements ServiceAddressListSu
         });
     }
 
+    private ConsulClientOptions getConsulOptions(PluginOptions pluginOptions) {
+        // consul options
+        JsonObject consulJson = pluginOptions.getOptions().getJsonObject("consul");
+        if (consulJson != null) {
+            return new ConsulClientOptions(consulJson);
+        } else {
+            return new ConsulClientOptions();
+        }
+    }
+
     @SuppressWarnings({ "rawtypes" })
     public void refresh() {
         LOG.debug("{} service discovery url parse", routeOptions.getRoute());
 
         List<ServiceAddress> serverUrls = new ArrayList<>();
         List<Future> futureList = new ArrayList<>();
-        for (String rawUrl : routeOptions.getRouting().getUrls()) {
+        for (Object rawUrl : pluginOptions.getOptions().getJsonArray("urls")) {
             try {
-                URL rurl = new URL(rawUrl);
-                String serviceName = rurl.getHost();
+                String rurl = rawUrl.toString();
+                String serviceName = new URL(rurl).getHost();
                 Future<ServiceList> f = consulClient.catalogServiceNodes(serviceName).onSuccess(ar -> {
-                    for (Service s : ar.getList()) {
-                        String address = s.getAddress() + ":" + s.getPort();
-                        serverUrls.add(new DefaultServiceAddress(rawUrl.replaceFirst(serviceName, address)));
+                    for (Service service : ar.getList()) {
+                        String address = service.getAddress() + ":" + service.getPort();
+                        serverUrls.add(new DefaultServiceAddress(rurl.replaceFirst(serviceName, address)));
                     }
                 });
                 futureList.add(f);
