@@ -27,6 +27,8 @@ import com.dinstone.agate.gateway.options.RouteOptions;
 import com.dinstone.agate.gateway.plugin.PluginOptions;
 import com.dinstone.agate.gateway.plugin.RoutePlugin;
 import com.dinstone.agate.gateway.plugin.internal.HttpProxyPlugin;
+import com.dinstone.agate.gateway.plugin.internal.ProxyReplyPlugin;
+import com.dinstone.agate.gateway.plugin.internal.RestfulFailurePlugin;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -86,6 +88,8 @@ public class ApplicationContext {
         clusterDeploy = new ClusterDeploy(clusterCode);
 
         regist("HttpProxyPlugin", HttpProxyPlugin.class);
+        regist("ProxyReplyPlugin", ProxyReplyPlugin.class);
+        regist("RestfulFailurePlugin", RestfulFailurePlugin.class);
 
         LOG.debug("init application context ended");
     }
@@ -99,7 +103,7 @@ public class ApplicationContext {
             Class<? extends RoutePlugin> pc = PLUGIN_MAP.get(pluginOptions.getPlugin());
             if (pc != null) {
                 return pc.getConstructor(RouteOptions.class, PluginOptions.class).newInstance(routeOptions,
-                        pluginOptions);
+                    pluginOptions);
             }
         } catch (Exception e) {
             LOG.warn("plugin instance error", e);

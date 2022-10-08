@@ -24,7 +24,6 @@ import com.dinstone.agate.gateway.handler.FilteringHandler;
 import com.dinstone.agate.gateway.options.RouteOptions;
 
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
@@ -36,21 +35,19 @@ import io.vertx.ext.web.RoutingContext;
  *
  * @author dinstone
  */
-public class ResultReplyHandler implements FilteringHandler {
+public class ProxyReplyHandler implements FilteringHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResultReplyHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyReplyHandler.class);
 
     // private BackendOptions backendOptions;
 
-    public ResultReplyHandler(RouteOptions routeOptions) {
+    public ProxyReplyHandler(RouteOptions routeOptions) {
         // backendOptions = apiOptions.getBackend();
     }
 
     @Override
     public void handle(RoutingContext rc) {
-        HttpClientRequest beRequest = rc.get(ContextConstants.BACKEND_REQUEST);
         HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
-
         HttpServerResponse feResponse = rc.response();
         feResponse.setStatusCode(beResponse.statusCode());
         feResponse.headers().addAll(beResponse.headers());

@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.dinstone.agate.gateway.context.ApplicationContext;
 import com.dinstone.agate.gateway.deploy.RouteDeploy;
-import com.dinstone.agate.gateway.handler.FailureHandler;
 import com.dinstone.agate.gateway.handler.OperationHandler;
 import com.dinstone.agate.gateway.handler.internal.AccessLogHandler;
 import com.dinstone.agate.gateway.handler.internal.RestfulFailureHandler;
@@ -33,7 +32,6 @@ import com.dinstone.agate.gateway.http.RestfulUtil;
 import com.dinstone.agate.gateway.options.GatewayOptions;
 import com.dinstone.agate.gateway.options.RequestOptions;
 import com.dinstone.agate.gateway.options.RouteOptions;
-import com.dinstone.agate.gateway.plugin.RoutePlugin;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
@@ -100,11 +98,11 @@ public class GatewayVerticle extends AbstractVerticle {
                 registDeployer();
 
                 LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                        serverOptions.getPort());
+                    serverOptions.getPort());
                 startPromise.complete();
             } else {
                 LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                        serverOptions.getPort());
+                    serverOptions.getPort());
                 startPromise.fail(ar.cause());
             }
         });
@@ -116,7 +114,7 @@ public class GatewayVerticle extends AbstractVerticle {
         removeDeployer();
 
         LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                serverOptions.getPort());
+            serverOptions.getPort());
     }
 
     public Future<Void> deployRoute(RouteDeploy deploy) {
@@ -157,14 +155,22 @@ public class GatewayVerticle extends AbstractVerticle {
                     }
                 }
 
-                // add handler
-                for (RoutePlugin routePlugin : deploy.getRoutePlugins()) {
-                    OperationHandler handler = routePlugin.createHandler(vertx);
-                    if (handler instanceof FailureHandler) {
-                        route.failureHandler(handler);
-                    } else {
-                        route.handler(handler);
-                    }
+                // before handler
+                for (OperationHandler handler : deploy.getBeforeHandlers(vertx)) {
+                    route.handler(handler);
+                }
+
+                // routing handler
+                route.handler(deploy.getRoutingHandler(vertx));
+
+                // after handler
+                for (OperationHandler handler : deploy.getAfterHandlers(vertx)) {
+                    route.handler(handler);
+                }
+
+                // failure handler
+                for (OperationHandler handler : deploy.getFailureHandlers(vertx)) {
+                    route.failureHandler(handler);
                 }
 
                 String mountPoint = "/";
@@ -208,7 +214,6 @@ public class GatewayVerticle extends AbstractVerticle {
      * 
      * @param mountPoint
      * @param subRouter
-     * 
      * @return
      */
     private Route mountRouter(String mountPoint, Router subRouter) {
@@ -226,7 +231,7 @@ public class GatewayVerticle extends AbstractVerticle {
     @SuppressWarnings("unused")
     private SessionHandler sessionHandler() {
         return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
-                .setNagHttps(false);
+            .setNagHttps(false);
     }
 
     private Router createHttpServerRouter() {
@@ -243,7 +248,7 @@ public class GatewayVerticle extends AbstractVerticle {
         });
         mainRouter.errorHandler(406, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(),
-                    "can’t provide a response with a content type matching Accept header");
+                "can’t provide a response with a content type matching Accept header");
         });
         mainRouter.errorHandler(415, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");

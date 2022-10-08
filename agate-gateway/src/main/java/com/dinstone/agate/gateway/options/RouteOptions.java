@@ -36,12 +36,16 @@ public class RouteOptions {
     // ====================
     private RequestOptions request;
 
-    private RoutingOptions routings;
-
     private ResponseOptions response;
 
     // ====================
-    private PluginOptions[] plugins;
+    private PluginOptions[] failures;
+
+    private PluginOptions[] befores;
+
+    private PluginOptions[] afters;
+
+    private PluginOptions routing;
 
     public RouteOptions(JsonObject json) {
         fromJson(json);
@@ -79,14 +83,6 @@ public class RouteOptions {
         this.request = frontend;
     }
 
-    public RoutingOptions getRouting() {
-        return routings;
-    }
-
-    public void setRouting(RoutingOptions backend) {
-        this.routings = backend;
-    }
-
     public ResponseOptions getResponse() {
         return response;
     }
@@ -95,12 +91,36 @@ public class RouteOptions {
         this.response = response;
     }
 
-    public PluginOptions[] getPlugins() {
-        return plugins;
+    public PluginOptions[] getFailures() {
+        return failures;
     }
 
-    public void setPlugins(PluginOptions[] plugins) {
-        this.plugins = plugins;
+    public void setFailures(PluginOptions[] failures) {
+        this.failures = failures;
+    }
+
+    public PluginOptions[] getBefores() {
+        return befores;
+    }
+
+    public void setBefores(PluginOptions[] befores) {
+        this.befores = befores;
+    }
+
+    public PluginOptions[] getAfters() {
+        return afters;
+    }
+
+    public void setAfters(PluginOptions[] afters) {
+        this.afters = afters;
+    }
+
+    public void setRouting(PluginOptions routing) {
+        this.routing = routing;
+    }
+
+    public PluginOptions getRouting() {
+        return routing;
     }
 
     public JsonObject toJson() {
@@ -115,14 +135,20 @@ public class RouteOptions {
         if (request != null) {
             json.put("request", request.toJson());
         }
-        if (routings != null) {
-            json.put("routings", routings.toJson());
+        if (routing != null) {
+            json.put("routing", routing.toJson());
         }
         if (response != null) {
             json.put("response", response.toJson());
         }
-        if (plugins != null) {
-            json.put("plugins", Arrays.asList(plugins));
+        if (befores != null) {
+            json.put("befores", Arrays.asList(befores));
+        }
+        if (afters != null) {
+            json.put("afters", Arrays.asList(afters));
+        }
+        if (failures != null) {
+            json.put("failures", Arrays.asList(failures));
         }
 
         return json;
@@ -131,47 +157,69 @@ public class RouteOptions {
     public void fromJson(JsonObject json) {
         for (java.util.Map.Entry<String, Object> member : json) {
             switch (member.getKey()) {
-            case "gateway":
-                if (member.getValue() instanceof String) {
-                    this.setGateway((String) member.getValue());
-                }
-                break;
-            case "cluster":
-                if (member.getValue() instanceof String) {
-                    this.setCluster((String) member.getValue());
-                }
-                break;
-            case "route":
-                if (member.getValue() instanceof String) {
-                    this.setRoute((String) member.getValue());
-                }
-                break;
-            case "request":
-                if (member.getValue() instanceof JsonObject) {
-                    this.setRequest(new RequestOptions((JsonObject) member.getValue()));
-                }
-                break;
-            case "routings":
-                if (member.getValue() instanceof JsonObject) {
-                    this.setRouting(new RoutingOptions((JsonObject) member.getValue()));
-                }
-                break;
-            case "response":
-                if (member.getValue() instanceof JsonObject) {
-                    this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
-                }
-                break;
-            case "plugins":
-                if (member.getValue() instanceof JsonArray) {
-                    List<PluginOptions> pol = new ArrayList<>();
-                    ((JsonArray) member.getValue()).forEach(m -> {
-                        if (m instanceof JsonObject) {
-                            pol.add(new PluginOptions((JsonObject) m));
-                        }
-                    });
-                    this.setPlugins(pol.toArray(new PluginOptions[0]));
-                }
-                break;
+                case "gateway":
+                    if (member.getValue() instanceof String) {
+                        this.setGateway((String) member.getValue());
+                    }
+                    break;
+                case "cluster":
+                    if (member.getValue() instanceof String) {
+                        this.setCluster((String) member.getValue());
+                    }
+                    break;
+                case "route":
+                    if (member.getValue() instanceof String) {
+                        this.setRoute((String) member.getValue());
+                    }
+                    break;
+                case "request":
+                    if (member.getValue() instanceof JsonObject) {
+                        this.setRequest(new RequestOptions((JsonObject) member.getValue()));
+                    }
+                    break;
+                case "routing":
+                    if (member.getValue() instanceof JsonObject) {
+                        this.setRouting(new PluginOptions((JsonObject) member.getValue()));
+                    }
+                    break;
+                case "response":
+                    if (member.getValue() instanceof JsonObject) {
+                        this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
+                    }
+                    break;
+                case "befores":
+                    if (member.getValue() instanceof JsonArray) {
+                        List<PluginOptions> pol = new ArrayList<>();
+                        ((JsonArray) member.getValue()).forEach(m -> {
+                            if (m instanceof JsonObject) {
+                                pol.add(new PluginOptions((JsonObject) m));
+                            }
+                        });
+                        this.setBefores(pol.toArray(new PluginOptions[0]));
+                    }
+                    break;
+                case "afters":
+                    if (member.getValue() instanceof JsonArray) {
+                        List<PluginOptions> pol = new ArrayList<>();
+                        ((JsonArray) member.getValue()).forEach(m -> {
+                            if (m instanceof JsonObject) {
+                                pol.add(new PluginOptions((JsonObject) m));
+                            }
+                        });
+                        this.setAfters(pol.toArray(new PluginOptions[0]));
+                    }
+                    break;
+                case "failures":
+                    if (member.getValue() instanceof JsonArray) {
+                        List<PluginOptions> pol = new ArrayList<>();
+                        ((JsonArray) member.getValue()).forEach(m -> {
+                            if (m instanceof JsonObject) {
+                                pol.add(new PluginOptions((JsonObject) m));
+                            }
+                        });
+                        this.setFailures(pol.toArray(new PluginOptions[0]));
+                    }
+                    break;
             }
         }
     }

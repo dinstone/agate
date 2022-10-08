@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.plugin.internal;
 
 import com.dinstone.agate.gateway.handler.OperationHandler;
@@ -56,8 +57,8 @@ public class HttpProxyPlugin extends RoutePlugin {
 
     @Override
     public OperationHandler createHandler(Vertx vertx) {
-        Loadbalancer loadbalancer = createLoadbalancer(vertx, routeOptions);
         HttpClient httpClient = createHttpClient(vertx, routeOptions);
+        Loadbalancer loadbalancer = createLoadbalancer(vertx, routeOptions);
         return new HttpProxyHandler(routeOptions, httpClient, loadbalancer);
     }
 

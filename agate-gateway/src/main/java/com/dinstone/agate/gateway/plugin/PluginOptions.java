@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.plugin;
 
 import io.vertx.core.json.JsonObject;
@@ -60,21 +61,21 @@ public class PluginOptions {
         for (java.util.Map.Entry<String, Object> member : json) {
             Object value = member.getValue();
             switch (member.getKey()) {
-            case "order":
-                if (value instanceof Number) {
-                    this.setOrder(((Number) value).intValue());
-                }
-                break;
-            case "plugin":
-                if (value instanceof String) {
-                    this.setPlugin((String) value);
-                }
-                break;
-            case "options":
-                if (value instanceof JsonObject) {
-                    this.setOptions((JsonObject) value);
-                }
-                break;
+                case "order":
+                    if (value instanceof Number) {
+                        this.setOrder(((Number) value).intValue());
+                    }
+                    break;
+                case "plugin":
+                    if (value instanceof String) {
+                        this.setPlugin((String) value);
+                    }
+                    break;
+                case "options":
+                    if (value instanceof JsonObject) {
+                        this.setOptions((JsonObject) value);
+                    }
+                    break;
             }
         }
     }
@@ -95,7 +96,7 @@ public class PluginOptions {
 
     @Override
     public String toString() {
-        return "PluginOptions [order=" + order + ", plugin=" + plugin + "]";
+        return "PluginOptions [order=" + order + ", plugin=" + plugin + ", options=" + options + "]";
     }
 
 }

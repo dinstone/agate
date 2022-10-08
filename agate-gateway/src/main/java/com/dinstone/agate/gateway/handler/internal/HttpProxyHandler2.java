@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.gateway.handler.internal;
 
 import java.util.HashMap;
@@ -48,7 +49,6 @@ import io.vertx.httpproxy.ProxyResponse;
  * http route and proxy.
  * 
  * @author dinstone
- *
  */
 public class HttpProxyHandler2 implements RoutingHandler {
 
@@ -68,7 +68,7 @@ public class HttpProxyHandler2 implements RoutingHandler {
         this.routeOptions = routeOptions;
         this.httpClient = httpClient;
         this.circuitBreaker = circuitBreaker;
-        this.routingOptions = routeOptions.getRouting();
+        this.routingOptions = new RoutingOptions(routeOptions.getRouting().getOptions());
     }
 
     @Override
@@ -90,7 +90,6 @@ public class HttpProxyHandler2 implements RoutingHandler {
         Promise<Void> promise = Promise.promise();
 
         HttpServerRequest serverRequest = rc.request();
-        ProxyRequest proxyRequest = ProxyRequest.reverseProxy(serverRequest);
 
         // Encoding check
         Boolean chunked = HttpUtil.isChunked(serverRequest.headers());
@@ -173,6 +172,7 @@ public class HttpProxyHandler2 implements RoutingHandler {
             }
         }
 
+        ProxyRequest proxyRequest = ProxyRequest.reverseProxy(serverRequest);
         httpClient.request(options).onSuccess(clientRequest -> {
             proxyRequest.setURI(options.getURI());
             proxyRequest.setMethod(method(serverRequest.method()));
