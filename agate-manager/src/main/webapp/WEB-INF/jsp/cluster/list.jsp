@@ -24,18 +24,7 @@
 	<jsp:include page="../topbar.jsp"></jsp:include>
 	<div class="ch-container">
 		<div class="row">
-			<div id="menu" class="col-sm-2 col-lg-2">
-				<div class="sidebar-nav">
-					<div class="nav-canvas">
-						<div class="nav-sm nav nav-stacked"></div>
-						<ul class="nav nav-pills nav-stacked main-menu">
-							<li><a class="ajax-link" href="${contextPath}/view/route/list"><i class="glyphicon glyphicon-align-justify"></i><span> Routes</span></a></li>
-							<li><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
-							<li class="active"><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
+			<jsp:include page="../menu.jsp"></jsp:include>
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
@@ -77,8 +66,8 @@
 												<td><c:forEach items="${cluster.nodes}" var="node">
 													${node.instanceId}
 												</c:forEach></td>
-												<td><a class="btn btn-default" href="${contextPath}/view/cluster/update?id=${cluster.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default"
-													href="${contextPath}/view/cluster/delete?id=${cluster.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+												<td><a class="btn btn-default" href="${contextPath}/view/cluster/update?id=${cluster.id}"><i class="glyphicon glyphicon-pencil"></i><span> Update</span></a> <a class="btn btn-default" href="${contextPath}/view/cluster/delete?id=${cluster.id}"><i class="glyphicon glyphicon-trash"></i><span>
+															Delete</span></a></td>
 											</tr>
 										</c:forEach>
 									</tbody>

@@ -54,13 +54,13 @@
 								<c:if test="${ !empty error}">
 									<div id="tip" class="alert alert-info">${error}</div>
 								</c:if>
-								<form role="form" action="/view/cluster/save" method="post">
+								<form action="/view/cluster/save" method="post">
 									<input name="action" value="${action}" type="hidden"> <input name="id" value="${cluster.id}" type="hidden">
 									<div class="form-group">
-										<label>Code (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="code" value="${cluster.code}">
+										<label>Cluster Code (Global Uniqueness and Not Update) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="code" value="${cluster.code}">
 									</div>
 									<div class="form-group">
-										<label>Name (Cluster Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${cluster.name}">
+										<label>Cluster Name <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${cluster.name}">
 									</div>
 									<button type="reset" class="btn btn-default">Reset</button>
 									<button type="submit" class="btn btn-default">Submit</button>

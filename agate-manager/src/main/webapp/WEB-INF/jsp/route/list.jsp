@@ -24,18 +24,7 @@
 	<jsp:include page="../topbar.jsp"></jsp:include>
 	<div class="ch-container">
 		<div class="row">
-			<div id="menu" class="col-sm-2 col-lg-2">
-				<div class="sidebar-nav">
-					<div class="nav-canvas">
-						<div class="nav-sm nav nav-stacked"></div>
-						<ul class="nav nav-pills nav-stacked main-menu">
-							<li class="active"><a class="ajax-link" href="${contextPath}/view/route/list"><i class="glyphicon glyphicon-align-justify"></i><span> Routes</span></a></li>
-							<li><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-align-justify"></i><span> Gateways</span></a></li>
-							<li><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-align-justify"></i><span> Clusters</span></a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
+			<jsp:include page="../menu.jsp"></jsp:include>
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">

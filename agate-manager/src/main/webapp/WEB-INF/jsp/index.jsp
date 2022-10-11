@@ -20,27 +20,31 @@
 <script src="${contextPath}/js/autosize.min.js"></script>
 <script src="${contextPath}/js/charisma.app.js?ctx=${contextPath}"></script>
 </head>
-<div class="ch-container">
-	<div class="row">
-
+<body>
+	<jsp:include page="topbar.jsp"></jsp:include>
+	<div class="ch-container">
 		<div class="row">
-			<div class="col-md-12 center login-header">
-				<h2>Welcome to Agate Manager</h2>
+			<jsp:include page="menu.jsp"></jsp:include>
+			<div id="content" class="col-lg-10 col-sm-10">
+				<div>
+					<ul class="breadcrumb">
+						<li><a href="${contextPath}/">Home</a></li>
+						<li>Dashboard</li>
+					</ul>
+				</div>
+				<div class="row">
+					<div class="box col-md-12">
+						Wecome!
+					</div>
+				</div>
 			</div>
-			<!--/span-->
+			<!-- content ends -->
+			<!--/#content.col-md-0-->
 		</div>
-		<!--/row-->
-
-		<div class="row">
-			<div class="well col-md-5 center login-box">
-				<a href="/view/route/list" class="btn btn-info">Routes</a>
-			</div>
-			<!--/span-->
-		</div>
-		<!--/row-->
+		<!--/fluid-row-->
+		<hr>
+		<jsp:include page="footbar.jsp" />
 	</div>
-	<!--/fluid-row-->
-</div>
-<!--/.fluid-container-->
+	<!--/.fluid-container-->
 </body>
 </html>

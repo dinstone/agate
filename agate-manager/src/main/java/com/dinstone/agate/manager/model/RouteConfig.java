@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.model;
 
-public class ApiRouteConfig {
+import java.util.List;
+
+public class RouteConfig {
 
     private Integer arId;
 
@@ -35,7 +38,7 @@ public class ApiRouteConfig {
 
     private ResponseConfig responseConfig;
 
-    private HandlersConfig handlersConfig;
+    private List<PluginConfig> pluginConfigs;
 
     public Integer getArId() {
         return arId;
@@ -101,20 +104,20 @@ public class ApiRouteConfig {
         this.responseConfig = responseConfig;
     }
 
-    public HandlersConfig getHandlersConfig() {
-        return handlersConfig;
-    }
-
-    public void setHandlersConfig(HandlersConfig handlersConfig) {
-        this.handlersConfig = handlersConfig;
-    }
-
     public String getGateway() {
         return gateway;
     }
 
     public void setGateway(String gateway) {
         this.gateway = gateway;
+    }
+
+    public List<PluginConfig> getPluginConfigs() {
+        return pluginConfigs;
+    }
+
+    public void setPluginConfigs(List<PluginConfig> pluginConfigs) {
+        this.pluginConfigs = pluginConfigs;
     }
 
 }

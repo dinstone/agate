@@ -9,7 +9,7 @@
 		<button type="button" class="navbar-toggle pull-left animated flip">
 			<span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
 		</button>
-		<a class="navbar-brand" href="/"><img alt="Charisma Logo" src="${contextPath}/img/logo20.png" class="hidden-xs" /><span>Agate</span></a>
+		<a class="navbar-brand" href="/view/dashboard/show"><img alt="Charisma Logo" src="${contextPath}/img/logo20.png" class="hidden-xs" /><span>Agate</span></a>
 		<!-- user dropdown starts -->
 		<div class="btn-group pull-right">
 			<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">

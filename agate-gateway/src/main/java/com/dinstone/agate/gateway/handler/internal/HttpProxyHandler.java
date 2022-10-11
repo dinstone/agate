@@ -153,7 +153,7 @@ public class HttpProxyHandler implements RoutingHandler {
             // response handler
             beRequest.response().onComplete(ar -> {
                 if (ar.succeeded()) {
-                    HttpClientResponse beResponse = ar.result().pause();
+                    HttpClientResponse beResponse = ar.result();
                     rc.put(ContextConstants.BACKEND_REQUEST, beRequest);
                     rc.put(ContextConstants.BACKEND_RESPONSE, beResponse);
                     rc.next();

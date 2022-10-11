@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,18 +24,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.dinstone.agate.manager.dao.GatewayDao;
 import com.dinstone.agate.manager.dao.RouteDao;
-import com.dinstone.agate.manager.model.ApiRouteConfig;
 import com.dinstone.agate.manager.model.GatewayEntity;
-import com.dinstone.agate.manager.model.HandlersConfig;
 import com.dinstone.agate.manager.model.ParamConfig;
+import com.dinstone.agate.manager.model.PluginConfig;
 import com.dinstone.agate.manager.model.RequestConfig;
 import com.dinstone.agate.manager.model.ResponseConfig;
+import com.dinstone.agate.manager.model.RouteConfig;
 import com.dinstone.agate.manager.model.RouteEntity;
 import com.dinstone.agate.manager.model.RoutingConfig;
 import com.dinstone.agate.manager.utils.JacksonCodec;
@@ -186,8 +189,8 @@ public class ManageService {
         }
     }
 
-    public List<ApiRouteConfig> apiList() {
-        List<ApiRouteConfig> apiConfigs = new LinkedList<>();
+    public List<RouteConfig> apiList() {
+        List<RouteConfig> apiConfigs = new LinkedList<>();
 
         List<RouteEntity> aes = routeDao.list();
         if (aes != null) {
@@ -199,8 +202,8 @@ public class ManageService {
         return apiConfigs;
     }
 
-    private ApiRouteConfig covert(RouteEntity apiEntity) {
-        ApiRouteConfig apiConfig = new ApiRouteConfig();
+    private RouteConfig covert(RouteEntity apiEntity) {
+        RouteConfig apiConfig = new RouteConfig();
         apiConfig.setArId(apiEntity.getId());
         apiConfig.setGwId(apiEntity.getGwId());
         apiConfig.setName(apiEntity.getName());
@@ -219,13 +222,16 @@ public class ManageService {
         ResponseConfig rc = JacksonCodec.decode(apiEntity.getResponse(), ResponseConfig.class);
         apiConfig.setResponseConfig(rc);
 
-        HandlersConfig hc = JacksonCodec.decode(apiEntity.getHandlers(), HandlersConfig.class);
-        apiConfig.setHandlersConfig(hc);
+        try {
+            List<PluginConfig> pcs = JacksonCodec.decodeList(apiEntity.getHandlers(), PluginConfig.class);
+            apiConfig.setPluginConfigs(pcs);
+        } catch (Exception e) {
+        }
 
         return apiConfig;
     }
 
-    private RouteEntity covert(ApiRouteConfig apiConfig) {
+    private RouteEntity covert(RouteConfig apiConfig) {
         RouteEntity apiEntity = new RouteEntity();
         apiEntity.setId(apiConfig.getArId());
         apiEntity.setGwId(apiConfig.getGwId());
@@ -235,7 +241,7 @@ public class ManageService {
         apiEntity.setRequest(JacksonCodec.encode(apiConfig.getRequestConfig()));
         apiEntity.setResponse(JacksonCodec.encode(apiConfig.getResponseConfig()));
 
-        apiEntity.setHandlers(JacksonCodec.encode(apiConfig.getHandlersConfig()));
+        apiEntity.setHandlers(JacksonCodec.encode(apiConfig.getPluginConfigs()));
 
         RoutingConfig backendConfig = apiConfig.getRoutingConfig();
         if (backendConfig.getParams() != null) {
@@ -251,7 +257,7 @@ public class ManageService {
         return apiEntity;
     }
 
-    public void createApi(ApiRouteConfig apiConfig) throws BusinessException {
+    public void createApi(RouteConfig apiConfig) throws BusinessException {
         if (apiConfig.getGwId() == null) {
             throw new BusinessException(40200, "gateway is invalid");
         }
@@ -300,7 +306,7 @@ public class ManageService {
         routeDao.create(apiEntity);
     }
 
-    public void updateApi(ApiRouteConfig apiConfig) throws BusinessException {
+    public void updateApi(RouteConfig apiConfig) throws BusinessException {
         RequestConfig frontendConfig = apiConfig.getRequestConfig();
         if (frontendConfig == null) {
             throw new BusinessException(40202, "frontend config is null");
@@ -321,9 +327,12 @@ public class ManageService {
                 iterator.remove();
             }
         }
-        if (backendConfig.getUrls().isEmpty()) {
+        List<String> uls = backendConfig.getUrls().stream().filter(u -> u != null && !u.isEmpty())
+            .collect(Collectors.toList());
+        if (uls.isEmpty()) {
             throw new BusinessException(40205, "backend urls is null");
         }
+        backendConfig.setUrls(uls);
 
         RouteEntity apiEntity = routeDao.find(apiConfig.getArId());
         if (apiEntity == null) {
@@ -345,7 +354,7 @@ public class ManageService {
         routeDao.update(apiEntity);
     }
 
-    public ApiRouteConfig getApiById(Integer apiId) {
+    public RouteConfig getApiById(Integer apiId) {
         RouteEntity ae = routeDao.find(apiId);
         if (ae != null) {
             return covert(ae);
@@ -373,6 +382,7 @@ public class ManageService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private String convertApiRouteOptions(GatewayEntity gatewayEntity, RouteEntity apiEntity) {
         Map<String, Object> apiOptions = new HashMap<>();
         apiOptions.put("cluster", gatewayEntity.getCode());
@@ -380,11 +390,58 @@ public class ManageService {
         apiOptions.put("route", apiEntity.getName());
 
         apiOptions.put("request", JacksonCodec.decode(apiEntity.getRequest(), Map.class));
-        apiOptions.put("routing", JacksonCodec.decode(apiEntity.getRouting(), Map.class));
         apiOptions.put("response", JacksonCodec.decode(apiEntity.getResponse(), Map.class));
-        apiOptions.put("handlers", JacksonCodec.decode(apiEntity.getHandlers(), Map.class));
+
+        // routing
+        Map<String, Object> rm = JacksonCodec.decode(apiEntity.getRouting(), Map.class);
+        int halderType = (int) rm.get("type");
+        if (halderType <= 1) {
+            Map<String, Object> rpm = new HashMap<>();
+            rpm.put("plugin", "HttpProxyPlugin");
+            rpm.put("options", rm);
+            apiOptions.put("routing", rpm);
+        }
+
+        // plugins
+        List<PluginConfig> pl = JacksonCodec.decodeList(apiEntity.getHandlers(), PluginConfig.class);
+        if (pl != null) {
+            List<Map<String, Object>> bps = new ArrayList<>();
+            List<Map<String, Object>> aps = new ArrayList<>();
+            List<Map<String, Object>> fps = new ArrayList<>();
+            for (PluginConfig pc : pl) {
+                Map<String, Object> pcm = convertToMap(pc);
+                if (pcm == null) {
+                    continue;
+                }
+                if (pc.getType() == 0) {
+                    fps.add(pcm);
+                } else if (pc.getType() == -1) {
+                    bps.add(pcm);
+                }
+                if (pc.getType() == 1) {
+                    aps.add(pcm);
+                }
+            }
+            apiOptions.put("befores", bps);
+            apiOptions.put("afters", aps);
+            apiOptions.put("failures", fps);
+        }
 
         return JacksonCodec.encode(apiOptions);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> convertToMap(PluginConfig pc) {
+        try {
+            Map<String, Object> cm = JacksonCodec.decode(pc.getConfig(), Map.class);
+            Map<String, Object> pm = new HashMap<>();
+            pm.put("order", pc.getOrder());
+            pm.put("plugin", pc.getPlugin());
+            pm.put("options", cm);
+            return pm;
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     public void closeRoute(Integer apiId) {

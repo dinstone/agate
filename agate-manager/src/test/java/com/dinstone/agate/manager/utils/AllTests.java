@@ -13,24 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dinstone.agate.manager.controller;
 
-import javax.servlet.http.HttpServletRequest;
+package com.dinstone.agate.manager.utils;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
-
-@Controller
-public class EnvironmentController {
-
-    @RequestMapping("/env")
-    public ModelAndView env(String env, HttpServletRequest request) {
-        try {
-            return new ModelAndView("index");
-        }catch (Exception e) {
-        }
-        return new ModelAndView("index");
-    }
+public class AllTests {
 
 }

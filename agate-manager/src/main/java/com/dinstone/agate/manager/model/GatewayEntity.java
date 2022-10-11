@@ -13,120 +13,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.model;
 
 import java.util.Date;
 
 public class GatewayEntity {
 
-	private Integer id;
+    private Integer id;
 
-	private String code;
+    private String code;
 
-	private String name;
+    private String cluster;
 
-	private String remark;
+    private String name;
 
-	private String host;
+    private String remark;
 
-	private Integer port;
+    private String host;
 
-	private String serverConfig;
+    private Integer port;
 
-	private String clientConfig;
+    private String serverConfig;
 
-	private int status;
+    private String clientConfig;
 
-	private Date createTime;
+    private int status;
 
-	private Date updateTime;
+    private Date createTime;
 
-	public Integer getId() {
-		return id;
-	}
+    private Date updateTime;
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public Integer getId() {
+        return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getRemark() {
-		return remark;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setRemark(String remark) {
-		this.remark = remark;
-	}
+    public String getRemark() {
+        return remark;
+    }
 
-	public String getCode() {
-		return code;
-	}
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
 
-	public void setCode(String code) {
-		this.code = code;
-	}
+    public String getCluster() {
+        return cluster;
+    }
 
-	public String getHost() {
-		return host;
-	}
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
+    }
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+    public String getCode() {
+        return code;
+    }
 
-	public Integer getPort() {
-		return port;
-	}
+    public void setCode(String code) {
+        this.code = code;
+    }
 
-	public void setPort(Integer port) {
-		this.port = port;
-	}
+    public String getHost() {
+        return host;
+    }
 
-	public String getServerConfig() {
-		return serverConfig;
-	}
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-	public void setServerConfig(String serverConfig) {
-		this.serverConfig = serverConfig;
-	}
+    public Integer getPort() {
+        return port;
+    }
 
-	public String getClientConfig() {
-		return clientConfig;
-	}
+    public void setPort(Integer port) {
+        this.port = port;
+    }
 
-	public void setClientConfig(String clientConfig) {
-		this.clientConfig = clientConfig;
-	}
+    public String getServerConfig() {
+        return serverConfig;
+    }
 
-	public int getStatus() {
-		return status;
-	}
+    public void setServerConfig(String serverConfig) {
+        this.serverConfig = serverConfig;
+    }
 
-	public void setStatus(int status) {
-		this.status = status;
-	}
+    public String getClientConfig() {
+        return clientConfig;
+    }
 
-	public Date getCreateTime() {
-		return createTime;
-	}
+    public void setClientConfig(String clientConfig) {
+        this.clientConfig = clientConfig;
+    }
 
-	public void setCreateTime(Date createTime) {
-		this.createTime = createTime;
-	}
+    public int getStatus() {
+        return status;
+    }
 
-	public Date getUpdateTime() {
-		return updateTime;
-	}
+    public void setStatus(int status) {
+        this.status = status;
+    }
 
-	public void setUpdateTime(Date updateTime) {
-		this.updateTime = updateTime;
-	}
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
 
 }

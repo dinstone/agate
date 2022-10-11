@@ -22,7 +22,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.dinstone.agate.manager.model.ApiRouteConfig;
+import com.dinstone.agate.manager.model.RouteConfig;
 import com.dinstone.agate.manager.model.GatewayEntity;
 import com.dinstone.agate.manager.service.BusinessException;
 import com.dinstone.agate.manager.service.ManageService;
@@ -36,7 +36,7 @@ public class RouteController {
 
 	@RequestMapping("/list")
 	public ModelAndView list() {
-		List<ApiRouteConfig> apis = manageService.apiList();
+		List<RouteConfig> apis = manageService.apiList();
 		return new ModelAndView("route/list").addObject("apis", apis);
 	}
 
@@ -54,7 +54,7 @@ public class RouteController {
 	@RequestMapping("/update")
 	public ModelAndView update(Integer apiId) {
 		try {
-			ApiRouteConfig apiConfig = manageService.getApiById(apiId);
+			RouteConfig apiConfig = manageService.getApiById(apiId);
 			List<GatewayEntity> gateways = manageService.gatewayList();
 			ModelAndView mav = new ModelAndView("route/edit").addObject("action", "update");
 			return mav.addObject("gateways", gateways).addObject("api", apiConfig);
@@ -64,7 +64,7 @@ public class RouteController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(ApiRouteConfig apiConfig, String action) {
+	public ModelAndView save(RouteConfig apiConfig, String action) {
 		ModelAndView mav = new ModelAndView("forward:/view/route/list");
 		try {
 			if ("create".equals(action)) {
@@ -85,7 +85,7 @@ public class RouteController {
 	public ModelAndView detail(Integer apiId) {
 		ModelAndView mav = new ModelAndView("route/detail");
 		try {
-			ApiRouteConfig apiConfig = manageService.getApiById(apiId);
+			RouteConfig apiConfig = manageService.getApiById(apiId);
 			if (apiConfig != null) {
 				GatewayEntity gateway = manageService.getGatewayById(apiConfig.getGwId());
 				mav.addObject("api", apiConfig).addObject("gateway", gateway);

@@ -13,8 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.model;
 
+import java.util.List;
+
 public class HandlersConfig {
+
+    private List<PluginConfig> befores;
+
+    private List<PluginConfig> afters;
+
+    private List<PluginConfig> failures;
+
+    public List<PluginConfig> getBefores() {
+        return befores;
+    }
+
+    public void setBefores(List<PluginConfig> befores) {
+        this.befores = befores;
+    }
+
+    public List<PluginConfig> getAfters() {
+        return afters;
+    }
+
+    public void setAfters(List<PluginConfig> afters) {
+        this.afters = afters;
+    }
+
+    public List<PluginConfig> getFailures() {
+        return failures;
+    }
+
+    public void setFailures(List<PluginConfig> failures) {
+        this.failures = failures;
+    }
+
+    @Override
+    public String toString() {
+        return "{\"befores\":" + befores + ", \"afters\":" + afters + ", \"failures\":" + failures + "}";
+    }
 
 }

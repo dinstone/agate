@@ -58,7 +58,7 @@ public class GatewayDao {
 		}
 	}
 
-	public boolean gatewayCodeExist(String code) {
+	public boolean hasGatewaysByClusterCode(String code) {
 		String sql = "select count(1) from t_gateway where code=?";
 		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { code }, Integer.class);
 		return count != null && count > 0;
@@ -81,7 +81,7 @@ public class GatewayDao {
 	}
 
 	public List<GatewayEntity> list() {
-		String sql = "select * from t_gateway";
+		String sql = "select g.*, c.name cluster from t_gateway g, t_cluster c where c.code=g.code";
 		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class));
 	}
 

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.service;
 
 import java.util.ArrayList;
@@ -35,116 +36,116 @@ import com.orbitz.consul.model.catalog.CatalogService;
 @Component
 public class ClusterService {
 
-	private List<NodeEntity> clusterNodes = new CopyOnWriteArrayList<>();
+    private List<NodeEntity> clusterNodes = new CopyOnWriteArrayList<>();
 
-	@Autowired
-	private CatalogClient catalogClient;
+    @Autowired
+    private CatalogClient catalogClient;
 
-	@Autowired
-	private ClusterDao clusterDao;
+    @Autowired
+    private ClusterDao clusterDao;
 
-	@Autowired
-	private GatewayDao gatewayDao;
+    @Autowired
+    private GatewayDao gatewayDao;
 
-	public List<ClusterEntity> clusterList() {
-		return clusterDao.list();
-	}
+    public List<ClusterEntity> clusterList() {
+        return clusterDao.list();
+    }
 
-	public List<ClusterEntity> clusterStatus() {
-		List<ClusterEntity> ces = clusterDao.list();
-		if (ces != null) {
-			for (ClusterEntity ce : ces) {
-				findNodes(ce);
-			}
-		}
-		return ces;
-	}
+    public List<ClusterEntity> clusterStatus() {
+        List<ClusterEntity> ces = clusterDao.list();
+        if (ces != null) {
+            for (ClusterEntity ce : ces) {
+                findNodes(ce);
+            }
+        }
+        return ces;
+    }
 
-	private void findNodes(ClusterEntity ce) {
-		for (NodeEntity ne : clusterNodes) {
-			if (ce.getCode().equals(ne.getClusterCode())) {
-				ce.getNodes().add(ne);
-			}
-		}
-	}
+    private void findNodes(ClusterEntity ce) {
+        for (NodeEntity ne : clusterNodes) {
+            if (ce.getCode().equals(ne.getClusterCode())) {
+                ce.getNodes().add(ne);
+            }
+        }
+    }
 
-	public void clusterRefresh() {
-		List<NodeEntity> entities = new ArrayList<>();
+    public void clusterRefresh() {
+        List<NodeEntity> entities = new ArrayList<>();
 
-		ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
-		for (CatalogService e : consulResponse.getResponse()) {
-			NodeEntity node = createNode(e.getServiceMeta());
-			entities.add(node);
-		}
+        ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
+        for (CatalogService e : consulResponse.getResponse()) {
+            NodeEntity node = createNode(e.getServiceMeta());
+            entities.add(node);
+        }
 
-		clusterNodes.clear();
-		clusterNodes.addAll(entities);
-	}
+        clusterNodes.clear();
+        clusterNodes.addAll(entities);
+    }
 
-	private NodeEntity createNode(Map<String, String> serviceMeta) {
-		NodeEntity node = new NodeEntity();
-		try {
-			if (serviceMeta != null) {
-				node.setInstanceId(serviceMeta.get("instanceId"));
-				node.setClusterCode(serviceMeta.get("clusterCode"));
-			}
-		} catch (Exception e) {
-			// ignore
-		}
-		return node;
-	}
+    private NodeEntity createNode(Map<String, String> serviceMeta) {
+        NodeEntity node = new NodeEntity();
+        try {
+            if (serviceMeta != null) {
+                node.setInstanceId(serviceMeta.get("instanceId"));
+                node.setClusterCode(serviceMeta.get("clusterCode"));
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return node;
+    }
 
-	public void createCluster(ClusterEntity entity) throws BusinessException {
-		// app param check
+    public void createCluster(ClusterEntity entity) throws BusinessException {
+        // app param check
 
-		Date now = new Date();
-		entity.setCreateTime(now);
-		entity.setUpdateTime(now);
+        Date now = new Date();
+        entity.setCreateTime(now);
+        entity.setUpdateTime(now);
 
-		try {
-			clusterDao.create(entity);
-		} catch (Exception e) {
-			throw new BusinessException(40110, "Cluster is exit");
-		}
-	}
+        try {
+            clusterDao.create(entity);
+        } catch (Exception e) {
+            throw new BusinessException(40110, "Cluster is exit");
+        }
+    }
 
-	public void updateCluster(ClusterEntity entity) throws BusinessException {
-		// app logic check
-		if (entity.getId() == null) {
-			throw new BusinessException(40108, "Cluster id is invalid");
-		}
+    public void updateCluster(ClusterEntity entity) throws BusinessException {
+        // app logic check
+        if (entity.getId() == null) {
+            throw new BusinessException(40108, "Cluster id is invalid");
+        }
 
-		// app param check
-		ClusterEntity ce = clusterDao.find(entity.getId());
-		if (ce == null) {
-			throw new BusinessException(40109, "can't find cluster");
-		}
+        // app param check
+        ClusterEntity ce = clusterDao.find(entity.getId());
+        if (ce == null) {
+            throw new BusinessException(40109, "can't find cluster");
+        }
 
-		// ce.setCode(entity.getCode());
-		ce.setName(entity.getName());
-		ce.setUpdateTime(new Date());
-		clusterDao.update(ce);
-	}
+        // ce.setCode(entity.getCode());
+        ce.setName(entity.getName());
+        ce.setUpdateTime(new Date());
+        clusterDao.update(ce);
+    }
 
-	public void deleteCluster(Integer id) throws BusinessException {
-		if (id == null) {
-			throw new BusinessException(40108, "Cluster id is invalid");
-		}
-		ClusterEntity ce = clusterDao.find(id);
-		if (ce != null) {
-			if (gatewayDao.gatewayCodeExist(ce.getCode())) {
-				throw new BusinessException(40111, "Cluster id is invalid");
-			}
-		}
-		clusterDao.delete(id);
-	}
+    public void deleteCluster(Integer id) throws BusinessException {
+        if (id == null) {
+            throw new BusinessException(40108, "Cluster id is invalid");
+        }
+        ClusterEntity ce = clusterDao.find(id);
+        if (ce != null) {
+            if (gatewayDao.hasGatewaysByClusterCode(ce.getCode())) {
+                throw new BusinessException(40111, "Cluster has gateways");
+            }
+        }
+        clusterDao.delete(id);
+    }
 
-	public ClusterEntity getClusterById(Integer id) {
-		return clusterDao.find(id);
-	}
+    public ClusterEntity getClusterById(Integer id) {
+        return clusterDao.find(id);
+    }
 
-	public ClusterEntity getClusterByCode(String code) {
-		return clusterDao.find(code);
-	}
+    public ClusterEntity getClusterByCode(String code) {
+        return clusterDao.find(code);
+    }
 
 }

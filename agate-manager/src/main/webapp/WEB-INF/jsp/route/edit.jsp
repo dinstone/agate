@@ -58,6 +58,24 @@
 		</tr>`;
 		$(ev).parent().parent().parent().append(tr);
 	}
+	
+	function addPlugin(ev){
+		event.preventDefault();
+		var tbody = $("#plugins");
+		var index = tbody.children().size();
+		var tr = '<tr><td><label>Plugin Type</label>'+
+			'<select class="form-control" name="pluginConfigs['+index+'].type">'+
+			'<option value="-1">Before</option><option value="1">After</option><option value="0">Failure</option>'+
+			'</select></td>'+'<td><label>Plugin Name</label><input type="text" class="form-control" name="pluginConfigs['+index+'].plugin" value="${pluginConfig.plugin}"></td>'+
+			'<td><label>Plugin Order</label><input type="text" class="form-control" name="pluginConfigs['+index+'].order"></td>'+
+			'<td><label>Plugin Config</label> <textarea class="form-control" name="pluginConfigs['+index+'].config"></textarea></td>'+
+			'<td><button class="btn btn-primary" onclick="delPlugin(this)"><i class="glyphicon glyphicon-trash"></i> Delete Plugin</button></td></tr>';
+		tbody.append(tr);
+	}
+	function delPlugin(ev) {
+		event.preventDefault();
+		$(ev).parent().parent().remove();
+	}
 
 	$(document).ready(function() {
 		$("form").submit(function(event) {
@@ -98,7 +116,7 @@
 									<div class="form-group">
 										<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <select name="gwId" class="form-control">
 											<c:forEach items="${gateways}" var="gateway">
-												<option value="${gateway.id}">${gateway.name}</option>
+												<option value="${gateway.id}" <c:if test="${gateway.id==api.gwId}">selected</c:if>>${gateway.name}</option>
 											</c:forEach>
 										</select>
 									</div>
@@ -257,13 +275,45 @@
 							</div>
 							<div class="panel panel-default">
 								<div class="panel-heading">
-									<h4>
-										<i class="glyphicon glyphicon-th"></i> Response
-									</h4>
+									<div class="row">
+										<div class="col-md-9">
+											<h4>
+												<i class="glyphicon glyphicon-th"></i> Plugin Config
+											</h4>
+										</div>
+										<div class="col-md-3">
+											<button class="btn btn-primary" onclick="addPlugin(this)">
+												<i class="glyphicon glyphicon-th-list"></i> Add Plugin
+											</button>
+										</div>
+									</div>
 								</div>
-								<div class="panel-body"></div>
+								<div class="panel-body">
+									<div class="form-group">
+										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
+											<tbody id="plugins">
+												<c:forEach var="pluginConfig" items="${api.pluginConfigs}" varStatus="status">
+													<tr>
+														<td><label>Plugin Type</label><select class="form-control" name="pluginConfigs[${status.index}].type" value="${pluginConfig.type}">
+																<option value="-1" <c:if test="${pluginConfig.type==-1}">selected</c:if>>Before</option>
+																<option value="1" <c:if test="${pluginConfig.type==1}">selected</c:if>>After</option>
+																<option value="0" <c:if test="${pluginConfig.type==0}">selected</c:if>>Failure</option>
+														</select></td>
+														<td><label>Plugin Name</label><input type="text" class="form-control" name="pluginConfigs[${status.index}].plugin" value="${pluginConfig.plugin}"></td>
+														<td><label>Plugin Order</label><input type="text" class="form-control" name="pluginConfigs[${status.index}].order" value="${pluginConfig.order}"></td>
+														<td><label>Plugin Config</label> <textarea class="form-control" name="pluginConfigs[${status.index}].config">${pluginConfig.config}</textarea></td>
+														<td>
+															<button class="btn btn-primary" onclick="delPlugin(this)">
+																<i class="glyphicon glyphicon-trash"></i> Delete Plugin
+															</button>
+														</td>
+													</tr>
+												</c:forEach>
+											</tbody>
+										</table>
+									</div>
+								</div>
 							</div>
-
 							<div class="form-group">
 								<button type="reset" class="btn btn-default">Reset</button>
 								<button type="submit" class="btn btn-default">Submit</button>

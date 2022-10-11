@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.dinstone.agate.manager.security;
 
 import org.springframework.context.annotation.Bean;
@@ -39,10 +40,10 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
 
         http.formLogin().loginPage("/index.html").loginProcessingUrl("/login")// login process
-                 .defaultSuccessUrl("/env", true) // env process
-                .and().logout().logoutUrl("/logout")// logout process
-                .and().csrf().disable()// csrf disabled
-                .headers().frameOptions().sameOrigin();
+            .defaultSuccessUrl("/view/dashboard/show", true) // env process
+            .and().logout().logoutUrl("/logout")// logout process
+            .and().csrf().disable()// csrf disabled
+            .headers().frameOptions().sameOrigin();
         //
         http.rememberMe().tokenValiditySeconds(180);
     }
