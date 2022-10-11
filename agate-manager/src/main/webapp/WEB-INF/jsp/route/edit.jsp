@@ -20,10 +20,7 @@
 <script src="${contextPath}/js/autosize.min.js"></script>
 <script src="${contextPath}/js/charisma.app.js?ctx=${contextPath}"></script>
 <script type="text/javascript">
-	function delParam(ev) {
-		event.preventDefault();
-		$(ev).parent().parent().remove();
-	}
+
 	function addParam(ev){
 		event.preventDefault();
 		var tbody = $(ev).parent().parent().parent();
@@ -39,44 +36,42 @@
 					'<option value="PATH">PATH</option>'+
 					'<option value="QUERY">QUERY</option>'+
 					'<option value="HEADER">HEADER</option></select></td>'+
-			'<td><button class="btn btn-primary" onclick="delParam(this)"><i class="glyphicon glyphicon-trash"></i> Delete</button></td></tr>';
+			'<td align="right"><button class="btn btn-danger" onclick="delThis(this)"><i class="glyphicon glyphicon-trash"></i> Delete</button></td></tr>';
 		$(ev).parent().parent().parent().append(tr);
 	}
-	function delUrl(ev) {
-		event.preventDefault();
-		$(ev).parent().parent().remove();
-	}
+
 	function addUrl(ev){
 		event.preventDefault();
 		var tr = `<tr>
-			<td><input type="text" class="form-control" name="routingConfig.urls"></td>
-			<td>
-				<button class="btn btn-primary" onclick="delUrl(this)">
+			<td colspan="4"><input type="text" class="form-control" name="routingConfig.urls"></td>
+			<td align="right">
+				<button class="btn btn-danger" onclick="delThis(this)">
 					<i class="glyphicon glyphicon-trash"></i> Delete
 				</button>
 			</td>
 		</tr>`;
-		$(ev).parent().parent().parent().append(tr);
+		 $("#urls").append(tr);
 	}
 	
 	function addPlugin(ev){
 		event.preventDefault();
 		var tbody = $("#plugins");
 		var index = tbody.children().size();
-		var tr = '<tr><td><label>Plugin Type</label>'+
+		var tr = '<tr><td>'+
 			'<select class="form-control" name="pluginConfigs['+index+'].type">'+
 			'<option value="-1">Before</option><option value="1">After</option><option value="0">Failure</option>'+
-			'</select></td>'+'<td><label>Plugin Name</label><input type="text" class="form-control" name="pluginConfigs['+index+'].plugin" value="${pluginConfig.plugin}"></td>'+
-			'<td><label>Plugin Order</label><input type="text" class="form-control" name="pluginConfigs['+index+'].order"></td>'+
-			'<td><label>Plugin Config</label> <textarea class="form-control" name="pluginConfigs['+index+'].config"></textarea></td>'+
-			'<td><button class="btn btn-primary" onclick="delPlugin(this)"><i class="glyphicon glyphicon-trash"></i> Delete Plugin</button></td></tr>';
+			'</select></td>'+'<td><input type="text" class="form-control" name="pluginConfigs['+index+'].plugin" value="${pluginConfig.plugin}"></td>'+
+			'<td><input type="text" class="form-control" name="pluginConfigs['+index+'].order"></td>'+
+			'<td><textarea class="form-control" name="pluginConfigs['+index+'].config"></textarea></td>'+
+			'<td align="right"><button class="btn btn-danger" onclick="delThis(this)"><i class="glyphicon glyphicon-trash"></i> Delete</button></td></tr>';
 		tbody.append(tr);
 	}
-	function delPlugin(ev) {
+
+	function delThis(ev) {
 		event.preventDefault();
 		$(ev).parent().parent().remove();
 	}
-
+	
 	$(document).ready(function() {
 		$("form").submit(function(event) {
 		});
@@ -196,40 +191,24 @@
 									<div class="form-group">
 										<label>Routing URLs <i class="glyphicon glyphicon-star red"></i></label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
-											<tbody>
-												<c:if test="${empty api.routingConfig.urls}">
+											<thead>
+												<tr>
+													<td colspan="4">Example: https://www.baidu.com/:path or http://user-service/:path</td>
+													<td align="right"><button class="btn btn-primary" onclick="addUrl(this)">
+															<i class="glyphicon glyphicon-th-list"></i> Add URL
+														</button></td>
+												</tr>
+											</thead>
+											<tbody id="urls">
+												<c:forEach var="url" items="${api.routingConfig.urls}" varStatus="status">
 													<tr>
-														<td><input type="text" class="form-control" name="routingConfig.urls" placeholder="example: http://127.0.0.1/test"></td>
-														<td>
-															<button class="btn btn-primary" onclick="addUrl(this)">
-																<i class="glyphicon glyphicon-th-list"></i> Create
+														<td colspan="4"><input type="text" class="form-control" name="routingConfig.urls" value="${url}"></td>
+														<td align="right">
+															<button class="btn btn-danger" onclick="delThis(this)">
+																<i class="glyphicon glyphicon-trash"></i> Delete
 															</button>
 														</td>
 													</tr>
-												</c:if>
-												<c:forEach var="url" items="${api.routingConfig.urls}" varStatus="status">
-													<c:choose>
-														<c:when test="${status.index==0}">
-															<tr>
-																<td><input type="text" class="form-control" name="routingConfig.urls" value="${url}" placeholder="example: http://127.0.0.1/test"></td>
-																<td>
-																	<button class="btn btn-primary" onclick="addUrl(this)">
-																		<i class="glyphicon glyphicon-th-list"></i> Create
-																	</button>
-																</td>
-															</tr>
-														</c:when>
-														<c:otherwise>
-															<tr>
-																<td><input type="text" class="form-control" name="routingConfig.urls" value="${url}"></td>
-																<td>
-																	<button class="btn btn-primary" onclick="delUrl(this)">
-																		<i class="glyphicon glyphicon-trash"></i> Delete
-																	</button>
-																</td>
-															</tr>
-														</c:otherwise>
-													</c:choose>
 												</c:forEach>
 											</tbody>
 										</table>
@@ -237,16 +216,18 @@
 									<div class="form-group">
 										<label>Param Mapping</label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
-											<tbody>
+											<thead>
 												<tr>
-													<th width="20%" class="ng-binding">Request ParamName</th>
-													<th width="20%" class="ng-binding">Request ParamType</th>
-													<th width="20%" class="ng-binding">Routing ParamName</th>
-													<th width="20%" class="ng-binding">Routing ParamType</th>
-													<th width="10%" class="ng-binding"><button class="btn btn-primary" onclick="addParam(this)">
-															<i class="glyphicon glyphicon-th-list"></i> Create
-														</button></th>
+													<td width="20%" class="ng-binding">Request ParamName</td>
+													<td width="20%" class="ng-binding">Request ParamType</td>
+													<td width="20%" class="ng-binding">Routing ParamName</td>
+													<td width="20%" class="ng-binding">Routing ParamType</td>
+													<td align="right" class="ng-binding"><button class="btn btn-primary" onclick="addParam(this)">
+															<i class="glyphicon glyphicon-th-list"></i> Add Param
+														</button></td>
 												</tr>
+											</thead>
+											<tbody>
 												<c:forEach var="paramConfig" items="${api.routingConfig.params}" varStatus="status">
 													<tr class="ng-scope">
 														<td><input class="form-control" name="routingConfig.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
@@ -261,8 +242,8 @@
 																<option value="QUERY">QUERY</option>
 																<option value="HEADER">HEADER</option>
 														</select></td>
-														<td>
-															<button class="btn btn-primary" onclick="delParam(this)">
+														<td align="right">
+															<button class="btn btn-danger" onclick="delThis(this)">
 																<i class="glyphicon glyphicon-trash"></i> Delete
 															</button>
 														</td>
@@ -275,36 +256,38 @@
 							</div>
 							<div class="panel panel-default">
 								<div class="panel-heading">
-									<div class="row">
-										<div class="col-md-9">
-											<h4>
-												<i class="glyphicon glyphicon-th"></i> Plugin Config
-											</h4>
-										</div>
-										<div class="col-md-3">
-											<button class="btn btn-primary" onclick="addPlugin(this)">
-												<i class="glyphicon glyphicon-th-list"></i> Add Plugin
-											</button>
-										</div>
-									</div>
+									<h4>
+										<i class="glyphicon glyphicon-th"></i> Plugin Config
+									</h4>
 								</div>
 								<div class="panel-body">
 									<div class="form-group">
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
+											<thead>
+												<tr>
+													<td><label>Plugin Type</label></td>
+													<td><label>Plugin Name</label></td>
+													<td><label>Plugin Order</label></td>
+													<td><label>Plugin Config</label></td>
+													<td align="right"><button class="btn btn-primary" onclick="addPlugin(this)">
+															<i class="glyphicon glyphicon-th-list"></i> Add Plugin
+														</button></td>
+												</tr>
+											</thead>
 											<tbody id="plugins">
 												<c:forEach var="pluginConfig" items="${api.pluginConfigs}" varStatus="status">
 													<tr>
-														<td><label>Plugin Type</label><select class="form-control" name="pluginConfigs[${status.index}].type" value="${pluginConfig.type}">
+														<td><select class="form-control" name="pluginConfigs[${status.index}].type" value="${pluginConfig.type}">
 																<option value="-1" <c:if test="${pluginConfig.type==-1}">selected</c:if>>Before</option>
 																<option value="1" <c:if test="${pluginConfig.type==1}">selected</c:if>>After</option>
 																<option value="0" <c:if test="${pluginConfig.type==0}">selected</c:if>>Failure</option>
 														</select></td>
-														<td><label>Plugin Name</label><input type="text" class="form-control" name="pluginConfigs[${status.index}].plugin" value="${pluginConfig.plugin}"></td>
-														<td><label>Plugin Order</label><input type="text" class="form-control" name="pluginConfigs[${status.index}].order" value="${pluginConfig.order}"></td>
-														<td><label>Plugin Config</label> <textarea class="form-control" name="pluginConfigs[${status.index}].config">${pluginConfig.config}</textarea></td>
+														<td><input type="text" class="form-control" name="pluginConfigs[${status.index}].plugin" value="${pluginConfig.plugin}"></td>
+														<td><input type="text" class="form-control" name="pluginConfigs[${status.index}].order" value="${pluginConfig.order}"></td>
+														<td><textarea class="form-control" name="pluginConfigs[${status.index}].config">${pluginConfig.config}</textarea></td>
 														<td>
-															<button class="btn btn-primary" onclick="delPlugin(this)">
-																<i class="glyphicon glyphicon-trash"></i> Delete Plugin
+															<button class="btn btn-danger" onclick="delThis(this)">
+																<i class="glyphicon glyphicon-trash"></i> Delete
 															</button>
 														</td>
 													</tr>

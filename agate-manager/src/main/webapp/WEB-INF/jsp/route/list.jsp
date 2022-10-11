@@ -43,7 +43,7 @@
 										</h4>
 									</div>
 									<div class="col-md-3">
-										<a class="btn btn-default" href="${contextPath}/view/route/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create API
+										<a class="btn btn-default" href="${contextPath}/view/route/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Route
 										</a>
 									</div>
 								</div>
