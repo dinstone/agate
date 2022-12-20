@@ -18,6 +18,8 @@ package io.agate.gateway;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,8 +79,30 @@ public class EventbusTest {
         vertx.eventBus().send("test", new GatewayOptions());
 
         System.out.println("ok");
-        
+
         vertx.close();
+
+        CompletableFuture<String> cf0 = new CompletableFuture<String>();
+        cf0.completeExceptionally(new RuntimeException("Oops"));
+
+        CompletableFuture<String> cf1 = cf0.handle((msg, ex) -> {
+            if (ex != null) {
+                return "Recovered from \"" + ex.getMessage() + "\"";
+            } else {
+                return msg;
+            }
+        });
+
+        try {
+            System.out.println("cf1 : " + cf1.get());
+            System.out.println(cf0.get());
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     static JsonObject getJsonFromFile(String jsonFile) {

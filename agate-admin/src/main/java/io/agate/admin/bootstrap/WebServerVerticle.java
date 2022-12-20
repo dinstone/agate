@@ -89,11 +89,11 @@ public class WebServerVerticle extends AbstractVerticle {
         // check authen handler
         CheckAuthenHandler checkHandler = CheckAuthenHandler.create();
         // user access control
-        mainRouter.route("/uac/*").handler(sessionHandler);
-        mainRouter.mountSubRouter("/uac/", uacRouterBuilder.build());
+        mainRouter.route("/uac/*").handler(sessionHandler).subRouter(uacRouterBuilder.build());
+        // mainRouter.mountSubRouter("/uac/", uacRouterBuilder.build());
         // api request handler
-        mainRouter.route("/api/*").handler(sessionHandler).handler(checkHandler);
-        mainRouter.mountSubRouter("/api/", apiRouterBuilder.build());
+        mainRouter.route("/api/*").handler(sessionHandler).handler(checkHandler).subRouter(apiRouterBuilder.build());
+        // mainRouter.mountSubRouter("/api/", apiRouterBuilder.build());
 
         // view handler
         mainRouter.route("/view/*").handler(sessionHandler).handler(checkHandler);
@@ -106,8 +106,8 @@ public class WebServerVerticle extends AbstractVerticle {
 
     private SessionHandler createSessionHandler() {
         SessionHandler sessionHandler = SessionHandler
-            .create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 3600000))
-            .setSessionTimeout(60000).setNagHttps(false);
+                .create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 3600000))
+                .setSessionTimeout(60000).setNagHttps(false);
         return sessionHandler;
     }
 

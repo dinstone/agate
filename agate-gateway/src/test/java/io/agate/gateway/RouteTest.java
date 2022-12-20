@@ -622,6 +622,18 @@ public class RouteTest {
             // TODO Auto-generated method stub
             return null;
         }
+
+        @Override
+        public HttpServerRequest setParamsCharset(String charset) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getParamsCharset() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     void httpserverTest(Vertx vertx, VertxTestContext testContext) throws Throwable {
