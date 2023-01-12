@@ -1,7 +1,7 @@
 <section>
 	<div>
 		<ul class="breadcrumb">
-			<li><a href="${contextPath}/">Home</a></li>
+			<li><a href="/view/index.html">Home</a></li>
 			<li>Clusters</li>
 		</ul>
 	</div>
@@ -117,7 +117,7 @@
 			success : function(data) {
 				if (data) {
 					$('#table').bootstrapTable('destroy').bootstrapTable({
-						height : 550,
+						height : 850,
 						data : data
 					})
 				}

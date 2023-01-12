@@ -382,7 +382,7 @@ public class RouteTest {
 
     }
 
-    private static final class HttpServerRequestMock implements HttpServerRequestInternal {
+    private static final class HttpServerRequestMock extends HttpServerRequestInternal {
 
         private String path;
 
@@ -638,7 +638,7 @@ public class RouteTest {
 
     void httpserverTest(Vertx vertx, VertxTestContext testContext) throws Throwable {
         vertx.createHttpServer().requestHandler(req -> req.response().end("ok")).listen(16969)
-            .onComplete(testContext.succeedingThenComplete());
+                .onComplete(testContext.succeedingThenComplete());
 
         testContext.awaitCompletion(5, TimeUnit.SECONDS);
 
@@ -684,6 +684,9 @@ public class RouteTest {
         route(router, HttpMethod.PUT, path);
 
         path = "/delete/index/8000";
+        route(router, HttpMethod.DELETE, path);
+        
+        path = "/delete/index/4000";
         route(router, HttpMethod.DELETE, path);
     }
 
