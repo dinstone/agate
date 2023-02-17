@@ -97,11 +97,11 @@ public class GatewayVerticle extends AbstractVerticle {
                 registDeployer();
 
                 LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
+                        serverOptions.getPort());
                 startPromise.complete();
             } else {
                 LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
+                        serverOptions.getPort());
                 startPromise.fail(ar.cause());
             }
         });
@@ -113,7 +113,7 @@ public class GatewayVerticle extends AbstractVerticle {
         removeDeployer();
 
         LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-            serverOptions.getPort());
+                serverOptions.getPort());
     }
 
     public Future<Void> deployRoute(RouteDeploy deploy) {
@@ -172,7 +172,7 @@ public class GatewayVerticle extends AbstractVerticle {
                     route.failureHandler(handler);
                 }
 
-                String mountPoint = "/";
+                String mountPoint = "/*";
                 String prefix = requestOptions.getPrefix();
                 if (prefix != null && prefix.startsWith("/")) {
                     mountPoint = prefix;
@@ -213,10 +213,11 @@ public class GatewayVerticle extends AbstractVerticle {
      * 
      * @param mountPoint
      * @param subRouter
+     * 
      * @return
      */
     private Route mountRouter(String mountPoint, Router subRouter) {
-        return mainRouter.mountSubRouter(mountPoint, subRouter);
+        return mainRouter.route(mountPoint).subRouter(subRouter);
     }
 
     private void registDeployer() {
@@ -230,7 +231,7 @@ public class GatewayVerticle extends AbstractVerticle {
     @SuppressWarnings("unused")
     private SessionHandler sessionHandler() {
         return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
-            .setNagHttps(false);
+                .setNagHttps(false);
     }
 
     private Router createHttpServerRouter() {
@@ -247,7 +248,7 @@ public class GatewayVerticle extends AbstractVerticle {
         });
         mainRouter.errorHandler(406, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(),
-                "can’t provide a response with a content type matching Accept header");
+                    "can’t provide a response with a content type matching Accept header");
         });
         mainRouter.errorHandler(415, rc -> {
             RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");

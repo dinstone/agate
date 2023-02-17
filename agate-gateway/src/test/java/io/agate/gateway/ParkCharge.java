@@ -51,7 +51,7 @@ public class ParkCharge {
             ParkCharge pc = new ParkCharge("2022-10-15T10:23:23", "2022-10-17T08:46:48", CarType.small);
             System.out.println(pc.charge());
             
-            LocalDateTime st = LocalDateTime.parse("2023-03-14T10:23:23");
+            LocalDateTime st = LocalDateTime.parse("2023-03-31T10:23:23");
             LocalDateTime et = st.plusDays(-75);
             System.out.println(et);
             
