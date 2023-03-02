@@ -39,14 +39,15 @@ public class HttpServerProxy {
         HttpClientOptions options = new HttpClientOptions().setMaxPoolSize(1).setMaxWaitQueueSize(2);
         HttpClient client = vertx.createHttpClient(options);
 
+        // error case:
         // HttpProxy httpProxy = HttpProxy.reverseProxy(client)
         // .originSelector(req -> Future.succeededFuture(SocketAddress.inetSocketAddress(443, "vertx.io")));
 
-        HttpProxy httpProxy = HttpProxy.reverseProxy(client).originSelector(req -> {
+        HttpProxy httpProxy = HttpProxy.reverseProxy(client).originRequestProvider((sreq, hclient) -> {
             RequestOptions requestOptions = new RequestOptions();
             requestOptions.setServer(SocketAddress.inetSocketAddress(443, "vertx.io"));
-            requestOptions.setSsl(Boolean.TRUE).setTimeout(1000).putHeader("Host", "vertx.io");
-            return Future.succeededFuture(requestOptions);
+            requestOptions.setSsl(Boolean.TRUE).setTimeout(3000).putHeader("Host", "vertx.io");
+            return hclient.request(requestOptions);
         });
         httpProxy.addInterceptor(new ProxyInterceptor() {
 
