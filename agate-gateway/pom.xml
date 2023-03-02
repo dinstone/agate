@@ -103,7 +103,6 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-http-proxy</artifactId>
-			<version>4.3.5-SNAPSHOT</version><!--$NO-MVN-MAN-VER$ -->
 		</dependency>
 
 		<dependency>
