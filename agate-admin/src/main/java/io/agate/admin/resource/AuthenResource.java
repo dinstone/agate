@@ -46,7 +46,7 @@ public class AuthenResource {
 
         try {
             // get request body
-            JsonObject authInfo = rc.getBodyAsJson();
+            JsonObject authInfo = rc.body().asJsonObject();
             authProvider.authenticate(authInfo, ar -> {
                 if (ar.succeeded()) {
                     rc.setUser(ar.result());

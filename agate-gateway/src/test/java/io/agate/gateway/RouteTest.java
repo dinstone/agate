@@ -382,7 +382,7 @@ public class RouteTest {
 
     }
 
-    private static final class HttpServerRequestMock implements HttpServerRequestInternal {
+    private static final class HttpServerRequestMock extends HttpServerRequestInternal {
 
         private String path;
 
@@ -622,11 +622,23 @@ public class RouteTest {
             // TODO Auto-generated method stub
             return null;
         }
+
+        @Override
+        public HttpServerRequest setParamsCharset(String charset) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getParamsCharset() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     void httpserverTest(Vertx vertx, VertxTestContext testContext) throws Throwable {
         vertx.createHttpServer().requestHandler(req -> req.response().end("ok")).listen(16969)
-            .onComplete(testContext.succeedingThenComplete());
+                .onComplete(testContext.succeedingThenComplete());
 
         testContext.awaitCompletion(5, TimeUnit.SECONDS);
 
@@ -672,6 +684,9 @@ public class RouteTest {
         route(router, HttpMethod.PUT, path);
 
         path = "/delete/index/8000";
+        route(router, HttpMethod.DELETE, path);
+        
+        path = "/delete/index/4000";
         route(router, HttpMethod.DELETE, path);
     }
 

@@ -103,7 +103,6 @@ public class GatewayVerticle extends AbstractVerticle {
 				startPromise.fail(ar.cause());
 			}
 		});
-
 	}
 
 	@Override
@@ -202,17 +201,6 @@ public class GatewayVerticle extends AbstractVerticle {
 		return promise.future();
 	}
 
-	/**
-	 * mount sub router to main router
-	 * 
-	 * @param mountPoint
-	 * @param subRouter
-	 * @return
-	 */
-	private Route mountRouter(String mountPoint, Router subRouter) {
-		return mainRouter.mountSubRouter(mountPoint, subRouter);
-	}
-
 	private void registDeployer() {
 		applicationContext.getClusterDeploy().get(gatewayName).regist(this);
 	}
@@ -225,6 +213,18 @@ public class GatewayVerticle extends AbstractVerticle {
 	private SessionHandler sessionHandler() {
 		return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
 				.setNagHttps(false);
+	}
+
+	/**
+	 * mount sub router to main router
+	 * 
+	 * @param mountPoint
+	 * @param subRouter
+	 * 
+	 * @return
+	 */
+	private Route mountRouter(String mountPoint, Router subRouter) {
+		return mainRouter.route(mountPoint).subRouter(subRouter);
 	}
 
 	private Router createHttpServerRouter() {
