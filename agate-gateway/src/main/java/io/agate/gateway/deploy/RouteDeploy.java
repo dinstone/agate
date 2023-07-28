@@ -22,120 +22,79 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.agate.gateway.context.ApplicationContext;
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.options.GatewayOptions;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.vertx.core.Vertx;
 
 public class RouteDeploy {
 
-    private ApplicationContext appContext;
+	private ApplicationContext applicationContext;
 
-    private GatewayOptions gatewayOptions;
+	private GatewayOptions gatewayOptions;
 
-    private RouteOptions routeOptions;
+	private RouteOptions routeOptions;
 
-    private RoutePlugin routingPlugin;
+	private List<RouteHandlerPlugin> plugins;
 
-    private List<RoutePlugin> failurePlugins;
+	public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
+		this.applicationContext = appContext;
+		this.gatewayOptions = gatewayOptions;
+		this.routeOptions = routeOptions;
+	}
 
-    private List<RoutePlugin> beforePlugins;
+	public String getRoute() {
+		return routeOptions.getRoute();
+	}
 
-    private List<RoutePlugin> afterPlugins;
+	public RouteOptions getRouteOptions() {
+		return routeOptions;
+	}
 
-    public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
-        this.appContext = appContext;
-        this.gatewayOptions = gatewayOptions;
-        this.routeOptions = routeOptions;
-    }
+	public GatewayOptions getGatewayOptions() {
+		return gatewayOptions;
+	}
 
-    public String getRoute() {
-        return routeOptions.getRoute();
-    }
+	public void destory() {
+		synchronized (this) {
+			if (plugins != null) {
+				plugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destory());
+			}
+		}
+	}
 
-    public RouteOptions getRouteOptions() {
-        return routeOptions;
-    }
+	private List<RouteHandlerPlugin> createPlugins(PluginOptions... plugins) {
+		List<RouteHandlerPlugin> routePlugins;
+		if (plugins != null) {
+			routePlugins = Stream.of(plugins).sorted((p, q) -> p.getOrder() - q.getOrder())
+					.map(pluginOptions -> applicationContext.createPlugin(routeOptions, pluginOptions))
+					.filter(p -> p != null).collect(Collectors.toList());
 
-    public GatewayOptions getGatewayOptions() {
-        return gatewayOptions;
-    }
+		} else {
+			routePlugins = Collections.emptyList();
+		}
+		return routePlugins;
+	}
 
-    public void destory() {
-        synchronized (this) {
-            if (routingPlugin != null) {
-                routingPlugin.destory();
-            }
-            if (failurePlugins != null) {
-                failurePlugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destory());
-            }
-            if (beforePlugins != null) {
-                beforePlugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destory());
-            }
-            if (afterPlugins != null) {
-                afterPlugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destory());
-            }
-        }
-    }
+	public List<RouteHandler> getRoutingHandlers(Vertx vertx) {
+		return initPlugins().stream().filter(rp -> !rp.failure()).map(p -> p.createHandler(vertx)).sorted()
+				.collect(Collectors.toList());
+	}
 
-    private List<RoutePlugin> createPlugins(PluginOptions... plugins) {
-        List<RoutePlugin> routePlugins;
-        if (plugins != null) {
-            routePlugins = Stream.of(plugins).sorted((p, q) -> p.getOrder() - q.getOrder())
-                .map(pluginOptions -> appContext.createPlugin(routeOptions, pluginOptions)).filter(p -> p != null)
-                .collect(Collectors.toList());
+	public List<RouteHandler> getFailureHandlers(Vertx vertx) {
+		return initPlugins().stream().filter(rp -> rp.failure()).map(p -> p.createHandler(vertx)).sorted()
+				.collect(Collectors.toList());
+	}
 
-        } else {
-            routePlugins = Collections.emptyList();
-        }
-        return routePlugins;
-    }
-
-    public List<OperationHandler> getBeforeHandlers(Vertx vertx) {
-        synchronized (this) {
-            if (beforePlugins == null) {
-                beforePlugins = createPlugins(routeOptions.getBefores());
-            }
-        }
-        if (beforePlugins != null) {
-            return beforePlugins.stream().map(p -> p.createHandler(vertx)).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    public List<OperationHandler> getAfterHandlers(Vertx vertx) {
-        synchronized (this) {
-            if (afterPlugins == null) {
-                afterPlugins = createPlugins(routeOptions.getAfters());
-            }
-        }
-        if (afterPlugins != null) {
-            return afterPlugins.stream().map(p -> p.createHandler(vertx)).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    public List<OperationHandler> getFailureHandlers(Vertx vertx) {
-        synchronized (this) {
-            if (failurePlugins == null) {
-                failurePlugins = createPlugins(routeOptions.getFailures());
-            }
-        }
-        if (failurePlugins != null) {
-            return failurePlugins.stream().map(p -> p.createHandler(vertx)).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
-    }
-
-    public OperationHandler getRoutingHandler(Vertx vertx) {
-        synchronized (this) {
-            if (routingPlugin == null) {
-                routingPlugin = createPlugins(routeOptions.getRouting()).get(0);
-            }
-        }
-        return routingPlugin.createHandler(vertx);
-    }
+	private List<RouteHandlerPlugin> initPlugins() {
+		synchronized (this) {
+			if (plugins == null) {
+				plugins = createPlugins(routeOptions.getPlugins());
+			}
+		}
+		return plugins;
+	}
 
 }

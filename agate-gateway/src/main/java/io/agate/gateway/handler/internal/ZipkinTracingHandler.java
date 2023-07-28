@@ -16,16 +16,17 @@
 package io.agate.gateway.handler.internal;
 
 import brave.Span;
-import io.agate.gateway.handler.FilteringHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.tracing.zipkin.ZipkinTracer;
 
-public class ZipkinTracingHandler implements FilteringHandler {
+public class ZipkinTracingHandler extends OrderedHandler {
 
 	private RouteOptions routeOptions;
 
 	public ZipkinTracingHandler(RouteOptions routeOptions) {
+		super(200);
 		this.routeOptions = routeOptions;
 	}
 

@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.agate.gateway.context.ContextConstants;
-import io.agate.gateway.handler.FilteringHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
@@ -34,56 +34,57 @@ import io.vertx.ext.web.RoutingContext;
  *
  * @author dinstone
  */
-public class ProxyReplyHandler implements FilteringHandler {
+public class ProxyReplyHandler extends OrderedHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyReplyHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ProxyReplyHandler.class);
 
-    // private BackendOptions backendOptions;
+	// private BackendOptions backendOptions;
 
-    public ProxyReplyHandler(RouteOptions routeOptions) {
-        // backendOptions = apiOptions.getBackend();
-    }
+	public ProxyReplyHandler(RouteOptions routeOptions) {
+		super(600);
+		// backendOptions = apiOptions.getBackend();
+	}
 
-    @Override
-    public void handle(RoutingContext rc) {
-        HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
-        HttpServerResponse feResponse = rc.response();
-        feResponse.setStatusCode(beResponse.statusCode());
-        feResponse.headers().addAll(beResponse.headers());
+	@Override
+	public void handle(RoutingContext rc) {
+		HttpClientResponse beResponse = rc.get(ContextConstants.BACKEND_RESPONSE);
+		HttpServerResponse feResponse = rc.response();
+		feResponse.setStatusCode(beResponse.statusCode());
+		feResponse.headers().addAll(beResponse.headers());
 
-        long len = getContentLength(beResponse);
-        if (len == 0) {
-            feResponse.end();
-            return;
-        }
+		long len = getContentLength(beResponse);
+		if (len == 0) {
+			feResponse.end();
+			return;
+		}
 
-        // beResponse.exceptionHandler(t -> {
-        // if (LOG.isDebugEnabled()) {
-        // LOG.debug("pipe from backend to front error", t);
-        // }
-        // beRequest.reset();
-        // });
+		// beResponse.exceptionHandler(t -> {
+		// if (LOG.isDebugEnabled()) {
+		// LOG.debug("pipe from backend to front error", t);
+		// }
+		// beRequest.reset();
+		// });
 
-        Pipe<Buffer> pipe = beResponse.pipe();
-        pipe.endOnFailure(false).endOnSuccess(true);
-        pipe.to(feResponse).onFailure(t -> {
-            pipe.close();
-        });
+		Pipe<Buffer> pipe = beResponse.pipe();
+		pipe.endOnFailure(false).endOnSuccess(true);
+		pipe.to(feResponse).onFailure(t -> {
+			pipe.close();
+		});
 
-    }
+	}
 
-    private long getContentLength(HttpClientResponse response) {
-        String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
-        if ("chunked".equalsIgnoreCase(tc)) {
-            return -1;
-        }
+	private long getContentLength(HttpClientResponse response) {
+		String tc = response.getHeader(HttpHeaders.TRANSFER_ENCODING);
+		if ("chunked".equalsIgnoreCase(tc)) {
+			return -1;
+		}
 
-        try {
-            return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
-        } catch (Exception e) {
-            // ignore
-        }
-        return -1;
-    }
+		try {
+			return Long.parseLong(response.getHeader(HttpHeaders.CONTENT_LENGTH));
+		} catch (Exception e) {
+			// ignore
+		}
+		return -1;
+	}
 
 }

@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import io.agate.gateway.deploy.ClusterDeploy;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.agate.gateway.plugin.internal.HttpProxyPlugin;
 import io.agate.gateway.plugin.internal.ProxyReplyPlugin;
 import io.agate.gateway.plugin.internal.RestfulFailurePlugin;
@@ -38,7 +38,7 @@ public class ApplicationContext {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
 
-    private final Map<String, Class<? extends RoutePlugin>> PLUGIN_MAP = new HashMap<>();
+    private final Map<String, Class<? extends RouteHandlerPlugin>> PLUGIN_MAP = new HashMap<>();
 
     private JsonObject config;
 
@@ -93,13 +93,13 @@ public class ApplicationContext {
         LOG.debug("init application context ended");
     }
 
-    private void regist(String pluginName, Class<? extends RoutePlugin> pluginClass) {
+    private void regist(String pluginName, Class<? extends RouteHandlerPlugin> pluginClass) {
         PLUGIN_MAP.put(pluginName, pluginClass);
     }
 
-    public RoutePlugin createPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
+    public RouteHandlerPlugin createPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
         try {
-            Class<? extends RoutePlugin> pc = PLUGIN_MAP.get(pluginOptions.getPlugin());
+            Class<? extends RouteHandlerPlugin> pc = PLUGIN_MAP.get(pluginOptions.getPlugin());
             if (pc != null) {
                 return pc.getConstructor(RouteOptions.class, PluginOptions.class).newInstance(routeOptions,
                     pluginOptions);

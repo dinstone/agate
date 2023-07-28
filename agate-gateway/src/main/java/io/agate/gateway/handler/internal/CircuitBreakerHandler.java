@@ -18,12 +18,12 @@ package io.agate.gateway.handler.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.agate.gateway.handler.FilteringHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.ext.web.RoutingContext;
 
-public class CircuitBreakerHandler implements FilteringHandler {
+public class CircuitBreakerHandler extends OrderedHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerHandler.class);
 
@@ -32,6 +32,8 @@ public class CircuitBreakerHandler implements FilteringHandler {
     private RouteOptions routeOptions;
 
     public CircuitBreakerHandler(RouteOptions routeOptions, CircuitBreaker circuitBreaker) {
+    	super(400);
+    	
         this.routeOptions = routeOptions;
         this.circuitBreaker = circuitBreaker;
     }

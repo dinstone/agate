@@ -16,7 +16,6 @@
 
 package io.agate.gateway;
 
-import io.agate.gateway.AgateGatewayLauncher;
 import io.agate.gateway.context.AgateVerticleFactory;
 import io.agate.gateway.verticle.LaunchVerticle;
 

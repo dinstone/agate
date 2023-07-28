@@ -23,7 +23,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.agate.gateway.handler.FilteringHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpVersion;
@@ -31,7 +31,7 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.LoggerFormat;
 
-public class AccessLogHandler implements FilteringHandler {
+public class AccessLogHandler extends OrderedHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogHandler.class);
 
@@ -44,6 +44,8 @@ public class AccessLogHandler implements FilteringHandler {
     }
 
     public AccessLogHandler(LoggerFormat format) {
+    	super(Integer.MIN_VALUE);
+    	
         this.format = format;
     }
 

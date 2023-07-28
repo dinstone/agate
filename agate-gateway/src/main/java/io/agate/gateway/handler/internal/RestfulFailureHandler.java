@@ -18,26 +18,31 @@ package io.agate.gateway.handler.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.agate.gateway.handler.FailureHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.http.RestfulUtil;
 import io.vertx.ext.web.RoutingContext;
 
-public class RestfulFailureHandler implements FailureHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
+public class RestfulFailureHandler extends OrderedHandler {
 
-    @Override
-    public void handle(RoutingContext rc) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("request [{}] error: {}", rc.request().path(), rc.failure());
-        }
+	public RestfulFailureHandler(int order) {
+		super(order);
+	}
 
-        int statusCode = rc.statusCode();
-        if (statusCode == -1) {
-            statusCode = 500;
-        }
-        if (!rc.response().ended()) {
-            RestfulUtil.exception(rc, statusCode, rc.failure());
-        }
-    }
+	private static final Logger LOG = LoggerFactory.getLogger(RestfulFailureHandler.class);
+
+	@Override
+	public void handle(RoutingContext rc) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("request [{}] error: {}", rc.request().path(), rc.failure());
+		}
+
+		int statusCode = rc.statusCode();
+		if (statusCode == -1) {
+			statusCode = 500;
+		}
+		if (!rc.response().ended()) {
+			RestfulUtil.exception(rc, statusCode, rc.failure());
+		}
+	}
 
 }

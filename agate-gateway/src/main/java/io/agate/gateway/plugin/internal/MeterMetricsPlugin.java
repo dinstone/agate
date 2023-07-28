@@ -15,23 +15,23 @@
  */
 package io.agate.gateway.plugin.internal;
 
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.MeterMetricsHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.micrometer.backends.BackendRegistries;
 
-public class MeterMetricsPlugin extends RoutePlugin {
+public class MeterMetricsPlugin extends RouteHandlerPlugin {
 
     public MeterMetricsPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
         super(routeOptions, pluginOptions);
     }
 
     @Override
-    public OperationHandler createHandler(Vertx vertx) {
+    public RouteHandler createHandler(Vertx vertx) {
         MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
         return new MeterMetricsHandler(routeOptions, meterRegistry);
     }

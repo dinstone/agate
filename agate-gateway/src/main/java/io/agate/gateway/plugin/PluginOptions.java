@@ -20,83 +20,83 @@ import io.vertx.core.json.JsonObject;
 
 public class PluginOptions {
 
-    private int order;
+	private int order;
 
-    private String plugin;
+	private String plugin;
 
-    private JsonObject options;
+	private JsonObject options;
 
-    public PluginOptions(JsonObject value) {
-        fromJson(value);
-    }
+	public PluginOptions(JsonObject value) {
+		fromJson(value);
+	}
 
-    public int getOrder() {
-        return order;
-    }
+	public int getOrder() {
+		return order;
+	}
 
-    public void setOrder(int order) {
-        this.order = order;
-    }
+	public void setOrder(int order) {
+		this.order = order;
+	}
 
-    public String getPlugin() {
-        return plugin;
-    }
+	public String getPlugin() {
+		return plugin;
+	}
 
-    public void setPlugin(String plugin) {
-        this.plugin = plugin;
-    }
+	public void setPlugin(String plugin) {
+		this.plugin = plugin;
+	}
 
-    public JsonObject getOptions() {
-        if (options == null) {
-            options = new JsonObject();
-        }
-        return options;
-    }
+	public JsonObject getOptions() {
+		if (options == null) {
+			options = new JsonObject();
+		}
+		return options;
+	}
 
-    public void setOptions(JsonObject options) {
-        this.options = options;
-    }
+	public void setOptions(JsonObject options) {
+		this.options = options;
+	}
 
-    public void fromJson(JsonObject json) {
-        for (java.util.Map.Entry<String, Object> member : json) {
-            Object value = member.getValue();
-            switch (member.getKey()) {
-                case "order":
-                    if (value instanceof Number) {
-                        this.setOrder(((Number) value).intValue());
-                    }
-                    break;
-                case "plugin":
-                    if (value instanceof String) {
-                        this.setPlugin((String) value);
-                    }
-                    break;
-                case "options":
-                    if (value instanceof JsonObject) {
-                        this.setOptions((JsonObject) value);
-                    }
-                    break;
-            }
-        }
-    }
+	public void fromJson(JsonObject json) {
+		for (java.util.Map.Entry<String, Object> member : json) {
+			Object value = member.getValue();
+			switch (member.getKey()) {
+			case "order":
+				if (value instanceof Number) {
+					this.setOrder(((Number) value).intValue());
+				}
+				break;
+			case "plugin":
+				if (value instanceof String) {
+					this.setPlugin((String) value);
+				}
+				break;
+			case "options":
+				if (value instanceof JsonObject) {
+					this.setOptions((JsonObject) value);
+				}
+				break;
+			}
+		}
+	}
 
-    public JsonObject toJson() {
-        JsonObject json = new JsonObject();
+	public JsonObject toJson() {
+		JsonObject json = new JsonObject();
 
-        json.put("order", order);
-        if (plugin != null) {
-            json.put("plugin", plugin);
-        }
-        if (options != null) {
-            json.put("options", options);
-        }
+		json.put("order", order);
+		if (plugin != null) {
+			json.put("plugin", plugin);
+		}
+		if (options != null) {
+			json.put("options", options);
+		}
 
-        return json;
-    }
+		return json;
+	}
 
-    @Override
-    public String toString() {
-        return "PluginOptions [order=" + order + ", plugin=" + plugin + ", options=" + options + "]";
-    }
+	@Override
+	public String toString() {
+		return "PluginOptions [order=" + order + ", plugin=" + plugin + ", options=" + options + "]";
+	}
 
 }

@@ -15,6 +15,9 @@
  */
 package io.agate.gateway.handler;
 
-public interface RoutingHandler extends OperationHandler {
+import io.vertx.core.Handler;
+import io.vertx.ext.web.RoutingContext;
+
+public interface RouteHandler extends Handler<RoutingContext> {
 
 }

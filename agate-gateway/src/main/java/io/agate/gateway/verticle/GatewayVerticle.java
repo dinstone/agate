@@ -24,9 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import io.agate.gateway.context.ApplicationContext;
 import io.agate.gateway.deploy.RouteDeploy;
-import io.agate.gateway.handler.OperationHandler;
-import io.agate.gateway.handler.internal.AccessLogHandler;
-import io.agate.gateway.handler.internal.RestfulFailureHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.http.HttpUtil;
 import io.agate.gateway.http.RestfulUtil;
 import io.agate.gateway.options.GatewayOptions;
@@ -52,227 +50,223 @@ import io.vertx.ext.web.sstore.LocalSessionStore;
  */
 public class GatewayVerticle extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GatewayVerticle.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GatewayVerticle.class);
 
-    private Map<String, Route> routeRouteMap = new ConcurrentHashMap<>();
+	private Map<String, Route> routeRouteMap = new ConcurrentHashMap<>();
 
-    private ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
-    private HttpServerOptions serverOptions;
+	private HttpServerOptions serverOptions;
 
-    private Router mainRouter;
+	private Router mainRouter;
 
-    private String gatewayName;
+	private String gatewayName;
 
-    public GatewayVerticle(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+	public GatewayVerticle(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 
-    @Override
-    public void init(Vertx vertx, Context context) {
-        super.init(vertx, context);
+	@Override
+	public void init(Vertx vertx, Context context) {
+		super.init(vertx, context);
 
-        GatewayOptions gatewayOptions = new GatewayOptions(config());
-        gatewayName = gatewayOptions.getGateway();
+		GatewayOptions gatewayOptions = new GatewayOptions(config());
+		gatewayName = gatewayOptions.getGateway();
 
-        serverOptions = gatewayOptions.getServerOptions();
-        if (serverOptions == null) {
-            serverOptions = new HttpServerOptions();
-        }
-        String host = serverOptions.getHost();
-        if (host == null || host.isEmpty() || "*".equals(host)) {
-            serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
-        }
-        if (serverOptions.getIdleTimeout() == 0) {
-            serverOptions.setIdleTimeout(60);
-        }
-    }
+		serverOptions = gatewayOptions.getServerOptions();
+		if (serverOptions == null) {
+			serverOptions = new HttpServerOptions();
+		}
+		String host = serverOptions.getHost();
+		if (host == null || host.isEmpty() || "*".equals(host)) {
+			serverOptions.setHost(NetServerOptions.DEFAULT_HOST);
+		}
+		if (serverOptions.getIdleTimeout() == 0) {
+			serverOptions.setIdleTimeout(60);
+		}
+	}
 
-    @Override
-    public void start(Promise<Void> startPromise) throws Exception {
-        mainRouter = createHttpServerRouter();
-        vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
-            if (ar.succeeded()) {
-                // register deployer
-                registDeployer();
+	@Override
+	public void start(Promise<Void> startPromise) throws Exception {
+		mainRouter = createHttpServerRouter();
+		vertx.createHttpServer(serverOptions).requestHandler(mainRouter).listen(ar -> {
+			if (ar.succeeded()) {
+				// register deployer
+				registDeployer();
 
-                LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
-                startPromise.complete();
-            } else {
-                LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
-                    serverOptions.getPort());
-                startPromise.fail(ar.cause());
-            }
-        });
+				LOG.info("gateway verticle start success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+						serverOptions.getPort());
+				startPromise.complete();
+			} else {
+				LOG.error("gateway verticle start failed, {}/{}:{}", gatewayName, serverOptions.getHost(),
+						serverOptions.getPort());
+				startPromise.fail(ar.cause());
+			}
+		});
 
-    }
+	}
 
-    @Override
-    public void stop() throws Exception {
-        removeDeployer();
+	@Override
+	public void stop() throws Exception {
+		removeDeployer();
 
-        LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
-            serverOptions.getPort());
-    }
+		LOG.info("gateway verticle stop success, {}/{}:{}", gatewayName, serverOptions.getHost(),
+				serverOptions.getPort());
+	}
 
-    public Future<Void> deployRoute(RouteDeploy deploy) {
-        Promise<Void> promise = Promise.promise();
-        context.runOnContext(ar -> {
-            RouteOptions routeOptions = deploy.getRouteOptions();
-            try {
-                if (routeRouteMap.containsKey(routeOptions.getRoute())) {
-                    promise.complete();
-                    return;
-                }
+	public Future<Void> deployRoute(RouteDeploy deploy) {
+		Promise<Void> promise = Promise.promise();
+		context.runOnContext(ar -> {
+			RouteOptions routeOptions = deploy.getRouteOptions();
+			try {
+				if (routeRouteMap.containsKey(routeOptions.getRoute())) {
+					promise.complete();
+					return;
+				}
 
-                RequestOptions requestOptions = routeOptions.getRequest();
-                // create sub router
-                Router subRouter = Router.router(vertx);
-                // create route
-                Route route = null;
-                if (HttpUtil.pathIsRegex(requestOptions.getPath())) {
-                    route = subRouter.routeWithRegex(requestOptions.getPath());
-                } else {
-                    route = subRouter.route(requestOptions.getPath());
-                }
-                // method
-                String method = requestOptions.getMethod();
-                if (method != null && method.length() > 0) {
-                    route.method(HttpMethod.valueOf(method.toUpperCase()));
-                }
-                // consumes
-                if (requestOptions.getConsumes() != null) {
-                    for (String consume : requestOptions.getConsumes()) {
-                        route.consumes(consume);
-                    }
-                }
-                // produces
-                if (requestOptions.getProduces() != null) {
-                    for (String produce : requestOptions.getProduces()) {
-                        route.produces(produce);
-                    }
-                }
+				RequestOptions requestOptions = routeOptions.getRequest();
+				// create sub router
+				Router subRouter = Router.router(vertx);
+				// create route
+				Route route = subRouter.route().setName(routeOptions.getRoute());
+				// path
+				if (HttpUtil.pathIsRegex(requestOptions.getPath())) {
+					route = route.pathRegex(requestOptions.getPath());
+				} else {
+					route = route.path(requestOptions.getPath());
+				}
+				// method
+				String method = requestOptions.getMethod();
+				if (method != null && method.length() > 0) {
+					route.method(HttpMethod.valueOf(method.toUpperCase()));
+				}
+				// consumes
+				if (requestOptions.getConsumes() != null) {
+					for (String consume : requestOptions.getConsumes()) {
+						route.consumes(consume);
+					}
+				}
+				// produces
+				if (requestOptions.getProduces() != null) {
+					for (String produce : requestOptions.getProduces()) {
+						route.produces(produce);
+					}
+				}
+				// virtual host
+				if (routeOptions.getDomain() != null) {
+					route.virtualHost(routeOptions.getDomain());
+				}
 
-                // before handler
-                for (OperationHandler handler : deploy.getBeforeHandlers(vertx)) {
-                    route.handler(handler);
-                }
+				// routing handler
+				for (RouteHandler handler : deploy.getRoutingHandlers(vertx)) {
+					route.handler(handler);
+				}
+				// failure handler
+				for (RouteHandler handler : deploy.getFailureHandlers(vertx)) {
+					route.failureHandler(handler);
+				}
 
-                // routing handler
-                route.handler(deploy.getRoutingHandler(vertx));
+				String mountPoint = "/";
+				String prefix = routeOptions.getPrefix();
+				if (prefix != null && prefix.startsWith("/")) {
+					mountPoint = prefix;
+				}
+				// mount sub router
+				Route mountedRoute = mountRouter(mountPoint, subRouter);
+				// cache route
+				routeRouteMap.put(routeOptions.getRoute(), mountedRoute);
 
-                // after handler
-                for (OperationHandler handler : deploy.getAfterHandlers(vertx)) {
-                    route.handler(handler);
-                }
+				promise.complete();
+			} catch (Exception e) {
+				promise.fail(e);
+			}
+		});
 
-                // failure handler
-                for (OperationHandler handler : deploy.getFailureHandlers(vertx)) {
-                    route.failureHandler(handler);
-                }
+		return promise.future();
+	}
 
-                String mountPoint = "/";
-                String prefix = requestOptions.getPrefix();
-                if (prefix != null && prefix.startsWith("/")) {
-                    mountPoint = prefix;
-                }
-                // mount sub router
-                Route mountedRoute = mountRouter(mountPoint, subRouter);
-                // cache route
-                routeRouteMap.put(routeOptions.getRoute(), mountedRoute);
+	public Future<Void> removeRoute(RouteDeploy deploy) {
+		Promise<Void> promise = Promise.promise();
+		context.runOnContext(ar -> {
+			try {
+				Route route = routeRouteMap.remove(deploy.getRoute());
+				if (route != null) {
+					route.disable().remove();
+				}
+				promise.complete();
+			} catch (Exception e) {
+				promise.fail(e);
+			}
+		});
 
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        });
+		return promise.future();
+	}
 
-        return promise.future();
-    }
+	/**
+	 * mount sub router to main router
+	 * 
+	 * @param mountPoint
+	 * @param subRouter
+	 * @return
+	 */
+	private Route mountRouter(String mountPoint, Router subRouter) {
+		return mainRouter.mountSubRouter(mountPoint, subRouter);
+	}
 
-    public Future<Void> removeRoute(RouteDeploy deploy) {
-        Promise<Void> promise = Promise.promise();
-        context.runOnContext(ar -> {
-            try {
-                Route route = routeRouteMap.remove(deploy.getRoute());
-                if (route != null) {
-                    route.disable().remove();
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        });
+	private void registDeployer() {
+		applicationContext.getClusterDeploy().get(gatewayName).regist(this);
+	}
 
-        return promise.future();
-    }
+	private void removeDeployer() {
+		applicationContext.getClusterDeploy().get(gatewayName).remove(this);
+	}
 
-    /**
-     * mount sub router to main router
-     * 
-     * @param mountPoint
-     * @param subRouter
-     * @return
-     */
-    private Route mountRouter(String mountPoint, Router subRouter) {
-        return mainRouter.mountSubRouter(mountPoint, subRouter);
-    }
+	@SuppressWarnings("unused")
+	private SessionHandler sessionHandler() {
+		return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
+				.setNagHttps(false);
+	}
 
-    private void registDeployer() {
-        applicationContext.getClusterDeploy().get(gatewayName).regist(this);
-    }
+	private Router createHttpServerRouter() {
+		Router mainRouter = Router.router(vertx);
+		// client error handler
+		mainRouter.errorHandler(400, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "can’t accept an empty body");
+		});
+		mainRouter.errorHandler(404, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "no route matches the path " + rc.request().path());
+		});
+		mainRouter.errorHandler(405, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "don’t match the HTTP Method " + rc.request().method());
+		});
+		mainRouter.errorHandler(406, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(),
+					"can’t provide a response with a content type matching Accept header");
+		});
+		mainRouter.errorHandler(415, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");
+		});
 
-    private void removeDeployer() {
-        applicationContext.getClusterDeploy().get(gatewayName).remove(this);
-    }
+		// server error handler
+		mainRouter.errorHandler(500, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "gateway internal error");
+		});
+		mainRouter.errorHandler(501, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "gateway can't handle error");
+		});
+		mainRouter.errorHandler(502, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "no live upstream error");
+		});
+		mainRouter.errorHandler(503, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "gateway unavailable error");
+		});
+		mainRouter.errorHandler(504, rc -> {
+			RestfulUtil.exception(rc, rc.statusCode(), "connect upstream timeout error");
+		});
 
-    @SuppressWarnings("unused")
-    private SessionHandler sessionHandler() {
-        return SessionHandler.create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 60000))
-            .setNagHttps(false);
-    }
-
-    private Router createHttpServerRouter() {
-        Router mainRouter = Router.router(vertx);
-        // client error handler
-        mainRouter.errorHandler(400, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "can’t accept an empty body");
-        });
-        mainRouter.errorHandler(404, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "no route matches the path " + rc.request().path());
-        });
-        mainRouter.errorHandler(405, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "don’t match the HTTP Method " + rc.request().method());
-        });
-        mainRouter.errorHandler(406, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(),
-                "can’t provide a response with a content type matching Accept header");
-        });
-        mainRouter.errorHandler(415, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "can’t accept the Content-type");
-        });
-
-        // server error handler
-        mainRouter.errorHandler(500, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "gateway internal error");
-        });
-        mainRouter.errorHandler(501, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "gateway can't handle error");
-        });
-        mainRouter.errorHandler(502, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "no live upstream error");
-        });
-        mainRouter.errorHandler(503, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "gateway unavailable error");
-        });
-        mainRouter.errorHandler(504, rc -> {
-            RestfulUtil.exception(rc, rc.statusCode(), "connect upstream timeout error");
-        });
-
-        mainRouter.route().order(Integer.MIN_VALUE).handler(new AccessLogHandler());
-        mainRouter.route().order(Integer.MAX_VALUE).failureHandler(new RestfulFailureHandler());
-        return mainRouter;
-    }
+//		mainRouter.route().order(Integer.MIN_VALUE).handler(new AccessLogHandler());
+//		mainRouter.route().order(Integer.MAX_VALUE).failureHandler(new RestfulFailureHandler());
+		return mainRouter;
+	}
 
 }

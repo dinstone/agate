@@ -18,7 +18,7 @@ package io.agate.gateway.handler.internal;
 import java.util.Arrays;
 import java.util.List;
 
-import io.agate.gateway.handler.FilteringHandler;
+import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -27,7 +27,7 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Timer.Sample;
 import io.vertx.ext.web.RoutingContext;
 
-public class MeterMetricsHandler implements FilteringHandler {
+public class MeterMetricsHandler extends OrderedHandler {
 
     private Counter count;
 
@@ -36,6 +36,8 @@ public class MeterMetricsHandler implements FilteringHandler {
     private Timer timer;
 
     public MeterMetricsHandler(RouteOptions routeOptions, MeterRegistry meterRegistry) {
+    	super(100);
+    	
         List<Tag> tags = Arrays.asList(Tag.of("gateway", routeOptions.getGateway()));
         this.count = meterRegistry.counter(routeOptions.getRoute() + "_count", tags);
         this.error = meterRegistry.counter(routeOptions.getRoute() + "_error", tags);

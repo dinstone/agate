@@ -18,16 +18,16 @@ package io.agate.gateway.plugin.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.CircuitBreakerHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Vertx;
 
-public class CircuitBreakerPlugin extends RoutePlugin {
+public class CircuitBreakerPlugin extends RouteHandlerPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerPlugin.class);
 
@@ -38,7 +38,7 @@ public class CircuitBreakerPlugin extends RoutePlugin {
     }
 
     @Override
-    public OperationHandler createHandler(Vertx vertx) {
+    public RouteHandler createHandler(Vertx vertx) {
         CircuitBreaker circuitBreaker = createCircuitBreaker(vertx);
         return new CircuitBreakerHandler(routeOptions, circuitBreaker);
     }

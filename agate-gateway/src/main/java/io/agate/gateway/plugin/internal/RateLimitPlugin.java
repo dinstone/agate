@@ -17,21 +17,21 @@ package io.agate.gateway.plugin.internal;
 
 import com.google.common.util.concurrent.RateLimiter;
 
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.RateLimitHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.vertx.core.Vertx;
 
-public class RateLimitPlugin extends RoutePlugin {
+public class RateLimitPlugin extends RouteHandlerPlugin {
 
     public RateLimitPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
         super(routeOptions, pluginOptions);
     }
 
     @Override
-    public OperationHandler createHandler(Vertx vertx) {
+    public RouteHandler createHandler(Vertx vertx) {
         RateLimiter limiter = RateLimiter.create(pluginOptions.getOptions().getDouble("permitsPerSecond", 0d));
         return new RateLimitHandler(routeOptions, limiter);
     }

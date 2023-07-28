@@ -15,22 +15,27 @@
  */
 package io.agate.gateway.plugin;
 
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.core.Vertx;
 
-public abstract class RoutePlugin {
+public abstract class RouteHandlerPlugin {
 
-    protected RouteOptions routeOptions;
-    protected PluginOptions pluginOptions;
+	protected RouteOptions routeOptions;
 
-    public RoutePlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        this.routeOptions = routeOptions;
-        this.pluginOptions = pluginOptions;
-    }
+	protected PluginOptions pluginOptions;
 
-    public abstract OperationHandler createHandler(Vertx vertx);
+	public RouteHandlerPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
+		this.routeOptions = routeOptions;
+		this.pluginOptions = pluginOptions;
+	}
 
-    public void destory() {
-    }
+	public abstract RouteHandler createHandler(Vertx vertx);
+
+	public boolean failure() {
+		return false;
+	}
+
+	public void destory() {
+	}
 }

@@ -15,22 +15,26 @@
  */
 package io.agate.gateway.plugin.internal;
 
-import io.agate.gateway.handler.OperationHandler;
+import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.RestfulFailureHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RoutePlugin;
+import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.vertx.core.Vertx;
 
-public class RestfulFailurePlugin extends RoutePlugin {
+public class RestfulFailurePlugin extends RouteHandlerPlugin {
 
-    public RestfulFailurePlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        super(routeOptions, pluginOptions);
-    }
+	public RestfulFailurePlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
+		super(routeOptions, pluginOptions);
+	}
 
-    @Override
-    public OperationHandler createHandler(Vertx vertx) {
-        return new RestfulFailureHandler();
-    }
+	@Override
+	public RouteHandler createHandler(Vertx vertx) {
+		return new RestfulFailureHandler(Integer.MAX_VALUE);
+	}
 
+	@Override
+	public boolean failure() {
+		return true;
+	}
 }
