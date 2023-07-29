@@ -37,85 +37,87 @@ import io.vertx.ext.consul.ServiceList;
 
 public class ConsulServiceAddressSupplier implements ServiceAddressSupplier {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConsulServiceAddressSupplier.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ConsulServiceAddressSupplier.class);
 
-    private List<ServiceAddress> addresses = new CopyOnWriteArrayList<>();
+	private List<ServiceAddress> addresses = new CopyOnWriteArrayList<>();
 
-    private Vertx vertx;
+	private Vertx vertx;
 
-    private long jobId;
+	private long jobId;
 
-    private RouteOptions routeOptions;
+	private RouteOptions routeOptions;
 
-    private ConsulClient consulClient;
+	private ConsulClient consulClient;
 
-    private PluginOptions pluginOptions;
+	private PluginOptions pluginOptions;
 
-    public ConsulServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
-        this.vertx = vertx;
-        this.routeOptions = routeOptions;
-        this.pluginOptions = pluginOptions;
+	public ConsulServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
+		this.vertx = vertx;
+		this.routeOptions = routeOptions;
+		this.pluginOptions = pluginOptions;
 
-        ConsulClientOptions consulOptions = getConsulOptions(pluginOptions);
-        this.consulClient = ConsulClient.create(vertx, consulOptions);
+		ConsulClientOptions consulOptions = getConsulOptions(pluginOptions);
+		this.consulClient = ConsulClient.create(vertx, consulOptions);
 
-        refresh();
+		refresh();
 
-        jobId = vertx.setPeriodic(5000, id -> {
-            refresh();
-        });
-    }
+		jobId = vertx.setPeriodic(5000, id -> {
+			refresh();
+		});
+	}
 
-    private ConsulClientOptions getConsulOptions(PluginOptions pluginOptions) {
-        // consul options
-        JsonObject consulJson = pluginOptions.getOptions().getJsonObject("consul");
-        if (consulJson != null) {
-            return new ConsulClientOptions(consulJson);
-        } else {
-            return new ConsulClientOptions();
-        }
-    }
+	private ConsulClientOptions getConsulOptions(PluginOptions pluginOptions) {
+		// consul options
+		JsonObject consulJson = pluginOptions.getOptions().getJsonObject("consul");
+		if (consulJson != null) {
+			return new ConsulClientOptions(consulJson);
+		} else {
+			return new ConsulClientOptions();
+		}
+	}
 
-    @SuppressWarnings({ "rawtypes" })
-    public void refresh() {
-        LOG.debug("{} service discovery url parse", routeOptions.getRoute());
+	@SuppressWarnings({ "rawtypes" })
+	public void refresh() {
+		LOG.debug("{} service discovery url parse", routeOptions.getRoute());
 
-        List<ServiceAddress> serverUrls = new ArrayList<>();
-        List<Future> futureList = new ArrayList<>();
-        for (Object rawUrl : pluginOptions.getOptions().getJsonArray("urls")) {
-            try {
-                String rurl = rawUrl.toString();
-                String serviceName = new URL(rurl).getHost();
-                Future<ServiceList> f = consulClient.catalogServiceNodes(serviceName).onSuccess(ar -> {
-                    for (Service service : ar.getList()) {
-                        String address = service.getAddress() + ":" + service.getPort();
-                        serverUrls.add(new DefaultServiceAddress(rurl.replaceFirst(serviceName, address)));
-                    }
-                });
-                futureList.add(f);
-            } catch (Exception e) {
-                LOG.debug("service discovery url parse error, {} : {}", rawUrl, e.getMessage());
-            }
-        }
-        CompositeFuture.join(futureList).onSuccess(cf -> {
-            addresses.clear();
-            addresses.addAll(serverUrls);
-        });
-    }
+		List<ServiceAddress> serverUrls = new ArrayList<>();
+		List<Future> futureList = new ArrayList<>();
+		for (Object rawUrl : routeOptions.getBackend().getUrls()) {
+			try {
+				String backendUrl = rawUrl.toString();
+				String serviceName = new URL(backendUrl).getHost();
+				Future<ServiceList> f = consulClient.catalogServiceNodes(serviceName).onSuccess(ar -> {
+					for (Service service : ar.getList()) {
+						String address = service.getAddress() + ":" + service.getPort();
+						serverUrls.add(new DefaultServiceAddress(backendUrl.replaceFirst(serviceName, address)));
+					}
+				}).onFailure(t -> {
+					LOG.warn("service discovery {} error, {}", serviceName, t.getMessage());
+				});
+				futureList.add(f);
+			} catch (Exception e) {
+				LOG.debug("service discovery url parse error, {} : {}", rawUrl, e.getMessage());
+			}
+		}
+		CompositeFuture.join(futureList).onSuccess(cf -> {
+			addresses.clear();
+			addresses.addAll(serverUrls);
+		});
+	}
 
-    @Override
-    public List<ServiceAddress> get() {
-        return addresses;
-    }
+	@Override
+	public List<ServiceAddress> get() {
+		return addresses;
+	}
 
-    @Override
-    public String getServiceId() {
-        return routeOptions.getRoute();
-    }
+	@Override
+	public String getServiceId() {
+		return routeOptions.getRoute();
+	}
 
-    @Override
-    public void close() {
-        vertx.cancelTimer(jobId);
-    }
+	@Override
+	public void close() {
+		vertx.cancelTimer(jobId);
+	}
 
 }

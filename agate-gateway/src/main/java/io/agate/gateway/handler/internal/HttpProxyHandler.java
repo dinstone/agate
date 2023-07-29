@@ -28,10 +28,10 @@ import io.agate.gateway.context.ContextConstants;
 import io.agate.gateway.handler.OrderedHandler;
 import io.agate.gateway.http.HttpUtil;
 import io.agate.gateway.http.QueryCoder;
+import io.agate.gateway.options.BackendOptions;
 import io.agate.gateway.options.ParamOptions;
 import io.agate.gateway.options.ParamType;
 import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.options.ServiceOptions;
 import io.agate.gateway.service.Loadbalancer;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -53,13 +53,15 @@ public class HttpProxyHandler extends OrderedHandler {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HttpProxyHandler.class);
 
+	private static final String ALL_PATH = "/*";
+
 	private final HttpClient httpClient;
 
 	private final Loadbalancer loadbalancer;
 
 	private final RouteOptions routeOptions;
 
-	private final ServiceOptions routingOptions;
+	private final BackendOptions backendOptions;
 
 	public HttpProxyHandler(RouteOptions routeOptions, HttpClient httpClient, Loadbalancer loadbalancer) {
 		super(500);
@@ -67,7 +69,7 @@ public class HttpProxyHandler extends OrderedHandler {
 		this.routeOptions = routeOptions;
 		this.loadbalancer = loadbalancer;
 		this.httpClient = httpClient;
-		this.routingOptions = routeOptions.getService();
+		this.backendOptions = routeOptions.getBackend();
 	}
 
 	@Override
@@ -77,8 +79,8 @@ public class HttpProxyHandler extends OrderedHandler {
 		Pipe<Buffer> bodyPipe = createPipe(feRequest);
 
 		// locate url
-		String requestUrl = loadbalancer.choose();
-		if (requestUrl == null) {
+		String backendAddr = loadbalancer.choose();
+		if (backendAddr == null) {
 			// Service Unavailable
 			rc.fail(501, new IllegalStateException("No servers available for service"));
 			return;
@@ -88,7 +90,7 @@ public class HttpProxyHandler extends OrderedHandler {
 		MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
 		MultiMap headerParams = MultiMap.caseInsensitiveMultiMap();
 		// parse params from frontend request
-		List<ParamOptions> params = routingOptions.getParams();
+		List<ParamOptions> params = backendOptions.getParams();
 		if (params != null) {
 			for (ParamOptions param : params) {
 				if (ParamType.PATH == param.getBeParamType()) {
@@ -104,37 +106,38 @@ public class HttpProxyHandler extends OrderedHandler {
 			}
 		}
 
-		// replace param for url
+		// replace param for path
+		String backendPath = backendPath(feRequest.path());
 		if (!pathParams.isEmpty()) {
 			for (Entry<String, String> e : pathParams.entrySet()) {
-				requestUrl = requestUrl.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
+				backendPath = backendPath.replace(":" + e.getKey(), e.getValue() == null ? "" : e.getValue());
 			}
 		}
-		// set query params
+		// set query params for path
 		if (!queryParams.isEmpty()) {
-			QueryCoder queryCoder = new QueryCoder(requestUrl);
+			QueryCoder queryCoder = new QueryCoder(backendPath);
 			for (Entry<String, String> e : queryParams) {
 				queryCoder.addParam(e.getKey(), e.getValue());
 			}
-			requestUrl = queryCoder.uri();
+			backendPath = queryCoder.uri();
 		} else if (feRequest.query() != null) {
 			// copy query frontend params to backend params
-			QueryCoder queryCoder = new QueryCoder(requestUrl);
+			QueryCoder queryCoder = new QueryCoder(backendPath);
 			for (Entry<String, String> kve : rc.queryParams().entries()) {
 				queryCoder.addParam(kve.getKey(), kve.getValue());
 			}
-			requestUrl = queryCoder.uri();
+			backendPath = queryCoder.uri();
 		}
 
 		// create backend request options
 		RequestOptions options = new RequestOptions();
 		// set url
-		options.setAbsoluteURI(requestUrl);
+		options.setAbsoluteURI(backendUrl(backendAddr, backendPath));
 		// set method
-		options.setMethod(method(feRequest.method()));
+		options.setMethod(backendMethod(feRequest.method()));
 		// set timeout
-		if (routingOptions.getTimeout() > 0) {
-			options.setTimeout(routingOptions.getTimeout());
+		if (backendOptions.getTimeout() > 0) {
+			options.setTimeout(backendOptions.getTimeout());
 		}
 		// set headers
 		for (Entry<String, String> e : feRequest.headers()) {
@@ -181,6 +184,32 @@ public class HttpProxyHandler extends OrderedHandler {
 
 	}
 
+	private String backendUrl(String backendAddr, String backendPath) {
+		if (backendAddr.endsWith("/")) {
+			backendAddr = backendAddr.substring(0, backendAddr.length() - 1);
+		}
+		if (!backendPath.startsWith("/")) {
+			backendPath = "/" + backendPath;
+		}
+		return backendAddr + backendPath;
+	}
+
+	private String backendPath(String frontendPath) {
+		String backendPath = backendOptions.getPath();
+		if (backendPath == null || backendPath.isEmpty() || ALL_PATH.equals(backendPath)) {
+			return frontendPath;
+		}
+		return backendPath;
+	}
+
+	private HttpMethod backendMethod(HttpMethod httpMethod) {
+		String method = backendOptions.getMethod();
+		if (method != null && !method.isEmpty()) {
+			return HttpMethod.valueOf(method.toUpperCase());
+		}
+		return httpMethod;
+	}
+
 	private Pipe<Buffer> createPipe(HttpServerRequest feRequest) {
 		// transport body and send request
 		if (HttpUtil.hasBody(feRequest.method())) {
@@ -200,14 +229,6 @@ public class HttpProxyHandler extends OrderedHandler {
 		}
 
 		return null;
-	}
-
-	private HttpMethod method(HttpMethod httpMethod) {
-		String method = routingOptions.getMethod();
-		if (method != null && !method.isEmpty()) {
-			return HttpMethod.valueOf(method.toUpperCase());
-		}
-		return httpMethod;
 	}
 
 }

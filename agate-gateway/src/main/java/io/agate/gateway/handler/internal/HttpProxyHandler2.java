@@ -30,7 +30,7 @@ import io.agate.gateway.http.QueryCoder;
 import io.agate.gateway.options.ParamOptions;
 import io.agate.gateway.options.ParamType;
 import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.options.ServiceOptions;
+import io.agate.gateway.options.BackendOptions;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -58,7 +58,7 @@ public class HttpProxyHandler2 extends OrderedHandler {
 
 	private final RouteOptions routeOptions;
 
-	private final ServiceOptions routingOptions;
+	private final BackendOptions routingOptions;
 
 	private final CircuitBreaker circuitBreaker;
 
@@ -70,7 +70,7 @@ public class HttpProxyHandler2 extends OrderedHandler {
 		this.routeOptions = routeOptions;
 		this.httpClient = httpClient;
 		this.circuitBreaker = circuitBreaker;
-		this.routingOptions = new ServiceOptions(new JsonObject());
+		this.routingOptions = new BackendOptions(new JsonObject());
 	}
 
 	@Override

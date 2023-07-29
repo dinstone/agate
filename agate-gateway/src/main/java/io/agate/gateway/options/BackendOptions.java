@@ -22,12 +22,14 @@ import java.util.List;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class ServiceOptions {
-
-	private int timeout;
+public class BackendOptions {
 
 	/** 0:http reverse proxy; 1:http service discovery 2:grpc discovery */
 	private int type;
+
+	private int timeout;
+
+	private String path;
 
 	private String method;
 
@@ -35,7 +37,7 @@ public class ServiceOptions {
 
 	private List<ParamOptions> params;
 
-	public ServiceOptions(JsonObject json) {
+	public BackendOptions(JsonObject json) {
 		fromJson(json);
 	}
 
@@ -79,6 +81,14 @@ public class ServiceOptions {
 		this.type = type;
 	}
 
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
 	public void fromJson(JsonObject json) {
 		for (java.util.Map.Entry<String, Object> member : json) {
 			switch (member.getKey()) {
@@ -95,6 +105,11 @@ public class ServiceOptions {
 			case "method":
 				if (member.getValue() instanceof String) {
 					this.setMethod((String) member.getValue());
+				}
+				break;
+			case "path":
+				if (member.getValue() instanceof String) {
+					this.setPath((String) member.getValue());
 				}
 				break;
 			case "urls":
@@ -128,6 +143,9 @@ public class ServiceOptions {
 
 		json.put("timeout", timeout);
 		json.put("type", type);
+		if (path != null) {
+			json.put("path", path);
+		}
 		if (method != null) {
 			json.put("method", method);
 		}

@@ -24,31 +24,31 @@ import io.agate.gateway.plugin.PluginOptions;
 
 public class FixedServiceAddressSupplier implements ServiceAddressSupplier {
 
-    private final List<ServiceAddress> addresses = new ArrayList<ServiceAddress>();
+	private final List<ServiceAddress> addresses = new ArrayList<ServiceAddress>();
 
-    private final String serviceId;
+	private final String serviceId;
 
-    public FixedServiceAddressSupplier(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        this.serviceId = routeOptions.getRoute();
+	public FixedServiceAddressSupplier(RouteOptions routeOptions, PluginOptions pluginOptions) {
+		this.serviceId = routeOptions.getRoute();
 
-        for (Object url : pluginOptions.getOptions().getJsonArray("urls")) {
-            addresses.add(new DefaultServiceAddress(url.toString()));
-        }
-    }
+		for (Object url : routeOptions.getBackend().getUrls()) {
+			addresses.add(new DefaultServiceAddress(url.toString()));
+		}
+	}
 
-    @Override
-    public List<ServiceAddress> get() {
-        return addresses;
-    }
+	@Override
+	public List<ServiceAddress> get() {
+		return addresses;
+	}
 
-    @Override
-    public String getServiceId() {
-        return serviceId;
-    }
+	@Override
+	public String getServiceId() {
+		return serviceId;
+	}
 
-    @Override
-    public void close() {
-        addresses.clear();
-    }
+	@Override
+	public void close() {
+		addresses.clear();
+	}
 
 }

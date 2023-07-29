@@ -22,7 +22,7 @@ import java.util.List;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class RequestOptions {
+public class FrontendOptions {
 
 	private String path;
 
@@ -32,7 +32,7 @@ public class RequestOptions {
 
 	private String[] produces;
 
-	public RequestOptions(JsonObject json) {
+	public FrontendOptions(JsonObject json) {
 		fromJson(json);
 	}
 

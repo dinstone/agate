@@ -36,7 +36,7 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 
 	private Loadbalancer loadBalancer;
 
-	private ServiceAddressSupplier supplier;
+	private ServiceAddressSupplier serviceSupplier;
 
 	public HttpProxyPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
 		super(routeOptions, pluginOptions);
@@ -48,8 +48,8 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 			if (httpClient != null) {
 				httpClient.close();
 			}
-			if (supplier != null) {
-				supplier.close();
+			if (serviceSupplier != null) {
+				serviceSupplier.close();
 			}
 		}
 	}
@@ -65,12 +65,12 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 		synchronized (this) {
 			if (loadBalancer == null) {
 				// service discovery
-				if (pluginOptions.getOptions().getInteger("type", 0) == 1) {
-					supplier = new ConsulServiceAddressSupplier(vertx, routeOptions, pluginOptions);
-					loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
+				if (routeOptions.getBackend().getType() == 1) {
+					serviceSupplier = new ConsulServiceAddressSupplier(vertx, routeOptions, pluginOptions);
+					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
 				} else {
-					supplier = new FixedServiceAddressSupplier(routeOptions, pluginOptions);
-					loadBalancer = new RoundRobinLoadBalancer(routeOptions, supplier);
+					serviceSupplier = new FixedServiceAddressSupplier(routeOptions, pluginOptions);
+					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
 				}
 			}
 

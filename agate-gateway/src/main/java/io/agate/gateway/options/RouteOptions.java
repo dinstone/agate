@@ -31,6 +31,8 @@ public class RouteOptions {
 	// ====================
 	// Application options
 	// ====================
+	private String appName;
+
 	private String cluster;
 
 	private String gateway;
@@ -40,13 +42,14 @@ public class RouteOptions {
 	private String prefix;
 
 	// ====================
-	// API options
+	// frontend api options
 	// ====================
-	private RequestOptions request;
+	private FrontendOptions frontend;
 
-	private ServiceOptions service;
-
-	private ResponseOptions response;
+	// ====================
+	// backend service options
+	// ====================
+	private BackendOptions backend;
 
 	// ====================
 	// Plugin options
@@ -55,6 +58,14 @@ public class RouteOptions {
 
 	public RouteOptions(JsonObject json) {
 		fromJson(json);
+	}
+
+	public String getAppName() {
+		return appName;
+	}
+
+	public void setAppName(String appName) {
+		this.appName = appName;
 	}
 
 	public String getCluster() {
@@ -97,22 +108,6 @@ public class RouteOptions {
 		this.prefix = prefix;
 	}
 
-	public RequestOptions getRequest() {
-		return request;
-	}
-
-	public void setRequest(RequestOptions frontend) {
-		this.request = frontend;
-	}
-
-	public ResponseOptions getResponse() {
-		return response;
-	}
-
-	public void setResponse(ResponseOptions response) {
-		this.response = response;
-	}
-
 	public PluginOptions[] getPlugins() {
 		return plugins;
 	}
@@ -121,12 +116,20 @@ public class RouteOptions {
 		this.plugins = options;
 	}
 
-	public ServiceOptions getService() {
-		return service;
+	public FrontendOptions getFrontend() {
+		return frontend;
 	}
 
-	public void setService(ServiceOptions service) {
-		this.service = service;
+	public void setFrontend(FrontendOptions frontend) {
+		this.frontend = frontend;
+	}
+
+	public BackendOptions getBackend() {
+		return backend;
+	}
+
+	public void setBackend(BackendOptions service) {
+		this.backend = service;
 	}
 
 	public JsonObject toJson() {
@@ -138,6 +141,9 @@ public class RouteOptions {
 		if (gateway != null) {
 			json.put("gateway", gateway);
 		}
+		if (appName != null) {
+			json.put("appName", appName);
+		}
 		if (route != null) {
 			json.put("route", route);
 		}
@@ -147,14 +153,11 @@ public class RouteOptions {
 		if (domain != null) {
 			json.put("domain", domain);
 		}
-		if (request != null) {
-			json.put("request", request.toJson());
+		if (frontend != null) {
+			json.put("frontend", frontend.toJson());
 		}
-		if (response != null) {
-			json.put("response", response.toJson());
-		}
-		if (service != null) {
-			json.put("failures", service.toJson());
+		if (backend != null) {
+			json.put("backend", backend.toJson());
 		}
 		if (plugins != null) {
 			json.put("plugins", Arrays.asList(plugins));
@@ -191,19 +194,14 @@ public class RouteOptions {
 					this.setRoute((String) member.getValue());
 				}
 				break;
-			case "request":
+			case "frontend":
 				if (member.getValue() instanceof JsonObject) {
-					this.setRequest(new RequestOptions((JsonObject) member.getValue()));
+					this.setFrontend(new FrontendOptions((JsonObject) member.getValue()));
 				}
 				break;
-			case "response":
+			case "backend":
 				if (member.getValue() instanceof JsonObject) {
-					this.setResponse(new ResponseOptions((JsonObject) member.getValue()));
-				}
-				break;
-			case "service":
-				if (member.getValue() instanceof JsonObject) {
-					this.setService(new ServiceOptions((JsonObject) member.getValue()));
+					this.setBackend(new BackendOptions((JsonObject) member.getValue()));
 				}
 				break;
 			case "plugins":
@@ -223,8 +221,8 @@ public class RouteOptions {
 
 	@Override
 	public String toString() {
-		return "RouteOptions [route=" + route + ", cluster=" + cluster + ", gateway=" + gateway + ", domain=" + domain
-				+ ", prefix=" + prefix + ", request=" + request + ", service=" + service + ", response=" + response
+		return "RouteOptions [route=" + route + ", cluster=" + cluster + ", gateway=" + gateway + ", appName=" + appName
+				+ ", domain=" + domain + ", prefix=" + prefix + ", frontend=" + frontend + ", backend=" + backend
 				+ ", plugins=" + Arrays.toString(plugins) + "]";
 	}
 

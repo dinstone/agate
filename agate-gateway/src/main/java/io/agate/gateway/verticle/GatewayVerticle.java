@@ -27,8 +27,8 @@ import io.agate.gateway.deploy.RouteDeploy;
 import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.http.HttpUtil;
 import io.agate.gateway.http.RestfulUtil;
+import io.agate.gateway.options.FrontendOptions;
 import io.agate.gateway.options.GatewayOptions;
-import io.agate.gateway.options.RequestOptions;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
@@ -123,7 +123,7 @@ public class GatewayVerticle extends AbstractVerticle {
 					return;
 				}
 
-				RequestOptions requestOptions = routeOptions.getRequest();
+				FrontendOptions requestOptions = routeOptions.getFrontend();
 				// create sub router
 				Router subRouter = Router.router(vertx);
 				// create route
@@ -165,11 +165,15 @@ public class GatewayVerticle extends AbstractVerticle {
 					route.failureHandler(handler);
 				}
 
-				String mountPoint = "/";
-				String prefix = routeOptions.getPrefix();
-				if (prefix != null && prefix.startsWith("/")) {
-					mountPoint = prefix;
+				String mountPoint = routeOptions.getPrefix();
+				if (mountPoint != null && !mountPoint.isEmpty()) {
+					if (!mountPoint.endsWith("*")) {
+						mountPoint = mountPoint + "*";
+					}
+				} else {
+					mountPoint = "/*";
 				}
+
 				// mount sub router
 				Route mountedRoute = mountRouter(mountPoint, subRouter);
 				// cache route
@@ -264,8 +268,6 @@ public class GatewayVerticle extends AbstractVerticle {
 			RestfulUtil.exception(rc, rc.statusCode(), "connect upstream timeout error");
 		});
 
-//		mainRouter.route().order(Integer.MIN_VALUE).handler(new AccessLogHandler());
-//		mainRouter.route().order(Integer.MAX_VALUE).failureHandler(new RestfulFailureHandler());
 		return mainRouter;
 	}
 
