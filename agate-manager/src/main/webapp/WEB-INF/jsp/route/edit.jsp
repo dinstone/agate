@@ -7,7 +7,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Agate Manager API</title>
+<title>Agate Manager Route</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="${contextPath}/img/favicon.ico">
@@ -26,13 +26,13 @@
 		var tbody = $(ev).parent().parent().parent();
 		var index = tbody.children().size()-1;
 		var tr = '<tr class="ng-scope">'+
-			'<td><input class="form-control" name="routingConfig.params['+index+'].feParamName"></td>'+
-			'<td><select class="form-control" name="routingConfig.params['+index+'].feParamType">'+
+			'<td><input class="form-control" name="backend.params['+index+'].feParamName"></td>'+
+			'<td><select class="form-control" name="backend.params['+index+'].feParamType">'+
 					'<option value="PATH">PATH</option>'+
 					'<option value="QUERY">QUERY</option>'+
 					'<option value="HEADER">HEADER</option></select></td>'+
-			'<td><input class="form-control" name="routingConfig.params['+index+'].beParamName"></td>'+
-			'<td><select class="form-control" name="routingConfig.params['+index+'].beParamType">'+
+			'<td><input class="form-control" name="backend.params['+index+'].beParamName"></td>'+
+			'<td><select class="form-control" name="backend.params['+index+'].beParamType">'+
 					'<option value="PATH">PATH</option>'+
 					'<option value="QUERY">QUERY</option>'+
 					'<option value="HEADER">HEADER</option></select></td>'+
@@ -43,7 +43,7 @@
 	function addUrl(ev){
 		event.preventDefault();
 		var tr = `<tr>
-			<td colspan="4"><input type="text" class="form-control" name="routingConfig.urls"></td>
+			<td colspan="4"><input type="text" class="form-control" name="backend.urls"></td>
 			<td align="right">
 				<button class="btn btn-danger" onclick="delThis(this)">
 					<i class="glyphicon glyphicon-trash"></i> Delete
@@ -58,11 +58,11 @@
 		var tbody = $("#plugins");
 		var index = tbody.children().size();
 		var tr = '<tr><td>'+
-			'<select class="form-control" name="pluginConfigs['+index+'].type">'+
-			'<option value="-1">Before</option><option value="1">After</option><option value="0">Failure</option>'+
-			'</select></td>'+'<td><input type="text" class="form-control" name="pluginConfigs['+index+'].plugin" value="${pluginConfig.plugin}"></td>'+
-			'<td><input type="text" class="form-control" name="pluginConfigs['+index+'].order"></td>'+
-			'<td><textarea class="form-control" name="pluginConfigs['+index+'].config"></textarea></td>'+
+			'<select class="form-control" name="plugins['+index+'].type">'+
+			'<option value="0">Routing</option><option value="1">Failure</option>'+
+			'</select></td>'+'<td><input type="text" class="form-control" name="plugins['+index+'].plugin" value="${pluginConfig.plugin}"></td>'+
+			'<td><input type="text" class="form-control" name="plugins['+index+'].order"></td>'+
+			'<td><textarea class="form-control" name="plugins['+index+'].config"></textarea></td>'+
 			'<td align="right"><button class="btn btn-danger" onclick="delThis(this)"><i class="glyphicon glyphicon-trash"></i> Delete</button></td></tr>';
 		tbody.append(tr);
 	}
@@ -85,7 +85,9 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/view/route/list">Routes</a></li>
+						<li><a href="${contextPath}/">Home</a></li>
+						<li><a href="${contextPath}/view/app/list">Applications</a></li>
+						<li><a href="${contextPath}/view/route/list?appId=${app.id}">Routes</a></li>
 						<c:if test="${action == 'create'}">
 							<li>Route Create</li>
 						</c:if>
@@ -100,7 +102,7 @@
 							<div id="tip" class="alert alert-info">${error}</div>
 						</c:if>
 						<form action="/view/route/save" method="post">
-							<input name="action" value="${action}" type="hidden"> <input name="arId" value="${api.arId}" type="hidden">
+							<input name="action" value="${action}" type="hidden"><input name=appId value="${app.id}" type="hidden"><input name=id value="${route.id}" type="hidden">
 							<div class="panel panel-default">
 								<div class="panel-heading">
 									<h4>
@@ -109,33 +111,35 @@
 								</div>
 								<div class="panel-body">
 									<div class="form-group">
-										<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <select name="gwId" class="form-control">
-											<c:forEach items="${gateways}" var="gateway">
-												<option value="${gateway.id}" <c:if test="${gateway.id==api.gwId}">selected</c:if>>${gateway.name}</option>
-											</c:forEach>
-										</select>
-									</div>
-									<div class="form-group">
-										<label>Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${api.name}">
+										<label>Route Name (Globe Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${route.name}">
 									</div>
 									<div class="form-group">
 										<label>Remark</label>
-										<textarea class="form-control" name="remark">${api.remark}</textarea>
+										<textarea class="form-control" name="remark">${route.remark}</textarea>
+									</div>
+									<div class="form-group">
+										<label>Application Name</label><input type="text" class="form-control" name="app.name" value="${app.name}" disabled>
+									</div>
+									<div class="form-group">
+										<label>Application Domain</label><input type="text" class="form-control" name="app.domain" value="${app.domain}" disabled>
+									</div>
+									<div class="form-group">
+										<label>Application Prefix</label><input type="text" class="form-control" name="appp.refix" value="${app.prefix}" disabled>
 									</div>
 								</div>
 							</div>
 							<div class="panel panel-default">
 								<div class="panel-heading">
 									<h4>
-										<i class="glyphicon glyphicon-th"></i> Request
+										<i class="glyphicon glyphicon-th"></i> Frontend
 									</h4>
 								</div>
 								<div class="panel-body">
 									<div class="form-group">
-										<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="requestConfig.path" value="${api.requestConfig.path}">
+										<label>Request Path (Path start with '/') <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="frontend.path" value="${route.frontend.path}">
 									</div>
 									<div class="form-group">
-										<label>Request Method (Http Method)</label> <select name="requestConfig.method" class="form-control">
+										<label>Request Method (Http Method)</label> <select name="frontend.method" class="form-control">
 											<option></option>
 											<option value="GET">GET</option>
 											<option value="POST">POST</option>
@@ -144,17 +148,17 @@
 										</select>
 									</div>
 									<div class="form-group">
-										<label>Request Consumes (consume type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.consumes" value="${api.requestConfig.consumes}" placeholder="please input consume type and split by ','">
+										<label>Request Consumes (consume type and split by ',')</label> <input type="text" class="form-control" name="frontend.consumes" value="${route.frontend.consumes}" placeholder="please input consume type and split by ','">
 									</div>
 									<div class="form-group">
-										<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="requestConfig.produces" value="${api.requestConfig.produces}" placeholder="please input produce type and split by ','">
+										<label>Request Produces (produce type and split by ',')</label> <input type="text" class="form-control" name="frontend.produces" value="${route.frontend.produces}" placeholder="please input produce type and split by ','">
 									</div>
 								</div>
 							</div>
 							<div class="panel panel-default">
 								<div class="panel-heading">
 									<h4>
-										<i class="glyphicon glyphicon-th"></i> Routing
+										<i class="glyphicon glyphicon-th"></i> Backend
 									</h4>
 								</div>
 								<div class="panel-body">
@@ -162,19 +166,19 @@
 										<label>Routing Type</label>
 										<div class="input-group">
 											<c:choose>
-												<c:when test="${api.routingConfig.type==0}">
-													<input type="radio" value="0" name="routingConfig.type" checked="checked"> Http Reverse Proxy 
-													<input type="radio" value="1" name="routingConfig.type"> Http Service Discovery
+												<c:when test="${route.backend.type==0}">
+													<input type="radio" value="0" name="backend.type" checked="checked"> Http Reverse Proxy 
+													<input type="radio" value="1" name="backend.type"> Http Service Discovery
 												</c:when>
 												<c:otherwise>
-													<input type="radio" value="0" name="routingConfig.type"> Http Reverse Proxy 
-													<input type="radio" value="1" name="routingConfig.type" checked="checked"> Http Service Discovery
+													<input type="radio" value="0" name="backend.type"> Http Reverse Proxy 
+													<input type="radio" value="1" name="backend.type" checked="checked"> Http Service Discovery
 												</c:otherwise>
 											</c:choose>
 										</div>
 									</div>
 									<div class="form-group">
-										<label>Routing Method (Http Method)</label> <select name="routingConfig.method" class="form-control">
+										<label>Routing Method (Http Method)</label> <select name="backend.method" class="form-control">
 											<option></option>
 											<option value="GET">GET</option>
 											<option value="POST">POST</option>
@@ -185,7 +189,7 @@
 									<div class="form-group has-feedback">
 										<label>Routing Timeout</label>
 										<div class="input-group">
-											<input type="text" class="form-control" name="routingConfig.timeout" value="${api.routingConfig.timeout}"><span class="input-group-addon">ms</span>
+											<input type="text" class="form-control" name="backend.timeout" value="${route.backend.timeout}"><span class="input-group-addon">ms</span>
 										</div>
 									</div>
 									<div class="form-group">
@@ -193,16 +197,16 @@
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 											<thead>
 												<tr>
-													<td colspan="4">Example: https://www.baidu.com/:path or http://user-service/:path</td>
+													<td colspan="4">Example: https://www.baidu.com or http://user-service, Does not include path.</td>
 													<td align="right"><button class="btn btn-primary" onclick="addUrl(this)">
 															<i class="glyphicon glyphicon-th-list"></i> Add URL
 														</button></td>
 												</tr>
 											</thead>
 											<tbody id="urls">
-												<c:forEach var="url" items="${api.routingConfig.urls}" varStatus="status">
+												<c:forEach var="url" items="${route.backend.urls}" varStatus="status">
 													<tr>
-														<td colspan="4"><input type="text" class="form-control" name="routingConfig.urls" value="${url}"></td>
+														<td colspan="4"><input type="text" class="form-control" name="backend.urls" value="${url}"></td>
 														<td align="right">
 															<button class="btn btn-danger" onclick="delThis(this)">
 																<i class="glyphicon glyphicon-trash"></i> Delete
@@ -212,6 +216,9 @@
 												</c:forEach>
 											</tbody>
 										</table>
+									</div>
+									<div class="form-group">
+										<label>Routing Path</label> Example: /* or /:path <input type="text" class="form-control" name="backend.path" value="${route.backend.path}">
 									</div>
 									<div class="form-group">
 										<label>Param Mapping</label>
@@ -228,16 +235,16 @@
 												</tr>
 											</thead>
 											<tbody>
-												<c:forEach var="paramConfig" items="${api.routingConfig.params}" varStatus="status">
+												<c:forEach var="paramConfig" items="${route.backend.params}" varStatus="status">
 													<tr class="ng-scope">
-														<td><input class="form-control" name="routingConfig.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
-														<td><select class="form-control" name="routingConfig.params[${status.index}].feParamType">
+														<td><input class="form-control" name="backend.params[${status.index}].feParamName" value="${paramConfig.feParamName}"></td>
+														<td><select class="form-control" name="backend.params[${status.index}].feParamType">
 																<option value="PATH">PATH</option>
 																<option value="QUERY">QUERY</option>
 																<option value="HEADER">HEADER</option>
 														</select></td>
-														<td><input class="form-control" name="routingConfig.params[${status.index}].beParamName" value="${paramConfig.beParamName}"></td>
-														<td><select class="form-control" name="routingConfig.params[${status.index}].beParamType">
+														<td><input class="form-control" name="backend.params[${status.index}].beParamName" value="${paramConfig.beParamName}"></td>
+														<td><select class="form-control" name="backend.params[${status.index}].beParamType">
 																<option value="PATH">PATH</option>
 																<option value="QUERY">QUERY</option>
 																<option value="HEADER">HEADER</option>
@@ -275,16 +282,15 @@
 												</tr>
 											</thead>
 											<tbody id="plugins">
-												<c:forEach var="pluginConfig" items="${api.pluginConfigs}" varStatus="status">
+												<c:forEach var="pluginConfig" items="${route.plugins}" varStatus="status">
 													<tr>
-														<td><select class="form-control" name="pluginConfigs[${status.index}].type" value="${pluginConfig.type}">
-																<option value="-1" <c:if test="${pluginConfig.type==-1}">selected</c:if>>Before</option>
-																<option value="1" <c:if test="${pluginConfig.type==1}">selected</c:if>>After</option>
-																<option value="0" <c:if test="${pluginConfig.type==0}">selected</c:if>>Failure</option>
+														<td><select class="form-control" name="plugins[${status.index}].type" value="${pluginConfig.type}">
+																<option value="0" <c:if test="${pluginConfig.type==0}">selected</c:if>>Routing</option>
+																<option value="1" <c:if test="${pluginConfig.type==1}">selected</c:if>>Failure</option>
 														</select></td>
-														<td><input type="text" class="form-control" name="pluginConfigs[${status.index}].plugin" value="${pluginConfig.plugin}"></td>
-														<td><input type="text" class="form-control" name="pluginConfigs[${status.index}].order" value="${pluginConfig.order}"></td>
-														<td><textarea class="form-control" name="pluginConfigs[${status.index}].config">${pluginConfig.config}</textarea></td>
+														<td><input type="text" class="form-control" name="plugins[${status.index}].plugin" value="${pluginConfig.plugin}"></td>
+														<td><input type="text" class="form-control" name="plugins[${status.index}].order" value="${pluginConfig.order}"></td>
+														<td><textarea class="form-control" name="plugins[${status.index}].config">${pluginConfig.config}</textarea></td>
 														<td>
 															<button class="btn btn-danger" onclick="delThis(this)">
 																<i class="glyphicon glyphicon-trash"></i> Delete

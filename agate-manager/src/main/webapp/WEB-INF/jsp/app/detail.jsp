@@ -7,7 +7,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Agate Manager Gateway</title>
+<title>Agate Manager APP</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="${contextPath}/img/favicon.ico">
@@ -33,13 +33,8 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="/view/gateway/list">Gateways</a></li>
-						<c:if test="${action == 'create'}">
-							<li>Gateway Create</li>
-						</c:if>
-						<c:if test="${action == 'update'}">
-							<li>Gateway Update</li>
-						</c:if>
+						<li><a href="/view/app/list">Applications</a></li>
+						<li>APP Detail</li>
 					</ul>
 				</div>
 				<div class="row">
@@ -47,53 +42,30 @@
 						<div class="box-inner">
 							<div class="box-header well">
 								<h2>
-									<i class="glyphicon glyphicon-th"></i> Gateway Config
+									<i class="glyphicon glyphicon-th"></i> APP Config
 								</h2>
 							</div>
 							<div class="box-content">
-								<c:if test="${ !empty error}">
+								<c:if test="${!empty error}">
 									<div id="tip" class="alert alert-info">${error}</div>
 								</c:if>
-								<form role="form" action="/view/gateway/save" method="post">
-									<input name="action" value="${action}" type="hidden"> <input name="id" value="${gateway.id}" type="hidden">
+								<div class="panel-body">
 									<div class="form-group">
-										<label>Cluster (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <select name="cluster" class="form-control">
-											<c:forEach items="${clusters}" var="cluster">
-												<c:choose>
-													<c:when test="${cluster.code == gateway.cluster}">
-														<option value="${cluster.code}" selected="selected">${cluster.name}</option>
-													</c:when>
-													<c:otherwise>
-														<option value="${cluster.code}">${cluster.name}</option>
-													</c:otherwise>
-												</c:choose>
-											</c:forEach>
-										</select>
+										<label>Cluster<i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${gateway.cluster}" disabled="disabled">
 									</div>
 									<div class="form-group">
-										<label>Name (Cluster Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${gateway.name}">
+										<label>Gateway <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="cluster" value="${gateway.name}" disabled="disabled">
 									</div>
 									<div class="form-group">
-										<label>Port (Server listen port) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="port" value="${gateway.port}">
+										<label>Application <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" value="${app.name}" disabled="disabled">
 									</div>
 									<div class="form-group">
-										<label>Host (Server listen host)</label> <input type="text" class="form-control" name="host" value="${gateway.host}">
+										<label>Domain <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${app.domain}" disabled="disabled">
 									</div>
 									<div class="form-group">
-										<label>Remark</label>
-										<textarea class="form-control" name="remark">${gateway.remark}</textarea>
-									</div>
-									<div class="form-group">
-										<label>Server Config (Json Format for Vertx's ServerOption)</label>
-										<textarea class="form-control" name="serverConfig">${gateway.serverConfig}</textarea>
-									</div>
-									<div class="form-group">
-										<label>Client Config (Json Format for Vertx's ClientOption)</label>
-										<textarea class="form-control" name="clientConfig">${gateway.clientConfig}</textarea>
-									</div>
-									<button type="reset" class="btn btn-default">Reset</button>
-									<button type="submit" class="btn btn-default">Submit</button>
-								</form>
+                                        <label>Prefix <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${app.prefix}" disabled="disabled">
+                                    </div>
+								</div>
 							</div>
 						</div>
 					</div>

@@ -29,6 +29,7 @@
 				<div>
 					<ul class="breadcrumb">
 						<li><a href="${contextPath}/">Home</a></li>
+						<li><a href="${contextPath}/view/app/list">Applications</a></li>
 						<li>Routes</li>
 					</ul>
 				</div>
@@ -43,7 +44,7 @@
 										</h4>
 									</div>
 									<div class="col-md-3">
-										<a class="btn btn-default" href="${contextPath}/view/route/create"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Route
+										<a class="btn btn-default" href="${contextPath}/view/route/create?appId=${app.id}"> <i class="glyphicon glyphicon-edit icon-white"></i> Create Route
 										</a>
 									</div>
 								</div>
@@ -52,30 +53,30 @@
 								<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 									<thead>
 										<tr>
-											<th rowspan="1" colspan="1" style="width: 99px;">Gateway</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Name</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Application</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Route Name</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Actions</th>
 										</tr>
 									</thead>
 									<tbody>
-										<c:forEach items="${apis}" var="api">
+										<c:forEach items="${routes}" var="route">
 											<tr class="line">
-												<td>${api.gateway}</td>
-												<td><a href="${contextPath}/view/route/detail?apiId=${api.arId}">${api.name}</a></td>
-												<td>${api.requestConfig.path}</td>
-												<td>${api.remark}</td>
-												<c:if test="${api.status > 0}">
+												<td>${app.name}</td>
+												<td><a href="${contextPath}/view/route/detail?id=${route.id}&appId=${app.id}">${route.name}</a></td>
+												<td>${route.remark}</td>
+												<td>${app.prefix}${route.frontend.path}</td>
+												<c:if test="${route.status > 0}">
 													<td>Started</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/route/close?apiId=${api.arId}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
-																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/route/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+													<td><a class="btn btn-default" href="${contextPath}/view/route/close?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span>
+																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/route/delete?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
 												</c:if>
-												<c:if test="${api.status == 0}">
+												<c:if test="${route.status == 0}">
 													<td>Closed</td>
-													<td><a class="btn btn-default" href="${contextPath}/view/route/start?apiId=${api.arId}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?apiId=${api.arId}"><i class="glyphicon glyphicon-pencil"></i><span>
-																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/route/delete?apiId=${api.arId}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
+													<td><a class="btn btn-default" href="${contextPath}/view/route/start?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-cog"></i><span> Start</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span>
+																Update</span></a> <a class="btn btn-default" href="${contextPath}/view/route/delete?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-trash"></i><span> Delete</span></a></td>
 												</c:if>
 											</tr>
 										</c:forEach>

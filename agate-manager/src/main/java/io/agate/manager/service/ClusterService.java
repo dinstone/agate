@@ -17,10 +17,12 @@
 package io.agate.manager.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -31,122 +33,138 @@ import com.orbitz.consul.model.catalog.CatalogService;
 
 import io.agate.manager.dao.ClusterDao;
 import io.agate.manager.dao.GatewayDao;
-import io.agate.manager.model.ClusterEntity;
-import io.agate.manager.model.NodeEntity;
+import io.agate.manager.entity.ClusterEntity;
+import io.agate.manager.model.ClusterDefination;
+import io.agate.manager.model.InstanceDefination;
 
 @Component
 public class ClusterService {
 
-    private List<NodeEntity> clusterNodes = new CopyOnWriteArrayList<>();
+	private List<InstanceDefination> clusterInstances = new CopyOnWriteArrayList<>();
 
-    @Autowired
-    private CatalogClient catalogClient;
+	@Autowired
+	private CatalogClient catalogClient;
 
-    @Autowired
-    private ClusterDao clusterDao;
+	@Autowired
+	private ClusterDao clusterDao;
 
-    @Autowired
-    private GatewayDao gatewayDao;
+	@Autowired
+	private GatewayDao gatewayDao;
 
-    public List<ClusterEntity> clusterList() {
-        return clusterDao.list();
-    }
+	public List<ClusterDefination> clusterList() {
+		List<ClusterEntity> ces = clusterDao.list();
+		if (ces != null) {
+			return ces.stream().map(ce -> convert(ce)).collect(Collectors.toList());
+		}
+		return Collections.emptyList();
+	}
 
-    public List<ClusterEntity> clusterStatus() {
-        List<ClusterEntity> ces = clusterDao.list();
-        if (ces != null) {
-            for (ClusterEntity ce : ces) {
-                findNodes(ce);
-            }
-        }
-        return ces;
-    }
+	private ClusterDefination convert(ClusterEntity ce) {
+		ClusterDefination cd = new ClusterDefination();
+		cd.setId(ce.getId());
+		cd.setCode(ce.getCode());
+		cd.setName(ce.getName());
+		for (InstanceDefination instance : clusterInstances) {
+			if (cd.getCode().equals(instance.getClusterCode())) {
+				cd.getInstances().add(instance);
+			}
+		}
+		return cd;
+	}
 
-    private void findNodes(ClusterEntity ce) {
-        for (NodeEntity ne : clusterNodes) {
-            if (ce.getCode().equals(ne.getClusterCode())) {
-                ce.getNodes().add(ne);
-            }
-        }
-    }
+	public void clusterRefresh() {
+		List<InstanceDefination> instances = new ArrayList<>();
+		ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
+		for (CatalogService e : consulResponse.getResponse()) {
+			instances.add(createInstance(e.getServiceMeta()));
+		}
 
-    public void clusterRefresh() {
-        List<NodeEntity> entities = new ArrayList<>();
+		for (InstanceDefination defination : instances) {
+			if (!clusterInstances.contains(defination)) {
+				clusterInstances.add(defination);
+			}
+		}
+		clusterInstances.retainAll(instances);
+	}
 
-        ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
-        for (CatalogService e : consulResponse.getResponse()) {
-            NodeEntity node = createNode(e.getServiceMeta());
-            entities.add(node);
-        }
+	private InstanceDefination createInstance(Map<String, String> serviceMeta) {
+		InstanceDefination instance = new InstanceDefination();
+		try {
+			if (serviceMeta != null) {
+				instance.setInstanceId(serviceMeta.get("instanceId"));
+				instance.setClusterCode(serviceMeta.get("cluster"));
+			}
+		} catch (Exception e) {
+			// ignore
+		}
+		return instance;
+	}
 
-        clusterNodes.clear();
-        clusterNodes.addAll(entities);
-    }
+	public void createCluster(ClusterDefination defination) throws BusinessException {
+		// app param check
+		if (defination.getCode() == null) {
+			throw new BusinessException(40111, "Cluster code is invalid");
+		}
+		if (defination.getName() == null) {
+			throw new BusinessException(40112, "Cluster name is invalid");
+		}
 
-    private NodeEntity createNode(Map<String, String> serviceMeta) {
-        NodeEntity node = new NodeEntity();
-        try {
-            if (serviceMeta != null) {
-                node.setInstanceId(serviceMeta.get("instanceId"));
-                node.setClusterCode(serviceMeta.get("clusterCode"));
-            }
-        } catch (Exception e) {
-            // ignore
-        }
-        return node;
-    }
+		ClusterEntity entity = new ClusterEntity();
+		entity.setCode(defination.getCode());
+		entity.setName(defination.getName());
+		Date now = new Date();
+		entity.setCreateTime(now);
+		entity.setUpdateTime(now);
 
-    public void createCluster(ClusterEntity entity) throws BusinessException {
-        // app param check
+		try {
+			clusterDao.create(entity);
+		} catch (Exception e) {
+			throw new BusinessException(40110, "Cluster is exit");
+		}
+	}
 
-        Date now = new Date();
-        entity.setCreateTime(now);
-        entity.setUpdateTime(now);
+	public void updateCluster(ClusterDefination defination) throws BusinessException {
+		// app logic check
+		if (defination.getId() == null) {
+			throw new BusinessException(40108, "Cluster id is invalid");
+		}
+		if (defination.getName() == null) {
+			throw new BusinessException(40112, "Cluster name is invalid");
+		}
 
-        try {
-            clusterDao.create(entity);
-        } catch (Exception e) {
-            throw new BusinessException(40110, "Cluster is exit");
-        }
-    }
+		// app param check
+		ClusterEntity ce = clusterDao.find(defination.getId());
+		if (ce == null) {
+			throw new BusinessException(40109, "can't find cluster");
+		}
 
-    public void updateCluster(ClusterEntity entity) throws BusinessException {
-        // app logic check
-        if (entity.getId() == null) {
-            throw new BusinessException(40108, "Cluster id is invalid");
-        }
+		// ce.setCode(entity.getCode());
+		ce.setName(defination.getName());
+		ce.setUpdateTime(new Date());
+		clusterDao.update(ce);
+	}
 
-        // app param check
-        ClusterEntity ce = clusterDao.find(entity.getId());
-        if (ce == null) {
-            throw new BusinessException(40109, "can't find cluster");
-        }
+	public void deleteCluster(Integer id) throws BusinessException {
+		if (id == null) {
+			throw new BusinessException(40108, "Cluster id is invalid");
+		}
+		ClusterEntity ce = clusterDao.find(id);
+		if (ce != null) {
+			if (gatewayDao.hasGatewaysByClusterCode(ce.getCode())) {
+				throw new BusinessException(40111, "Cluster has gateways");
+			}
+		}
+		clusterDao.delete(id);
+	}
 
-        // ce.setCode(entity.getCode());
-        ce.setName(entity.getName());
-        ce.setUpdateTime(new Date());
-        clusterDao.update(ce);
-    }
+	public ClusterDefination getClusterById(Integer id) {
+		ClusterEntity e = clusterDao.find(id);
+		return convert(e);
+	}
 
-    public void deleteCluster(Integer id) throws BusinessException {
-        if (id == null) {
-            throw new BusinessException(40108, "Cluster id is invalid");
-        }
-        ClusterEntity ce = clusterDao.find(id);
-        if (ce != null) {
-            if (gatewayDao.hasGatewaysByClusterCode(ce.getCode())) {
-                throw new BusinessException(40111, "Cluster has gateways");
-            }
-        }
-        clusterDao.delete(id);
-    }
-
-    public ClusterEntity getClusterById(Integer id) {
-        return clusterDao.find(id);
-    }
-
-    public ClusterEntity getClusterByCode(String code) {
-        return clusterDao.find(code);
-    }
+	public ClusterDefination getClusterByCode(String code) {
+		ClusterEntity e = clusterDao.find(code);
+		return convert(e);
+	}
 
 }

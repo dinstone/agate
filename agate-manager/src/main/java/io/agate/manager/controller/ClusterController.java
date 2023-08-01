@@ -22,7 +22,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.ClusterEntity;
+import io.agate.manager.model.ClusterDefination;
 import io.agate.manager.service.BusinessException;
 import io.agate.manager.service.ClusterService;
 
@@ -30,67 +30,66 @@ import io.agate.manager.service.ClusterService;
 @RequestMapping("/view/cluster")
 public class ClusterController {
 
-    @Autowired
-    private ClusterService clusterService;
+	@Autowired
+	private ClusterService clusterService;
 
-    @RequestMapping("/list")
-    public ModelAndView list() {
-        ModelAndView mav = new ModelAndView("cluster/list");
-        List<ClusterEntity> clusterList = clusterService.clusterStatus();
-        return mav.addObject("clusters", clusterList);
-    }
+	@RequestMapping("/list")
+	public ModelAndView list() {
+		ModelAndView mav = new ModelAndView("cluster/list");
+		List<ClusterDefination> clusters = clusterService.clusterList();
+		return mav.addObject("clusters", clusters);
+	}
 
-    @RequestMapping("/create")
-    public ModelAndView create() {
-        ModelAndView mav = new ModelAndView("cluster/edit");
-        return mav.addObject("action", "create");
-    }
+	@RequestMapping("/create")
+	public ModelAndView create() {
+		ModelAndView mav = new ModelAndView("cluster/edit");
+		return mav.addObject("action", "create");
+	}
 
-    @RequestMapping("/update")
-    public ModelAndView update(Integer id) {
-        try {
-            ClusterEntity entity = clusterService.getClusterById(id);
-            ModelAndView mav = new ModelAndView("cluster/edit").addObject("cluster", entity);
-            return mav.addObject("action", "update");
-        } catch (Exception e) {
-            return new ModelAndView("cluster/list");
-        }
-    }
+	@RequestMapping("/update")
+	public ModelAndView update(Integer id) {
+		try {
+			ClusterDefination cluster = clusterService.getClusterById(id);
+			ModelAndView mav = new ModelAndView("cluster/edit").addObject("cluster", cluster);
+			return mav.addObject("action", "update");
+		} catch (Exception e) {
+			return new ModelAndView("cluster/list");
+		}
+	}
 
-    @RequestMapping("/save")
-    public ModelAndView save(ClusterEntity entity, String action) {
-        try {
-            if ("create".equals(action)) {
-                clusterService.createCluster(entity);
-            } else {
-                clusterService.updateCluster(entity);
-            }
-        } catch (BusinessException e) {
-            ModelAndView mav = new ModelAndView("forward:/view/cluster/" + action);
-            mav.addObject("error", e.getMessage());
-            return mav.addObject("cluster", entity).addObject("action", action);
-        }
-        return new ModelAndView("forward:/view/cluster/list");
-    }
+	@RequestMapping("/save")
+	public ModelAndView save(ClusterDefination clusterDefination, String action) {
+		try {
+			if ("create".equals(action)) {
+				clusterService.createCluster(clusterDefination);
+			} else {
+				clusterService.updateCluster(clusterDefination);
+			}
+		} catch (BusinessException e) {
+			ModelAndView mav = new ModelAndView("forward:/view/cluster/" + action);
+			mav.addObject("error", e.getMessage());
+			return mav.addObject("cluster", clusterDefination).addObject("action", action);
+		}
+		return new ModelAndView("forward:/view/cluster/list");
+	}
 
-    @RequestMapping("/detail")
-    public ModelAndView detail(Integer id) {
-        try {
-            ClusterEntity entity = clusterService.getClusterById(id);
+	@RequestMapping("/detail")
+	public ModelAndView detail(Integer id) {
+		try {
+			ClusterDefination cluster = clusterService.getClusterById(id);
+			return new ModelAndView("cluster/detail").addObject("cluster", cluster);
+		} catch (Exception e) {
+			return new ModelAndView("forward:/view/cluster/list");
+		}
+	}
 
-            return new ModelAndView("cluster/detail").addObject("cluster", entity);
-        } catch (Exception e) {
-            return new ModelAndView("forward:/view/cluster/list");
-        }
-    }
-
-    @RequestMapping("/delete")
-    public ModelAndView delete(Integer id) {
-        try {
-            clusterService.deleteCluster(id);
-        } catch (BusinessException e) {
-        }
-        return new ModelAndView("forward:/view/cluster/list");
-    }
+	@RequestMapping("/delete")
+	public ModelAndView delete(Integer id) {
+		try {
+			clusterService.deleteCluster(id);
+		} catch (BusinessException e) {
+		}
+		return new ModelAndView("forward:/view/cluster/list");
+	}
 
 }

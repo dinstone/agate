@@ -13,29 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agate.manager.model;
+package io.agate.manager.entity;
 
 import java.util.Date;
 
-public class RouteEntity {
+public class ClusterEntity {
 
 	private Integer id;
 
-	private Integer gwId;
+	private String code;
 
 	private String name;
-
-	private String remark;
-
-	private String request;
-
-	private String response;
-
-	private String routing;
-
-	private String handlers;
-
-	private int status;
 
 	private Date createTime;
 
@@ -49,12 +37,12 @@ public class RouteEntity {
 		this.id = id;
 	}
 
-	public Integer getGwId() {
-		return gwId;
+	public String getCode() {
+		return code;
 	}
 
-	public void setGwId(Integer gwId) {
-		this.gwId = gwId;
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 	public String getName() {
@@ -63,54 +51,6 @@ public class RouteEntity {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getRemark() {
-		return remark;
-	}
-
-	public void setRemark(String remark) {
-		this.remark = remark;
-	}
-
-	public String getRequest() {
-		return request;
-	}
-
-	public void setRequest(String request) {
-		this.request = request;
-	}
-
-	public String getResponse() {
-		return response;
-	}
-
-	public void setResponse(String response) {
-		this.response = response;
-	}
-
-	public String getRouting() {
-		return routing;
-	}
-
-	public void setRouting(String routing) {
-		this.routing = routing;
-	}
-
-	public String getHandlers() {
-		return handlers;
-	}
-
-	public void setHandlers(String handlers) {
-		this.handlers = handlers;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
-		this.status = status;
 	}
 
 	public Date getCreateTime() {

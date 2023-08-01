@@ -24,8 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.ClusterEntity;
-import io.agate.manager.model.GatewayEntity;
+import io.agate.manager.model.ClusterDefination;
+import io.agate.manager.model.GatewayDefination;
 import io.agate.manager.service.BusinessException;
 import io.agate.manager.service.ClusterService;
 import io.agate.manager.service.ManageService;
@@ -43,23 +43,22 @@ public class GatewayController {
 	@RequestMapping("/list")
 	public ModelAndView list(HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView("gateway/list");
-		List<GatewayEntity> gateways = manageService.gatewayList();
+		List<GatewayDefination> gateways = manageService.gatewayList();
 		return mav.addObject("gateways", gateways);
 	}
 
 	@RequestMapping("/create")
 	public ModelAndView create(HttpServletRequest request) {
-		List<ClusterEntity> clusters = clusterService.clusterList();
-
+		List<ClusterDefination> clusters = clusterService.clusterList();
 		ModelAndView mav = new ModelAndView("gateway/edit");
 		return mav.addObject("action", "create").addObject("clusters", clusters);
 	}
 
 	@RequestMapping("/update")
 	public ModelAndView update(Integer id, HttpServletRequest request) {
-		List<ClusterEntity> clusters = clusterService.clusterList();
+		List<ClusterDefination> clusters = clusterService.clusterList();
 		try {
-			GatewayEntity appEntity = manageService.getGatewayById(id);
+			GatewayDefination appEntity = manageService.getGatewayById(id);
 			ModelAndView mav = new ModelAndView("gateway/edit").addObject("gateway", appEntity);
 			return mav.addObject("action", "update").addObject("clusters", clusters);
 		} catch (Exception e) {
@@ -68,19 +67,19 @@ public class GatewayController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(GatewayEntity entity, String action, HttpServletRequest request) {
+	public ModelAndView save(GatewayDefination defination, String action, HttpServletRequest request) {
 		try {
 			if ("create".equals(action)) {
-				manageService.createGateway(entity);
+				manageService.createGateway(defination);
 			} else {
-				manageService.updateGateway(entity);
+				manageService.updateGateway(defination);
 			}
 		} catch (BusinessException e) {
 			ModelAndView mav = new ModelAndView("forward:/view/gateway/" + action);
 
-			List<ClusterEntity> clusters = clusterService.clusterList();
+			List<ClusterDefination> clusters = clusterService.clusterList();
 			mav.addObject("error", e.getMessage()).addObject("clusters", clusters);
-			return mav.addObject("gateway", entity).addObject("action", action);
+			return mav.addObject("gateway", defination).addObject("action", action);
 		}
 		return new ModelAndView("forward:/view/gateway/list");
 	}
@@ -89,8 +88,8 @@ public class GatewayController {
 	public ModelAndView detail(Integer id) {
 		ModelAndView mav = new ModelAndView("gateway/detail");
 		try {
-			GatewayEntity gateway = manageService.getGatewayById(id);
-			ClusterEntity cluster = clusterService.getClusterByCode(gateway.getCode());
+			GatewayDefination gateway = manageService.getGatewayById(id);
+			ClusterDefination cluster = clusterService.getClusterByCode(gateway.getCluster());
 			mav.addObject("cluster", cluster);
 			mav.addObject("gateway", gateway);
 			mav.addObject("action", "detail");

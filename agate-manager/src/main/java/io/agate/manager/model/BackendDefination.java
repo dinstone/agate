@@ -13,34 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.agate.manager.model;
 
-public class RequestConfig {
+import java.util.List;
 
-	private String prefix;
+public class BackendDefination {
 
-	private String path;
+	/** 0:http reverse proxy; 1:http service discovery 2:grpc discovery */
+	private int type;
+
+	private Integer timeout;
 
 	private String method;
 
-	private String consumes;
+	private String path;
 
-	private String produces;
+	private List<String> urls;
 
-	public String getPrefix() {
-		return prefix;
+	private List<ParamConfig> params;
+
+	public int getType() {
+		return type;
 	}
 
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
+	public void setType(int type) {
+		this.type = type;
 	}
 
-	public String getPath() {
-		return path;
+	public Integer getTimeout() {
+		return timeout;
 	}
 
-	public void setPath(String path) {
-		this.path = path;
+	public void setTimeout(Integer timeout) {
+		this.timeout = timeout;
 	}
 
 	public String getMethod() {
@@ -51,20 +57,28 @@ public class RequestConfig {
 		this.method = method;
 	}
 
-	public String getConsumes() {
-		return consumes;
+	public List<String> getUrls() {
+		return urls;
 	}
 
-	public void setConsumes(String consumes) {
-		this.consumes = consumes;
+	public void setUrls(List<String> urls) {
+		this.urls = urls;
 	}
 
-	public String getProduces() {
-		return produces;
+	public List<ParamConfig> getParams() {
+		return params;
 	}
 
-	public void setProduces(String produces) {
-		this.produces = produces;
+	public void setParams(List<ParamConfig> params) {
+		this.params = params;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 }

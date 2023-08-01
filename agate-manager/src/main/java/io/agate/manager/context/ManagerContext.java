@@ -66,7 +66,7 @@ public class ManagerContext implements ApplicationListener<ApplicationStartedEve
 			}
 		}, 1, 3, TimeUnit.SECONDS);
 
-		executor.scheduleAtFixedRate(new Runnable() {
+		executor.scheduleWithFixedDelay(new Runnable() {
 
 			@Override
 			public void run() {

@@ -22,7 +22,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import io.agate.manager.model.GatewayEntity;
+import io.agate.manager.entity.GatewayEntity;
 
 @Component
 public class GatewayDao {
@@ -32,27 +32,13 @@ public class GatewayDao {
 
 	public boolean gatewayNameExist(GatewayEntity entity) {
 		if (entity.getId() != null) {
-			String sql = "select count(1) from t_gateway where code=? and name=? and id<>?";
+			String sql = "select count(1) from t_gateway where cluster=? and name=? and id<>?";
 			Integer count = jdbcTemplate.queryForObject(sql,
-					new Object[] { entity.getCode(), entity.getName(), entity.getId() }, Integer.class);
+					new Object[] { entity.getCluster(), entity.getName(), entity.getId() }, Integer.class);
 			return count != null && count > 0;
 		} else {
-			String sql = "select count(1) from t_gateway where code=? and name=?";
-			Integer count = jdbcTemplate.queryForObject(sql, new Object[] { entity.getCode(), entity.getName() },
-					Integer.class);
-			return count != null && count > 0;
-		}
-	}
-
-	public boolean gatewayPortExist(GatewayEntity entity) {
-		if (entity.getId() != null) {
-			String sql = "select count(1) from t_gateway where code=? and port=? and id<>?";
-			Integer count = jdbcTemplate.queryForObject(sql,
-					new Object[] { entity.getCode(), entity.getPort(), entity.getId() }, Integer.class);
-			return count != null && count > 0;
-		} else {
-			String sql = "select count(1)  from t_gateway where code=? and port=?";
-			Integer count = jdbcTemplate.queryForObject(sql, new Object[] { entity.getCode(), entity.getPort() },
+			String sql = "select count(1) from t_gateway where cluster=? and name=?";
+			Integer count = jdbcTemplate.queryForObject(sql, new Object[] { entity.getCluster(), entity.getName() },
 					Integer.class);
 			return count != null && count > 0;
 		}
@@ -65,23 +51,19 @@ public class GatewayDao {
 	}
 
 	public void create(GatewayEntity entity) {
-		String sql = "insert into t_gateway(code,name,host,port,remark,serverconfig,clientconfig,createtime,updatetime) values(?,?,?,?,?,?,?,?,?)";
-		jdbcTemplate.update(sql,
-				new Object[] { entity.getCode(), entity.getName(), entity.getHost(), entity.getPort(),
-						entity.getRemark(), entity.getServerConfig(), entity.getClientConfig(), entity.getCreateTime(),
-						entity.getUpdateTime() });
+		String sql = "insert into t_gateway(cluster,name,json,status,createtime,updatetime) values(?,?,?,?,?,?)";
+		jdbcTemplate.update(sql, new Object[] { entity.getCluster(), entity.getName(), entity.getJson(),
+				entity.getStatus(), entity.getCreateTime(), entity.getUpdateTime() });
 	}
 
 	public void update(GatewayEntity entity) {
-		String sql = "update t_gateway set code=?,name=?,host=?,port=?,remark=?,serverconfig=?,clientconfig=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql,
-				new Object[] { entity.getCode(), entity.getName(), entity.getHost(), entity.getPort(),
-						entity.getRemark(), entity.getServerConfig(), entity.getClientConfig(), entity.getUpdateTime(),
-						entity.getId() });
+		String sql = "update t_gateway set cluster=?,name=?,json=?,updatetime=? where id=?";
+		jdbcTemplate.update(sql, new Object[] { entity.getCluster(), entity.getName(), entity.getJson(),
+				entity.getUpdateTime(), entity.getId() });
 	}
 
 	public List<GatewayEntity> list() {
-		String sql = "select g.*, c.name cluster from t_gateway g, t_cluster c where c.code=g.code";
+		String sql = "select * from t_gateway";
 		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class));
 	}
 
@@ -96,7 +78,7 @@ public class GatewayDao {
 	}
 
 	public GatewayEntity find(String cluster, String gateway) {
-		String sql = "select * from t_gateway where code=? and name=?";
+		String sql = "select * from t_gateway where cluster=? and name=?";
 		List<GatewayEntity> apps = jdbcTemplate.query(sql, new Object[] { cluster, gateway },
 				BeanPropertyRowMapper.newInstance(GatewayEntity.class));
 		if (!apps.isEmpty()) {
@@ -113,11 +95,6 @@ public class GatewayDao {
 	public void updateStatus(GatewayEntity entity) {
 		String sql = "update t_gateway set status=?,updatetime=? where id=?";
 		jdbcTemplate.update(sql, new Object[] { entity.getStatus(), entity.getUpdateTime(), entity.getId() });
-	}
-
-	public List<GatewayEntity> all() {
-		String sql = "select * from t_gateway";
-		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class));
 	}
 
 }

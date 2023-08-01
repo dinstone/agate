@@ -19,15 +19,15 @@ package io.agate.manager.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.agate.manager.model.PluginConfig;
+import io.agate.manager.model.PluginDefination;
 import io.agate.manager.utils.JacksonCodec;
 
 public class JacksonCodecTest {
 
     public static void main(String[] args) {
-        List<PluginConfig> l = new ArrayList<>();
+        List<PluginDefination> l = new ArrayList<>();
         for (int j = 0; j < 3; j++) {
-            PluginConfig e = new PluginConfig();
+            PluginDefination e = new PluginDefination();
             e.setOrder(j + 1);
             e.setPlugin("p-" + j);
             e.setType(j % 2);
@@ -37,7 +37,7 @@ public class JacksonCodecTest {
 
         System.out.println(s);
 
-        List<PluginConfig> o = JacksonCodec.decodeList(s, PluginConfig.class);
+        List<PluginDefination> o = JacksonCodec.decodeList(s, PluginDefination.class);
         System.out.println(o);
     }
 

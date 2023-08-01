@@ -20,33 +20,33 @@ import java.util.List;
 
 public class HandlersConfig {
 
-    private List<PluginConfig> befores;
+    private List<PluginDefination> befores;
 
-    private List<PluginConfig> afters;
+    private List<PluginDefination> afters;
 
-    private List<PluginConfig> failures;
+    private List<PluginDefination> failures;
 
-    public List<PluginConfig> getBefores() {
+    public List<PluginDefination> getBefores() {
         return befores;
     }
 
-    public void setBefores(List<PluginConfig> befores) {
+    public void setBefores(List<PluginDefination> befores) {
         this.befores = befores;
     }
 
-    public List<PluginConfig> getAfters() {
+    public List<PluginDefination> getAfters() {
         return afters;
     }
 
-    public void setAfters(List<PluginConfig> afters) {
+    public void setAfters(List<PluginDefination> afters) {
         this.afters = afters;
     }
 
-    public List<PluginConfig> getFailures() {
+    public List<PluginDefination> getFailures() {
         return failures;
     }
 
-    public void setFailures(List<PluginConfig> failures) {
+    public void setFailures(List<PluginDefination> failures) {
         this.failures = failures;
     }
 

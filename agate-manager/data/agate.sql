@@ -36,6 +36,14 @@ CREATE UNIQUE INDEX i_cluster_port ON t_gateway (
     port
 );
 
+CREATE TABLE t_app (
+    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+    name       STRING   NOT NULL,
+    json       TEXT     NOT NULL,
+    createTime DATETIME NOT NULL,
+    updateTime DATETIME NOT NULL
+);
+
 CREATE TABLE t_route (
     id      INTEGER  PRIMARY KEY AUTOINCREMENT,
     gwId      INTEGER  NOT NULL REFERENCES t_gateway (id),

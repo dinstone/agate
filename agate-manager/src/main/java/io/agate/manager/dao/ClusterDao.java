@@ -23,7 +23,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import io.agate.manager.model.ClusterEntity;
+import io.agate.manager.entity.ClusterEntity;
 
 @Component
 public class ClusterDao {

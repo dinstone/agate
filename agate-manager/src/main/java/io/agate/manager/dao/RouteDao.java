@@ -22,7 +22,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import io.agate.manager.model.RouteEntity;
+import io.agate.manager.entity.RouteEntity;
 
 @Component
 public class RouteDao {
@@ -30,24 +30,22 @@ public class RouteDao {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-	public boolean apiNameExist(String name) {
+	public boolean routeNameExist(String name) {
 		String sql = "select count(1) from t_route where name=?";
 		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { name }, Integer.class);
 		return count != null && count > 0;
 	}
 
 	public void create(RouteEntity entity) {
-		String sql = "insert into t_route(gwId,name,remark,request,response,routing,handlers,status,createtime,updatetime) values(?,?,?,?,?,?,?,?,?,?)";
-		jdbcTemplate.update(sql,
-				new Object[] { entity.getGwId(), entity.getName(), entity.getRemark(), entity.getRequest(),
-						entity.getResponse(), entity.getRouting(), entity.getHandlers(), entity.getStatus(),
-						entity.getCreateTime(), entity.getUpdateTime() });
+		String sql = "insert into t_route(appId,name,status,json,createtime,updatetime) values(?,?,?,?,?,?)";
+		jdbcTemplate.update(sql, new Object[] { entity.getAppId(), entity.getName(), entity.getStatus(),
+				entity.getJson(), entity.getCreateTime(), entity.getUpdateTime() });
 	}
 
 	public void update(RouteEntity entity) {
-		String sql = "update t_route set remark=?,request=?,response=?,routing=?,handlers=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { entity.getRemark(), entity.getRequest(), entity.getResponse(),
-				entity.getRouting(), entity.getHandlers(), entity.getUpdateTime(), entity.getId() });
+		String sql = "update t_route set appId=?,name=?,json=?,updatetime=? where id=?";
+		jdbcTemplate.update(sql, new Object[] { entity.getAppId(), entity.getName(), entity.getJson(),
+				entity.getUpdateTime(), entity.getId() });
 	}
 
 	public List<RouteEntity> list() {
@@ -55,14 +53,19 @@ public class RouteDao {
 		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteEntity.class));
 	}
 
-	public List<RouteEntity> list(Integer gwId) {
-		String sql = "select * from t_route where gwId=?";
+	public List<RouteEntity> list(Integer appId) {
+		String sql = "select * from t_route where appId=?";
+		return jdbcTemplate.query(sql, new Object[] { appId }, BeanPropertyRowMapper.newInstance(RouteEntity.class));
+	}
+	
+	public List<RouteEntity> listByGatewayId(Integer gwId) {
+		String sql = "select r.* from t_route r, t_app a where r.appId=a.id and a.gwId=?";
 		return jdbcTemplate.query(sql, new Object[] { gwId }, BeanPropertyRowMapper.newInstance(RouteEntity.class));
 	}
 
-	public RouteEntity find(Integer arId) {
+	public RouteEntity find(Integer id) {
 		String sql = "select * from t_route where id=?";
-		List<RouteEntity> ares = jdbcTemplate.query(sql, new Object[] { arId },
+		List<RouteEntity> ares = jdbcTemplate.query(sql, new Object[] { id },
 				BeanPropertyRowMapper.newInstance(RouteEntity.class));
 		if (!ares.isEmpty()) {
 			return ares.get(0);
@@ -70,9 +73,9 @@ public class RouteDao {
 		return null;
 	}
 
-	public void delete(Integer arId) {
+	public void delete(Integer id) {
 		String sql = "delete from t_route where id=?";
-		jdbcTemplate.update(sql, new Object[] { arId });
+		jdbcTemplate.update(sql, new Object[] { id });
 	}
 
 	public void updateStatus(RouteEntity entity) {
