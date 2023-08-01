@@ -40,7 +40,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers("/", "/error").permitAll().antMatchers("/**").authenticated();
 
         http.formLogin().loginPage("/index.html").loginProcessingUrl("/login")// login process
-            .defaultSuccessUrl("/view/dashboard/show", true) // env process
+            .defaultSuccessUrl("/view/home/welcome", true) // env process
             .and().logout().logoutUrl("/logout")// logout process
             .and().csrf().disable()// csrf disabled
             .headers().frameOptions().sameOrigin();

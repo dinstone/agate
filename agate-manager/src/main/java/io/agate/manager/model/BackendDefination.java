@@ -29,9 +29,13 @@ public class BackendDefination {
 
 	private String path;
 
+	private String registry;
+
+	private String connection;
+
 	private List<String> urls;
 
-	private List<ParamConfig> params;
+	private List<ParamDefination> params;
 
 	public int getType() {
 		return type;
@@ -65,11 +69,11 @@ public class BackendDefination {
 		this.urls = urls;
 	}
 
-	public List<ParamConfig> getParams() {
+	public List<ParamDefination> getParams() {
 		return params;
 	}
 
-	public void setParams(List<ParamConfig> params) {
+	public void setParams(List<ParamDefination> params) {
 		this.params = params;
 	}
 
@@ -79,6 +83,28 @@ public class BackendDefination {
 
 	public void setPath(String path) {
 		this.path = path;
+	}
+
+	public String getRegistry() {
+		return registry;
+	}
+
+	public void setRegistry(String registry) {
+		this.registry = registry;
+	}
+
+	public String getConnection() {
+		return connection;
+	}
+
+	public void setConnection(String connection) {
+		this.connection = connection;
+	}
+
+	@Override
+	public String toString() {
+		return "BackendDefination [type=" + type + ", timeout=" + timeout + ", method=" + method + ", path=" + path
+				+ ", registry=" + registry + ", urls=" + urls + ", params=" + params + "]";
 	}
 
 }

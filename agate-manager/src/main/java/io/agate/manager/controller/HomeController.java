@@ -22,16 +22,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
-@RequestMapping("/view/dashboard")
-public class DashboardController {
+@RequestMapping("/view/home")
+public class HomeController {
 
-    @RequestMapping("/show")
-    public ModelAndView show(String env, HttpServletRequest request) {
-        try {
-            return new ModelAndView("index");
-        }catch (Exception e) {
-        }
-        return new ModelAndView("index");
-    }
+	@RequestMapping("/dashboard")
+	public ModelAndView dashboard(String env, HttpServletRequest request) {
+		try {
+			return new ModelAndView("index");
+		} catch (Exception e) {
+		}
+		return new ModelAndView("index");
+	}
+
+	@RequestMapping("/welcome")
+	public ModelAndView welcome(String env, HttpServletRequest request) {
+		try {
+			return new ModelAndView("index");
+		} catch (Exception e) {
+		}
+		return new ModelAndView("index");
+	}
 
 }

@@ -28,7 +28,7 @@
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/">Home</a></li>
+						<li><a href="${contextPath}/view/home/welcome">Home</a></li>
 						<li><a href="${contextPath}/view/app/list">Applications</a></li>
 						<li>Routes</li>
 					</ul>
@@ -56,7 +56,7 @@
 											<th rowspan="1" colspan="1" style="width: 99px;">Application</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Route Name</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Remark</th>
-											<th rowspan="1" colspan="1" style="width: 99px;">Path</th>
+											<th rowspan="1" colspan="1" style="width: 99px;">URL</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Status</th>
 											<th rowspan="1" colspan="1" style="width: 99px;">Actions</th>
 										</tr>
@@ -67,7 +67,7 @@
 												<td>${app.name}</td>
 												<td><a href="${contextPath}/view/route/detail?id=${route.id}&appId=${app.id}">${route.name}</a></td>
 												<td>${route.remark}</td>
-												<td>${app.prefix}${route.frontend.path}</td>
+												<td>${app.domain}${app.prefix}${route.frontend.path}</td>
 												<c:if test="${route.status > 0}">
 													<td>Started</td>
 													<td><a class="btn btn-default" href="${contextPath}/view/route/close?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-off"></i><span> Close</span></a> <a class="btn btn-default" href="${contextPath}/view/route/update?id=${route.id}&appId=${app.id}"><i class="glyphicon glyphicon-pencil"></i><span>

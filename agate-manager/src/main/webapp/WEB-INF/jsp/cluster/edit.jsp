@@ -33,7 +33,7 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="/view/cluster/list">Cluster</a></li>
+						<li><a href="/view/cluster/list">Clusters</a></li>
 						<c:if test="${action == 'create'}">
 							<li>Cluster Create</li>
 						</c:if>

@@ -31,7 +31,7 @@ import io.agate.manager.service.ManageService;
 
 @Controller
 @RequestMapping("/view/app")
-public class AppController {
+public class ApplicationController {
 
 	@Autowired
 	private ManageService manageService;
@@ -63,19 +63,19 @@ public class AppController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(AppDefination defination, String action, HttpServletRequest request) {
+	public ModelAndView save(AppDefination app, String action, HttpServletRequest request) {
 		try {
 			if ("create".equals(action)) {
-				manageService.createApp(defination);
+				manageService.createApp(app);
 			} else {
-				manageService.updateApp(defination);
+				manageService.updateApp(app);
 			}
 		} catch (BusinessException e) {
 			ModelAndView mav = new ModelAndView("forward:/view/app/" + action);
 
 			List<GatewayDefination> gateways = manageService.gatewayList();
 			mav.addObject("error", e.getMessage()).addObject("gateways", gateways);
-			return mav.addObject("app", defination).addObject("action", action);
+			return mav.addObject("app", app).addObject("action", action);
 		}
 		return new ModelAndView("forward:/view/app/list");
 	}

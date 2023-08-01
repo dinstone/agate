@@ -72,10 +72,22 @@
 		$(ev).parent().parent().remove();
 	}
 	
+	function routeTypeChange(){
+		var v = $("input[name='backend.type']:checked").val();
+		if(v==1){
+			$("#registry").show();
+		}else{
+			$("#registry").hide();
+		}
+	}
+
 	$(document).ready(function() {
+		routeTypeChange();
+		
 		$("form").submit(function(event) {
 		});
 	});
+	
 </script>
 </head>
 <body>
@@ -85,7 +97,6 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/">Home</a></li>
 						<li><a href="${contextPath}/view/app/list">Applications</a></li>
 						<li><a href="${contextPath}/view/route/list?appId=${app.id}">Routes</a></li>
 						<c:if test="${action == 'create'}">
@@ -166,38 +177,27 @@
 										<label>Routing Type</label>
 										<div class="input-group">
 											<c:choose>
-												<c:when test="${route.backend.type==0}">
-													<input type="radio" value="0" name="backend.type" checked="checked"> Http Reverse Proxy 
-													<input type="radio" value="1" name="backend.type"> Http Service Discovery
+												<c:when test="${route.backend.type==1}">
+													<input type="radio" value="0" name="backend.type" onchange="routeTypeChange()"> Reverse Proxy 
+													<input type="radio" value="1" name="backend.type" onchange="routeTypeChange()" checked="checked"> Service Discovery
 												</c:when>
 												<c:otherwise>
-													<input type="radio" value="0" name="backend.type"> Http Reverse Proxy 
-													<input type="radio" value="1" name="backend.type" checked="checked"> Http Service Discovery
+													<input type="radio" value="0" name="backend.type" onchange="routeTypeChange()" checked="checked"> Reverse Proxy 
+													<input type="radio" value="1" name="backend.type" onchange="routeTypeChange()"> Service Discovery
 												</c:otherwise>
 											</c:choose>
 										</div>
 									</div>
-									<div class="form-group">
-										<label>Routing Method (Http Method)</label> <select name="backend.method" class="form-control">
-											<option></option>
-											<option value="GET">GET</option>
-											<option value="POST">POST</option>
-											<option value="PUT">PUT</option>
-											<option value="DELETE">DELETE</option>
-										</select>
-									</div>
-									<div class="form-group has-feedback">
-										<label>Routing Timeout</label>
-										<div class="input-group">
-											<input type="text" class="form-control" name="backend.timeout" value="${route.backend.timeout}"><span class="input-group-addon">ms</span>
-										</div>
+									<div class="form-group" id="registry">
+										<label>Service Registry <i class="glyphicon glyphicon-star red"></i></label> Json config example : {"type": "consul","host": "192.168.1.120","port": 8500}
+										<textarea class="form-control" name="backend.registry">${route.backend.registry}</textarea>
 									</div>
 									<div class="form-group">
 										<label>Routing URLs <i class="glyphicon glyphicon-star red"></i></label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">
 											<thead>
 												<tr>
-													<td colspan="4">Example: https://www.baidu.com or http://user-service, Does not include path.</td>
+													<td colspan="4">Example: https://www.baidu.com or http://user-service. Does not include path.</td>
 													<td align="right"><button class="btn btn-primary" onclick="addUrl(this)">
 															<i class="glyphicon glyphicon-th-list"></i> Add URL
 														</button></td>
@@ -220,6 +220,25 @@
 									<div class="form-group">
 										<label>Routing Path</label> Example: /* or /:path <input type="text" class="form-control" name="backend.path" value="${route.backend.path}">
 									</div>
+									<div class="form-group">
+										<label>Routing Method (Http Method)</label> <select name="backend.method" class="form-control">
+											<option></option>
+											<option value="GET">GET</option>
+											<option value="POST">POST</option>
+											<option value="PUT">PUT</option>
+											<option value="DELETE">DELETE</option>
+										</select>
+									</div>
+									<div class="form-group has-feedback">
+										<label>Routing Timeout</label>
+										<div class="input-group">
+											<input type="text" class="form-control" name="backend.timeout" value="${route.backend.timeout}"><span class="input-group-addon">ms</span>
+										</div>
+									</div>
+									<div class="form-group">
+                                        <label>Connetion Config </label> Json config example : {"connectTimeout": 1000,"idleTimeout": 10,"maxPoolSize": 100,"maxWaitQueueSize": 1000}
+                                        <textarea class="form-control" name="backend.connection">${route.backend.connection}</textarea>
+                                    </div>
 									<div class="form-group">
 										<label>Param Mapping</label>
 										<table class="table table-striped bootstrap-datatable datatable responsive dataTable">

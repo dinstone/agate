@@ -28,7 +28,7 @@
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/">Home</a></li>
+						<li><a href="${contextPath}/view/home/welcome">Home</a></li>
 						<li>Clusters</li>
 					</ul>
 				</div>

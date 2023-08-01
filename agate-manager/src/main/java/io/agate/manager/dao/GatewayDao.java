@@ -44,9 +44,9 @@ public class GatewayDao {
 		}
 	}
 
-	public boolean hasGatewaysByClusterCode(String code) {
-		String sql = "select count(1) from t_gateway where code=?";
-		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { code }, Integer.class);
+	public boolean hasGatewaysByClusterCode(String cluster) {
+		String sql = "select count(1) from t_gateway where cluster=?";
+		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { cluster }, Integer.class);
 		return count != null && count > 0;
 	}
 

@@ -71,7 +71,7 @@
 										</select>
 									</div>
 									<div class="form-group">
-										<label>Name (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${app.name}">
+										<label>APP Name (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${app.name}">
 									</div>
 									<div class="form-group">
 										<label>Vertual Host</label> <input type="text" class="form-control" name="domain" value="${app.domain}">

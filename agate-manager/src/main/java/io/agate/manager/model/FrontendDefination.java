@@ -67,4 +67,10 @@ public class FrontendDefination {
 		this.produces = produces;
 	}
 
+	@Override
+	public String toString() {
+		return "FrontendDefination [prefix=" + prefix + ", path=" + path + ", method=" + method + ", consumes="
+				+ consumes + ", produces=" + produces + "]";
+	}
+
 }

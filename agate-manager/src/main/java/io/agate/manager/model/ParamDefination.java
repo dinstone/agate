@@ -15,7 +15,7 @@
  */
 package io.agate.manager.model;
 
-public class ParamConfig {
+public class ParamDefination {
 
 	private String feParamName;
 
@@ -31,7 +31,7 @@ public class ParamConfig {
 	 */
 	private ParamType beParamType;
 
-	public ParamConfig() {
+	public ParamDefination() {
 		super();
 	}
 

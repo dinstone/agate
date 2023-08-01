@@ -123,37 +123,38 @@ public class GatewayVerticle extends AbstractVerticle {
 					return;
 				}
 
-				FrontendOptions requestOptions = routeOptions.getFrontend();
 				// create sub router
 				Router subRouter = Router.router(vertx);
 				// create route
 				Route route = subRouter.route().setName(routeOptions.getRoute());
+				// virtual host
+				String domain = routeOptions.getDomain();
+				if (domain != null && !domain.isEmpty()) {
+					route.virtualHost(domain);
+				}
 				// path
-				if (HttpUtil.pathIsRegex(requestOptions.getPath())) {
-					route = route.pathRegex(requestOptions.getPath());
+				FrontendOptions frontendOptions = routeOptions.getFrontend();
+				if (HttpUtil.pathIsRegex(frontendOptions.getPath())) {
+					route = route.pathRegex(frontendOptions.getPath());
 				} else {
-					route = route.path(requestOptions.getPath());
+					route = route.path(frontendOptions.getPath());
 				}
 				// method
-				String method = requestOptions.getMethod();
-				if (method != null && method.length() > 0) {
+				String method = frontendOptions.getMethod();
+				if (method != null && !method.isEmpty()) {
 					route.method(HttpMethod.valueOf(method.toUpperCase()));
 				}
 				// consumes
-				if (requestOptions.getConsumes() != null) {
-					for (String consume : requestOptions.getConsumes()) {
+				if (frontendOptions.getConsumes() != null) {
+					for (String consume : frontendOptions.getConsumes()) {
 						route.consumes(consume);
 					}
 				}
 				// produces
-				if (requestOptions.getProduces() != null) {
-					for (String produce : requestOptions.getProduces()) {
+				if (frontendOptions.getProduces() != null) {
+					for (String produce : frontendOptions.getProduces()) {
 						route.produces(produce);
 					}
-				}
-				// virtual host
-				if (routeOptions.getDomain() != null) {
-					route.virtualHost(routeOptions.getDomain());
 				}
 
 				// routing handler

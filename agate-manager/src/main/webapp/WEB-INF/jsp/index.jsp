@@ -28,13 +28,13 @@
 			<div id="content" class="col-lg-10 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/">Home</a></li>
-						<li>Dashboard</li>
+						<li><a href="${contextPath}/view/home/welcome">Home</a></li>
+						<li>Welcome</li>
 					</ul>
 				</div>
 				<div class="row">
 					<div class="box col-md-12">
-						Wecome!
+						Hi <span class="hidden-sm hidden-xs"> <sec:authentication property="principal.username" /> ! Welcome to experience Agate，which is distributed、asynchronous、responsive API Gateway.
 					</div>
 				</div>
 			</div>

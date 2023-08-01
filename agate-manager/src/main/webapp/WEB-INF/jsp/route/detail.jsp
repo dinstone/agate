@@ -33,7 +33,7 @@
 			<div id="content" class="col-lg-12 col-sm-10">
 				<div>
 					<ul class="breadcrumb">
-						<li><a href="${contextPath}/">Home</a></li>
+						<li><a href="${contextPath}/view/home/welcome">Home</a></li>
 						<li><a href="${contextPath}/view/app/list">Applications</a></li>
 						<li><a href="${contextPath}/view/route/list?appId=${app.id}">Routes</a></li>
 						<li>Route Detail</li>
