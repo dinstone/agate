@@ -15,8 +15,6 @@
  */
 package io.agate.gateway;
 
-import io.agate.gateway.AgateGatewayLauncher;
-
 class AgateGatewayLauncherTest3 {
 
     public static void main(String[] args) throws Exception {

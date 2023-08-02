@@ -19,45 +19,26 @@ import java.util.List;
 
 import com.orbitz.consul.CatalogClient;
 import com.orbitz.consul.Consul;
-import com.orbitz.consul.KeyValueClient;
 import com.orbitz.consul.model.ConsulResponse;
 import com.orbitz.consul.model.catalog.CatalogService;
 import com.orbitz.consul.model.health.Node;
 
 public class ConsulClientTest {
 
-    public static void main(String[] args) {
-        CatalogClient cc = Consul.builder().build().catalogClient();
-        for (Node node : cc.getNodes().getResponse()) {
-            System.out.println(node.getNode() + ":" + node.getAddress() + ":" + node.getNodeMeta());
-        }
+	public static void main(String[] args) {
+		CatalogClient cc = Consul.builder().build().catalogClient();
+		for (Node node : cc.getNodes().getResponse()) {
+			System.out.println(node.getNode() + ":" + node.getAddress() + ":" + node.getNodeMeta());
+		}
 
-        service(cc);
-    }
+		service(cc);
+	}
 
-    private static void service(CatalogClient cc) {
-        ConsulResponse<List<CatalogService>> rl = cc.getService("agate-gateway");
-        for (CatalogService e : rl.getResponse()) {
-            System.out.println(e.getServiceName() + " : " + e.getServiceId() + " : " + e.getServiceMeta());
-        }
-    }
-
-    private static void kv() {
-        KeyValueClient kvc = Consul.builder().build().keyValueClient();
-
-        String key = "agate/apps/default/gw-app";
-        String value = "{\n" + "    \"cluster\": \"default\",\n" + "    \"appName\": \"gw-app\",\n"
-                + "    \"prefix\": \"/consul\",\n" + "    \"apiName\": \"consul\",\n" + "    \"path\": \"/*\",\n"
-                + "    \"rateLimit\": {\n" + "        \"permitsPerSecond\": 5000\n" + "    },\n"
-                + "    \"backend\": {\n" + "        \"params\": [\n" + "            {\n"
-                + "                \"feParamName\": \"path\",\n" + "                \"feParamType\": \"PATH\",\n"
-                + "                \"beParamName\": \"path\",\n" + "                \"beParamType\": \"path\"\n"
-                + "            }\n" + "        ],\n" + "        \"urls\": [\n"
-                + "            \"http://localhost:8500/ui/dc1/intentions\",\n"
-                + "            \"http://localhost:8500/ui/dc1/intentions\"\n" + "        ]\n" + "    }\n" + "}";
-        boolean ok = kvc.putValue(key, value);
-
-        System.out.println(ok);
-    }
+	private static void service(CatalogClient cc) {
+		ConsulResponse<List<CatalogService>> rl = cc.getService("agate-gateway");
+		for (CatalogService e : rl.getResponse()) {
+			System.out.println(e.getServiceName() + " : " + e.getServiceId() + " : " + e.getServiceMeta());
+		}
+	}
 
 }

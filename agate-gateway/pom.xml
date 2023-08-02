@@ -169,7 +169,7 @@
 				<executions>
 					<execution>
 						<id>default</id>
-						<phase>deploy</phase>
+						<phase>install</phase>
 						<goals>
 							<goal>build</goal>
 						</goals>
@@ -177,7 +177,7 @@
 				</executions>
 				<configuration>
 					<repository>agate/gateway</repository>
-					<tag>latest</tag>
+					<tag>${project.version}</tag>
 					<buildArgs>
 						<JAR_FILE>${project.artifactId}-${project.version}-fat.jar</JAR_FILE>
 					</buildArgs>

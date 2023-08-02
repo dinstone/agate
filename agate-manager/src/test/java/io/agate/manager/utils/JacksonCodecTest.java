@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.agate.manager.model.PluginDefinition;
-import io.agate.manager.utils.JacksonCodec;
 
 public class JacksonCodecTest {
 

@@ -23,7 +23,7 @@ docker-compose rm
 
 // build new images
 cd agate
-mvn clean package
+mvn clean install
 ```
 
 - step2: start agate docker containers

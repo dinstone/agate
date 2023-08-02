@@ -78,7 +78,7 @@ public class JacksonCodec {
             return Collections.emptyMap();
         }
         try {
-            return objectMapper.readValue(str, getCollectionType(List.class, key, val));
+            return objectMapper.readValue(str, getCollectionType(Map.class, key, val));
         } catch (Exception e) {
             throw new RuntimeException("Failed to decode: " + e.getMessage(), e);
         }
