@@ -35,6 +35,10 @@ public class BackendOptions {
 
 	private List<String> urls;
 
+	private JsonObject registry;
+
+	private JsonObject connection;
+
 	private List<ParamOptions> params;
 
 	public BackendOptions(JsonObject json) {
@@ -89,6 +93,22 @@ public class BackendOptions {
 		this.path = path;
 	}
 
+	public JsonObject getRegistry() {
+		return registry;
+	}
+
+	public void setRegistry(JsonObject registry) {
+		this.registry = registry;
+	}
+
+	public JsonObject getConnection() {
+		return connection;
+	}
+
+	public void setConnection(JsonObject connection) {
+		this.connection = connection;
+	}
+
 	public void fromJson(JsonObject json) {
 		for (java.util.Map.Entry<String, Object> member : json) {
 			switch (member.getKey()) {
@@ -100,6 +120,16 @@ public class BackendOptions {
 			case "type":
 				if (member.getValue() instanceof Number) {
 					this.setType(((Number) member.getValue()).intValue());
+				}
+				break;
+			case "registry":
+				if (member.getValue() instanceof JsonObject) {
+					this.setRegistry((JsonObject) member.getValue());
+				}
+				break;
+			case "connection":
+				if (member.getValue() instanceof JsonObject) {
+					this.setConnection((JsonObject) member.getValue());
 				}
 				break;
 			case "method":

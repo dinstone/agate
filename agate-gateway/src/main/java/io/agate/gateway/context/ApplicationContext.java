@@ -16,19 +16,11 @@
 
 package io.agate.gateway.context;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.agate.gateway.deploy.ClusterDeploy;
-import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.plugin.PluginOptions;
-import io.agate.gateway.plugin.RouteHandlerPlugin;
-import io.agate.gateway.plugin.internal.HttpProxyPlugin;
-import io.agate.gateway.plugin.internal.ProxyReplyPlugin;
-import io.agate.gateway.plugin.internal.RestfulFailurePlugin;
+import io.agate.gateway.plugin.PluginFactory;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClient;
@@ -36,107 +28,92 @@ import io.vertx.ext.consul.ConsulClientOptions;
 
 public class ApplicationContext {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
 
-    private final Map<String, Class<? extends RouteHandlerPlugin>> PLUGIN_MAP = new HashMap<>();
+	private JsonObject config;
 
-    private JsonObject config;
+	private String clusterCode;
 
-    private String clusterCode;
+	private ClusterDeploy clusterDeploy;
 
-    private ClusterDeploy clusterDeploy;
+	private ConsulClientOptions consulOptions;
 
-    private ConsulClientOptions consulOptions;
+	private ConsulClient consulClient;
 
-    private ConsulClient consulClient;
+	private PluginFactory pluginFactory;
 
-    public ApplicationContext(JsonObject config) {
-        this.config = config;
+	public ApplicationContext(JsonObject config) {
+		this.config = config;
 
-        try {
-            init();
-        } catch (Exception e) {
-            throw new RuntimeException("init application context error", e);
-        }
-    }
+		try {
+			init();
+		} catch (Exception e) {
+			throw new RuntimeException("init application context error", e);
+		}
+	}
 
-    private void init() throws Exception {
-        LOG.debug("init application context start");
+	private void init() throws Exception {
+		LOG.debug("init application context start");
 
-        // cluster id
+		// cluster id
 
-        JsonObject node = config.getJsonObject("gateway");
-        if (node == null) {
-            throw new IllegalArgumentException("gateway is empty");
-        }
-        String cluster = node.getString("cluster");
-        if (cluster == null || cluster.isEmpty()) {
-            throw new IllegalArgumentException("cluster is empty");
-        }
-        clusterCode = cluster;
+		JsonObject node = config.getJsonObject("gateway");
+		if (node == null) {
+			throw new IllegalArgumentException("gateway is empty");
+		}
+		String cluster = node.getString("cluster");
+		if (cluster == null || cluster.isEmpty()) {
+			throw new IllegalArgumentException("cluster is empty");
+		}
+		clusterCode = cluster;
 
-        // consul options
-        JsonObject consulJson = config.getJsonObject("consul");
-        if (consulJson != null) {
-            consulOptions = new ConsulClientOptions(consulJson);
-        } else {
-            consulOptions = new ConsulClientOptions();
-        }
+		// consul options
+		JsonObject consulJson = config.getJsonObject("consul");
+		if (consulJson != null) {
+			consulOptions = new ConsulClientOptions(consulJson);
+		} else {
+			consulOptions = new ConsulClientOptions();
+		}
 
-        // deployment
-        clusterDeploy = new ClusterDeploy(clusterCode);
+		// deployment
+		clusterDeploy = new ClusterDeploy(clusterCode);
 
-        regist("HttpProxyPlugin", HttpProxyPlugin.class);
-        regist("ProxyReplyPlugin", ProxyReplyPlugin.class);
-        regist("RestfulFailurePlugin", RestfulFailurePlugin.class);
+		pluginFactory = new PluginFactory();
 
-        LOG.debug("init application context ended");
-    }
+		LOG.debug("init application context ended");
+	}
 
-    private void regist(String pluginName, Class<? extends RouteHandlerPlugin> pluginClass) {
-        PLUGIN_MAP.put(pluginName, pluginClass);
-    }
+	public void destroy() {
+		clusterDeploy.destroy();
+	}
 
-    public RouteHandlerPlugin createPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        try {
-            Class<? extends RouteHandlerPlugin> pc = PLUGIN_MAP.get(pluginOptions.getPlugin());
-            if (pc != null) {
-                return pc.getConstructor(RouteOptions.class, PluginOptions.class).newInstance(routeOptions,
-                    pluginOptions);
-            }
-        } catch (Exception e) {
-            LOG.warn("plugin instance error", e);
-        }
-        return null;
-    }
+	public JsonObject getConfig() {
+		return config;
+	}
 
-    public void destroy() {
-        clusterDeploy.destroy();
-    }
+	public ClusterDeploy getClusterDeploy() {
+		return clusterDeploy;
+	}
 
-    public JsonObject getConfig() {
-        return config;
-    }
+	public String getClusterCode() {
+		return clusterCode;
+	}
 
-    public ClusterDeploy getClusterDeploy() {
-        return clusterDeploy;
-    }
+	public ConsulClientOptions getConsulOptions() {
+		return consulOptions;
+	}
 
-    public String getClusterCode() {
-        return clusterCode;
-    }
+	public ConsulClient getConsulClient(Vertx vertx) {
+		synchronized (this) {
+			if (consulClient == null) {
+				consulClient = ConsulClient.create(vertx, consulOptions);
+			}
+		}
+		return consulClient;
+	}
 
-    public ConsulClientOptions getConsulOptions() {
-        return consulOptions;
-    }
-
-    public ConsulClient getConsulClient(Vertx vertx) {
-        synchronized (this) {
-            if (consulClient == null) {
-                consulClient = ConsulClient.create(vertx, consulOptions);
-            }
-        }
-        return consulClient;
-    }
+	public PluginFactory getPluginFactory() {
+		return pluginFactory;
+	}
 
 }

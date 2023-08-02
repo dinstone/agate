@@ -22,8 +22,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.AppDefination;
-import io.agate.manager.model.RouteDefination;
+import io.agate.manager.model.AppDefinition;
+import io.agate.manager.model.RouteDefinition;
 import io.agate.manager.service.BusinessException;
 import io.agate.manager.service.ManageService;
 
@@ -36,15 +36,15 @@ public class RouteController {
 
 	@RequestMapping("/list")
 	public ModelAndView list(Integer appId) {
-		AppDefination appDefination = manageService.getAppById(appId);
-		List<RouteDefination> routeDefinations = manageService.routeList(appId);
+		AppDefinition appDefination = manageService.getAppById(appId);
+		List<RouteDefinition> routeDefinations = manageService.routeList(appId);
 		return new ModelAndView("route/list").addObject("app", appDefination).addObject("routes", routeDefinations);
 	}
 
 	@RequestMapping("/create")
 	public ModelAndView create(Integer appId) {
 		try {
-			AppDefination appDefination = manageService.getAppById(appId);
+			AppDefinition appDefination = manageService.getAppById(appId);
 			ModelAndView mav = new ModelAndView("route/edit");
 			return mav.addObject("app", appDefination).addObject("action", "create");
 		} catch (Exception e) {
@@ -55,8 +55,8 @@ public class RouteController {
 	@RequestMapping("/update")
 	public ModelAndView update(Integer id) {
 		try {
-			RouteDefination routeDefination = manageService.getRouteById(id);
-			AppDefination appDefination = manageService.getAppById(routeDefination.getAppId());
+			RouteDefinition routeDefination = manageService.getRouteById(id);
+			AppDefinition appDefination = manageService.getAppById(routeDefination.getAppId());
 			ModelAndView mav = new ModelAndView("route/edit").addObject("action", "update");
 			return mav.addObject("app", appDefination).addObject("route", routeDefination);
 		} catch (Exception e) {
@@ -65,7 +65,7 @@ public class RouteController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(RouteDefination defination, String action) {
+	public ModelAndView save(RouteDefinition defination, String action) {
 		ModelAndView mav = new ModelAndView("forward:/view/route/list");
 		try {
 			if ("create".equals(action)) {
@@ -75,7 +75,7 @@ public class RouteController {
 			}
 		} catch (BusinessException e) {
 			mav = new ModelAndView("route/edit");
-			AppDefination appDefination = manageService.getAppById(defination.getAppId());
+			AppDefinition appDefination = manageService.getAppById(defination.getAppId());
 			mav.addObject("app", appDefination).addObject("route", defination);
 			mav.addObject("error", e.getMessage()).addObject("action", action);
 		}
@@ -86,9 +86,9 @@ public class RouteController {
 	public ModelAndView detail(Integer id) {
 		ModelAndView mav = new ModelAndView("route/detail");
 		try {
-			RouteDefination routeDefination = manageService.getRouteById(id);
+			RouteDefinition routeDefination = manageService.getRouteById(id);
 			if (routeDefination != null) {
-				AppDefination appDefination = manageService.getAppById(routeDefination.getAppId());
+				AppDefinition appDefination = manageService.getAppById(routeDefination.getAppId());
 				mav.addObject("route", routeDefination).addObject("app", appDefination);
 			}
 		} catch (Exception e) {

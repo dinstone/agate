@@ -18,10 +18,15 @@ package io.agate.manager.model;
 
 import java.util.List;
 
-public class BackendDefination {
+public class BackendDefinition {
 
-	/** 0:http reverse proxy; 1:http service discovery 2:grpc discovery */
+	/** 0:http reverse proxy; 1:http service discovery */
 	private int type;
+
+	/**
+	 * 0: RoundRobinLoadBalancer; 1: RandomLoadBalancer
+	 */
+	private int algorithm;
 
 	private Integer timeout;
 
@@ -35,7 +40,7 @@ public class BackendDefination {
 
 	private List<String> urls;
 
-	private List<ParamDefination> params;
+	private List<ParamDefinition> params;
 
 	public int getType() {
 		return type;
@@ -69,11 +74,11 @@ public class BackendDefination {
 		this.urls = urls;
 	}
 
-	public List<ParamDefination> getParams() {
+	public List<ParamDefinition> getParams() {
 		return params;
 	}
 
-	public void setParams(List<ParamDefination> params) {
+	public void setParams(List<ParamDefinition> params) {
 		this.params = params;
 	}
 
@@ -101,10 +106,19 @@ public class BackendDefination {
 		this.connection = connection;
 	}
 
+	public int getAlgorithm() {
+		return algorithm;
+	}
+
+	public void setAlgorithm(int algorithm) {
+		this.algorithm = algorithm;
+	}
+
 	@Override
 	public String toString() {
-		return "BackendDefination [type=" + type + ", timeout=" + timeout + ", method=" + method + ", path=" + path
-				+ ", registry=" + registry + ", urls=" + urls + ", params=" + params + "]";
+		return "BackendDefination [path=" + path + ", type=" + type + ", algorithm=" + algorithm + ", timeout="
+				+ timeout + ", method=" + method + ", registry=" + registry + ", connection=" + connection + ", urls="
+				+ urls + ", params=" + params + "]";
 	}
 
 }

@@ -17,7 +17,7 @@ package io.agate.manager.model;
 
 import java.util.Objects;
 
-public class InstanceDefination {
+public class InstanceDefinition {
 
 	private String clusterCode;
 
@@ -52,7 +52,7 @@ public class InstanceDefination {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		InstanceDefination other = (InstanceDefination) obj;
+		InstanceDefinition other = (InstanceDefinition) obj;
 		return Objects.equals(instanceId, other.instanceId);
 	}
 

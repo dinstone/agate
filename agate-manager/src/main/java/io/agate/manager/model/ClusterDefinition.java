@@ -3,7 +3,7 @@ package io.agate.manager.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClusterDefination {
+public class ClusterDefinition {
 
 	private Integer id;
 
@@ -11,7 +11,7 @@ public class ClusterDefination {
 
 	private String name;
 
-	private List<InstanceDefination> instances = new ArrayList<InstanceDefination>();
+	private List<InstanceDefinition> instances = new ArrayList<InstanceDefinition>();
 
 	public Integer getId() {
 		return id;
@@ -37,11 +37,11 @@ public class ClusterDefination {
 		this.name = name;
 	}
 
-	public List<InstanceDefination> getInstances() {
+	public List<InstanceDefinition> getInstances() {
 		return instances;
 	}
 
-	public void setInstances(List<InstanceDefination> instances) {
+	public void setInstances(List<InstanceDefinition> instances) {
 		this.instances = instances;
 	}
 

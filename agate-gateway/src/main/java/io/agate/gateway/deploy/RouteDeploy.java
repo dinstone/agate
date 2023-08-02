@@ -16,22 +16,21 @@
 
 package io.agate.gateway.deploy;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.agate.gateway.context.ApplicationContext;
 import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.options.GatewayOptions;
 import io.agate.gateway.options.RouteOptions;
+import io.agate.gateway.plugin.PluginFactory;
 import io.agate.gateway.plugin.PluginOptions;
 import io.agate.gateway.plugin.RouteHandlerPlugin;
 import io.vertx.core.Vertx;
 
 public class RouteDeploy {
 
-	private ApplicationContext applicationContext;
+	private PluginFactory pluginFactory;
 
 	private GatewayOptions gatewayOptions;
 
@@ -40,7 +39,7 @@ public class RouteDeploy {
 	private List<RouteHandlerPlugin> plugins;
 
 	public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
-		this.applicationContext = appContext;
+		this.pluginFactory = appContext.getPluginFactory();
 		this.gatewayOptions = gatewayOptions;
 		this.routeOptions = routeOptions;
 	}
@@ -65,16 +64,14 @@ public class RouteDeploy {
 		}
 	}
 
-	private List<RouteHandlerPlugin> createPlugins(PluginOptions... plugins) {
-		List<RouteHandlerPlugin> routePlugins;
-		if (plugins != null) {
-			routePlugins = Stream.of(plugins).sorted((p, q) -> p.getOrder() - q.getOrder())
-					.map(pluginOptions -> applicationContext.createPlugin(routeOptions, pluginOptions))
-					.filter(p -> p != null).collect(Collectors.toList());
-
-		} else {
-			routePlugins = Collections.emptyList();
+	private List<RouteHandlerPlugin> createPlugins() {
+		List<PluginOptions> globalPlugins = pluginFactory.getGlobalPlugins();
+		if (routeOptions.getPlugins() != null) {
+			globalPlugins.addAll(routeOptions.getPlugins());
 		}
+		List<RouteHandlerPlugin> routePlugins = globalPlugins.stream().distinct()
+				.map(pluginOptions -> pluginFactory.createPlugin(routeOptions, pluginOptions))
+				.collect(Collectors.toList());
 		return routePlugins;
 	}
 
@@ -91,7 +88,7 @@ public class RouteDeploy {
 	private List<RouteHandlerPlugin> initPlugins() {
 		synchronized (this) {
 			if (plugins == null) {
-				plugins = createPlugins(routeOptions.getPlugins());
+				plugins = createPlugins();
 			}
 		}
 		return plugins;

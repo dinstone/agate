@@ -24,8 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.AppDefination;
-import io.agate.manager.model.GatewayDefination;
+import io.agate.manager.model.AppDefinition;
+import io.agate.manager.model.GatewayDefinition;
 import io.agate.manager.service.BusinessException;
 import io.agate.manager.service.ManageService;
 
@@ -39,22 +39,22 @@ public class ApplicationController {
 	@RequestMapping("/list")
 	public ModelAndView list(HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView("app/list");
-		List<AppDefination> apps = manageService.appList();
+		List<AppDefinition> apps = manageService.appList();
 		return mav.addObject("apps", apps);
 	}
 
 	@RequestMapping("/create")
 	public ModelAndView create(HttpServletRequest request) {
-		List<GatewayDefination> gateways = manageService.gatewayList();
+		List<GatewayDefinition> gateways = manageService.gatewayList();
 		ModelAndView mav = new ModelAndView("app/edit");
 		return mav.addObject("action", "create").addObject("gateways", gateways);
 	}
 
 	@RequestMapping("/update")
 	public ModelAndView update(Integer id, HttpServletRequest request) {
-		List<GatewayDefination> gateways = manageService.gatewayList();
+		List<GatewayDefinition> gateways = manageService.gatewayList();
 		try {
-			AppDefination appEntity = manageService.getAppById(id);
+			AppDefinition appEntity = manageService.getAppById(id);
 			ModelAndView mav = new ModelAndView("app/edit").addObject("app", appEntity);
 			return mav.addObject("action", "update").addObject("gateways", gateways);
 		} catch (Exception e) {
@@ -63,7 +63,7 @@ public class ApplicationController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(AppDefination app, String action, HttpServletRequest request) {
+	public ModelAndView save(AppDefinition app, String action, HttpServletRequest request) {
 		try {
 			if ("create".equals(action)) {
 				manageService.createApp(app);
@@ -73,7 +73,7 @@ public class ApplicationController {
 		} catch (BusinessException e) {
 			ModelAndView mav = new ModelAndView("forward:/view/app/" + action);
 
-			List<GatewayDefination> gateways = manageService.gatewayList();
+			List<GatewayDefinition> gateways = manageService.gatewayList();
 			mav.addObject("error", e.getMessage()).addObject("gateways", gateways);
 			return mav.addObject("app", app).addObject("action", action);
 		}
@@ -84,8 +84,8 @@ public class ApplicationController {
 	public ModelAndView detail(Integer id) {
 		ModelAndView mav = new ModelAndView("app/detail");
 		try {
-			AppDefination app = manageService.getAppById(id);
-			GatewayDefination gateway = manageService.getGatewayById(app.getGwId());
+			AppDefinition app = manageService.getAppById(id);
+			GatewayDefinition gateway = manageService.getGatewayById(app.getGwId());
 			mav.addObject("gateway", gateway);
 			mav.addObject("app", app);
 			mav.addObject("action", "detail");

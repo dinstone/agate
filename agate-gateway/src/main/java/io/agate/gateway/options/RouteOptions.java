@@ -54,7 +54,7 @@ public class RouteOptions {
 	// ====================
 	// Plugin options
 	// ====================
-	private PluginOptions[] plugins;
+	private List<PluginOptions> plugins;
 
 	public RouteOptions(JsonObject json) {
 		fromJson(json);
@@ -108,12 +108,12 @@ public class RouteOptions {
 		this.prefix = prefix;
 	}
 
-	public PluginOptions[] getPlugins() {
+	public List<PluginOptions> getPlugins() {
 		return plugins;
 	}
 
-	public void setPlugins(PluginOptions[] options) {
-		this.plugins = options;
+	public void setPlugins(List<PluginOptions> plugins) {
+		this.plugins = plugins;
 	}
 
 	public FrontendOptions getFrontend() {
@@ -212,7 +212,7 @@ public class RouteOptions {
 							pol.add(new PluginOptions((JsonObject) m));
 						}
 					});
-					this.setPlugins(pol.toArray(new PluginOptions[0]));
+					this.setPlugins(pol);
 				}
 				break;
 			}
@@ -221,9 +221,9 @@ public class RouteOptions {
 
 	@Override
 	public String toString() {
-		return "RouteOptions [route=" + route + ", cluster=" + cluster + ", gateway=" + gateway + ", appName=" + appName
+		return "RouteOptions [route=" + route + ", appName=" + appName + ", cluster=" + cluster + ", gateway=" + gateway
 				+ ", domain=" + domain + ", prefix=" + prefix + ", frontend=" + frontend + ", backend=" + backend
-				+ ", plugins=" + Arrays.toString(plugins) + "]";
+				+ ", plugins=" + plugins + "]";
 	}
 
 }

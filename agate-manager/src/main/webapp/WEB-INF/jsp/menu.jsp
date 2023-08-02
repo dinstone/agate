@@ -7,7 +7,7 @@
 				<li><a class="ajax-link" href="${contextPath}/view/home/welcome"><i class="glyphicon glyphicon-home"></i><span> Welcome</span></a></li>
 				<li><a class="ajax-link" href="${contextPath}/view/cluster/list"><i class="glyphicon glyphicon-th"></i><span> Clusters</span></a></li>
 				<li><a class="ajax-link" href="${contextPath}/view/gateway/list"><i class="glyphicon glyphicon-globe"></i><span> Gateways</span></a></li>
-				<li><a class="ajax-link" href="${contextPath}/view/app/list"><i class="glyphicon glyphicon-list"></i><span> Applications</span></a></li>
+				<li><a class="ajax-link" href="${contextPath}/view/app/list"><i class="glyphicon glyphicon-tasks"></i><span> Applications</span></a></li>
 			</ul>
 		</div>
 	</div>

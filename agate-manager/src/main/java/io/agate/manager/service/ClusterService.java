@@ -34,13 +34,13 @@ import com.orbitz.consul.model.catalog.CatalogService;
 import io.agate.manager.dao.ClusterDao;
 import io.agate.manager.dao.GatewayDao;
 import io.agate.manager.entity.ClusterEntity;
-import io.agate.manager.model.ClusterDefination;
-import io.agate.manager.model.InstanceDefination;
+import io.agate.manager.model.ClusterDefinition;
+import io.agate.manager.model.InstanceDefinition;
 
 @Component
 public class ClusterService {
 
-	private List<InstanceDefination> clusterInstances = new CopyOnWriteArrayList<>();
+	private List<InstanceDefinition> clusterInstances = new CopyOnWriteArrayList<>();
 
 	@Autowired
 	private CatalogClient catalogClient;
@@ -51,7 +51,7 @@ public class ClusterService {
 	@Autowired
 	private GatewayDao gatewayDao;
 
-	public List<ClusterDefination> clusterList() {
+	public List<ClusterDefinition> clusterList() {
 		List<ClusterEntity> ces = clusterDao.list();
 		if (ces != null) {
 			return ces.stream().map(ce -> convert(ce)).collect(Collectors.toList());
@@ -59,12 +59,12 @@ public class ClusterService {
 		return Collections.emptyList();
 	}
 
-	private ClusterDefination convert(ClusterEntity ce) {
-		ClusterDefination cd = new ClusterDefination();
+	private ClusterDefinition convert(ClusterEntity ce) {
+		ClusterDefinition cd = new ClusterDefinition();
 		cd.setId(ce.getId());
 		cd.setCode(ce.getCode());
 		cd.setName(ce.getName());
-		for (InstanceDefination instance : clusterInstances) {
+		for (InstanceDefinition instance : clusterInstances) {
 			if (cd.getCode().equals(instance.getClusterCode())) {
 				cd.getInstances().add(instance);
 			}
@@ -73,13 +73,13 @@ public class ClusterService {
 	}
 
 	public void clusterRefresh() {
-		List<InstanceDefination> instances = new ArrayList<>();
+		List<InstanceDefinition> instances = new ArrayList<>();
 		ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
 		for (CatalogService e : consulResponse.getResponse()) {
 			instances.add(createInstance(e.getServiceMeta()));
 		}
 
-		for (InstanceDefination defination : instances) {
+		for (InstanceDefinition defination : instances) {
 			if (!clusterInstances.contains(defination)) {
 				clusterInstances.add(defination);
 			}
@@ -87,8 +87,8 @@ public class ClusterService {
 		clusterInstances.retainAll(instances);
 	}
 
-	private InstanceDefination createInstance(Map<String, String> serviceMeta) {
-		InstanceDefination instance = new InstanceDefination();
+	private InstanceDefinition createInstance(Map<String, String> serviceMeta) {
+		InstanceDefinition instance = new InstanceDefinition();
 		try {
 			if (serviceMeta != null) {
 				instance.setInstanceId(serviceMeta.get("instanceId"));
@@ -100,7 +100,7 @@ public class ClusterService {
 		return instance;
 	}
 
-	public void createCluster(ClusterDefination defination) throws BusinessException {
+	public void createCluster(ClusterDefinition defination) throws BusinessException {
 		// app param check
 		if (defination.getCode() == null) {
 			throw new BusinessException(40111, "Cluster code is invalid");
@@ -123,7 +123,7 @@ public class ClusterService {
 		}
 	}
 
-	public void updateCluster(ClusterDefination defination) throws BusinessException {
+	public void updateCluster(ClusterDefinition defination) throws BusinessException {
 		// app logic check
 		if (defination.getId() == null) {
 			throw new BusinessException(40108, "Cluster id is invalid");
@@ -157,12 +157,12 @@ public class ClusterService {
 		clusterDao.delete(id);
 	}
 
-	public ClusterDefination getClusterById(Integer id) {
+	public ClusterDefinition getClusterById(Integer id) {
 		ClusterEntity e = clusterDao.find(id);
 		return convert(e);
 	}
 
-	public ClusterDefination getClusterByCode(String code) {
+	public ClusterDefinition getClusterByCode(String code) {
 		ClusterEntity e = clusterDao.find(code);
 		return convert(e);
 	}

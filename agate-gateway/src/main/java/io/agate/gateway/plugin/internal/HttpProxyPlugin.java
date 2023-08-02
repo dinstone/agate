@@ -29,6 +29,7 @@ import io.agate.gateway.service.ServiceAddressSupplier;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.json.JsonObject;
 
 public class HttpProxyPlugin extends RouteHandlerPlugin {
 
@@ -66,10 +67,10 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 			if (loadBalancer == null) {
 				// service discovery
 				if (routeOptions.getBackend().getType() == 1) {
-					serviceSupplier = new ConsulServiceAddressSupplier(vertx, routeOptions, pluginOptions);
+					serviceSupplier = new ConsulServiceAddressSupplier(vertx, routeOptions);
 					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
 				} else {
-					serviceSupplier = new FixedServiceAddressSupplier(routeOptions, pluginOptions);
+					serviceSupplier = new FixedServiceAddressSupplier(vertx, routeOptions);
 					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
 				}
 			}
@@ -81,13 +82,19 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 	public HttpClient createHttpClient(Vertx vertx, RouteOptions routeOptions) {
 		synchronized (this) {
 			if (httpClient == null) {
-				HttpClientOptions clientOptions = new HttpClientOptions();
-				clientOptions.setKeepAlive(true);
-				clientOptions.setConnectTimeout(2000);
-				// clientOptions.setMaxWaitQueueSize(1000);
-				clientOptions.setIdleTimeout(10);
-				clientOptions.setMaxPoolSize(100);
-				// clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+				HttpClientOptions clientOptions;
+				JsonObject config = routeOptions.getBackend().getConnection();
+				if (config != null) {
+					clientOptions = new HttpClientOptions(config);
+				} else {
+					clientOptions = new HttpClientOptions();
+					clientOptions.setKeepAlive(true);
+					clientOptions.setConnectTimeout(2000);
+					// clientOptions.setMaxWaitQueueSize(1000);
+					clientOptions.setIdleTimeout(10);
+					clientOptions.setMaxPoolSize(100);
+					// clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+				}
 				httpClient = vertx.createHttpClient(clientOptions);
 			}
 			return httpClient;

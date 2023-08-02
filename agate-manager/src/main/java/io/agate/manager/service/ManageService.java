@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,11 +38,12 @@ import io.agate.manager.dao.RouteDao;
 import io.agate.manager.entity.AppEntity;
 import io.agate.manager.entity.GatewayEntity;
 import io.agate.manager.entity.RouteEntity;
-import io.agate.manager.model.AppDefination;
-import io.agate.manager.model.BackendDefination;
-import io.agate.manager.model.FrontendDefination;
-import io.agate.manager.model.GatewayDefination;
-import io.agate.manager.model.RouteDefination;
+import io.agate.manager.model.AppDefinition;
+import io.agate.manager.model.BackendDefinition;
+import io.agate.manager.model.FrontendDefinition;
+import io.agate.manager.model.GatewayDefinition;
+import io.agate.manager.model.PluginDefinition;
+import io.agate.manager.model.RouteDefinition;
 import io.agate.manager.utils.JacksonCodec;
 
 @Component
@@ -63,7 +65,7 @@ public class ManageService {
 	@Autowired
 	private KeyValueClient keyValueClient;
 
-	public void createGateway(GatewayDefination defination) throws BusinessException {
+	public void createGateway(GatewayDefinition defination) throws BusinessException {
 		// app param check
 		GatewayEntity entity = gatewayParamCheck(defination);
 
@@ -74,7 +76,7 @@ public class ManageService {
 		gatewayDao.create(entity);
 	}
 
-	private GatewayEntity gatewayParamCheck(GatewayDefination defination) throws BusinessException {
+	private GatewayEntity gatewayParamCheck(GatewayDefinition defination) throws BusinessException {
 		if (defination.getName() == null || defination.getName().isEmpty()) {
 			throw new BusinessException(40101, "Gateway Name is empty");
 		}
@@ -92,7 +94,7 @@ public class ManageService {
 		return entity;
 	}
 
-	private GatewayEntity convert(GatewayDefination gd) {
+	private GatewayEntity convert(GatewayDefinition gd) {
 		GatewayEntity ge = new GatewayEntity();
 		ge.setCluster(gd.getCluster());
 		ge.setId(gd.getId());
@@ -102,7 +104,7 @@ public class ManageService {
 		return ge;
 	}
 
-	public void updateGateway(GatewayDefination defination) throws BusinessException {
+	public void updateGateway(GatewayDefinition defination) throws BusinessException {
 		// app logic check
 		if (defination.getId() == null) {
 			throw new BusinessException(40108, "Gateway id is invalid");
@@ -116,7 +118,7 @@ public class ManageService {
 		gatewayDao.update(entity);
 	}
 
-	public List<GatewayDefination> gatewayList() {
+	public List<GatewayDefinition> gatewayList() {
 		List<GatewayEntity> ges = gatewayDao.list();
 		if (ges != null) {
 			return ges.stream().map(ge -> convert(ge)).collect(Collectors.toList());
@@ -124,8 +126,8 @@ public class ManageService {
 		return Collections.emptyList();
 	}
 
-	private GatewayDefination convert(GatewayEntity ge) {
-		GatewayDefination gd = JacksonCodec.decode(ge.getJson(), GatewayDefination.class);
+	private GatewayDefinition convert(GatewayEntity ge) {
+		GatewayDefinition gd = JacksonCodec.decode(ge.getJson(), GatewayDefinition.class);
 		gd.setId(ge.getId());
 		gd.setCluster(ge.getCluster());
 		gd.setName(ge.getName());
@@ -133,7 +135,7 @@ public class ManageService {
 		return gd;
 	}
 
-	public GatewayDefination getGatewayById(Integer id) {
+	public GatewayDefinition getGatewayById(Integer id) {
 		GatewayEntity ge = gatewayDao.find(id);
 		if (ge != null) {
 			return convert(ge);
@@ -185,7 +187,7 @@ public class ManageService {
 		}
 	}
 
-	public List<RouteDefination> routeList(Integer appId) {
+	public List<RouteDefinition> routeList(Integer appId) {
 		List<RouteEntity> aes = null;
 		if (appId != null) {
 			aes = routeDao.list(appId);
@@ -197,8 +199,8 @@ public class ManageService {
 		return Collections.emptyList();
 	}
 
-	private RouteDefination convert(RouteEntity re) {
-		RouteDefination rd = JacksonCodec.decode(re.getJson(), RouteDefination.class);
+	private RouteDefinition convert(RouteEntity re) {
+		RouteDefinition rd = JacksonCodec.decode(re.getJson(), RouteDefinition.class);
 		rd.setId(re.getId());
 		rd.setName(re.getName());
 		rd.setAppId(re.getAppId());
@@ -206,7 +208,7 @@ public class ManageService {
 		return rd;
 	}
 
-	private RouteEntity convert(RouteDefination defination) {
+	private RouteEntity convert(RouteDefinition defination) {
 		RouteEntity entity = new RouteEntity();
 		entity.setId(defination.getId());
 		entity.setName(defination.getName());
@@ -217,21 +219,21 @@ public class ManageService {
 		return entity;
 	}
 
-	public void createRoute(RouteDefination route) throws BusinessException {
+	public void createRoute(RouteDefinition route) throws BusinessException {
 		if (route.getAppId() == null) {
 			throw new BusinessException(40200, "APP is invalid");
 		}
 		if (route.getName() == null || route.getName().isEmpty()) {
 			throw new BusinessException(40201, "Route name is empty");
 		}
-		FrontendDefination frontendDefination = route.getFrontend();
+		FrontendDefinition frontendDefination = route.getFrontend();
 		if (frontendDefination == null) {
 			throw new BusinessException(40202, "frontend defination is null");
 		}
 		if (frontendDefination.getPath() == null || frontendDefination.getPath().isEmpty()) {
 			throw new BusinessException(40203, "request path is empty");
 		}
-		BackendDefination backendDefination = route.getBackend();
+		BackendDefinition backendDefination = route.getBackend();
 		if (backendDefination == null) {
 			throw new BusinessException(40204, "backend defination is null");
 		}
@@ -266,21 +268,21 @@ public class ManageService {
 		routeDao.create(routeEntity);
 	}
 
-	public void updateRoute(RouteDefination routeDefination) throws BusinessException {
+	public void updateRoute(RouteDefinition routeDefination) throws BusinessException {
 		if (routeDefination.getAppId() == null) {
 			throw new BusinessException(40200, "APP is invalid");
 		}
 		if (routeDefination.getName() == null || routeDefination.getName().isEmpty()) {
 			throw new BusinessException(40201, "Route name is empty");
 		}
-		FrontendDefination frontend = routeDefination.getFrontend();
+		FrontendDefinition frontend = routeDefination.getFrontend();
 		if (frontend == null) {
 			throw new BusinessException(40202, "frontend config is null");
 		}
 		if (frontend.getPath() == null || frontend.getPath().isEmpty()) {
 			throw new BusinessException(40203, "frontend path is empty");
 		}
-		BackendDefination backend = routeDefination.getBackend();
+		BackendDefinition backend = routeDefination.getBackend();
 		if (backend == null) {
 			throw new BusinessException(40204, "backend config is null");
 		}
@@ -312,7 +314,7 @@ public class ManageService {
 		routeDao.update(routeEntity);
 	}
 
-	public RouteDefination getRouteById(Integer id) {
+	public RouteDefinition getRouteById(Integer id) {
 		RouteEntity ae = routeDao.find(id);
 		if (ae != null) {
 			return convert(ae);
@@ -339,20 +341,60 @@ public class ManageService {
 	}
 
 	private String convertRouteOptions(GatewayEntity gatewayEntity, RouteEntity routeEntity) {
-		AppDefination appDefination = getAppById(routeEntity.getAppId());
-		RouteDefination routeDefination = convert(routeEntity);
+		AppDefinition appDefination = getAppById(routeEntity.getAppId());
+		RouteDefinition routeDefination = convert(routeEntity);
 
 		Map<String, Object> routeOptions = new HashMap<>();
 		routeOptions.put("cluster", gatewayEntity.getCluster());
 		routeOptions.put("gateway", gatewayEntity.getName());
+		routeOptions.put("appNmae", appDefination.getName());
 		routeOptions.put("prefix", appDefination.getPrefix());
 		routeOptions.put("domain", appDefination.getDomain());
 		routeOptions.put("route", routeDefination.getName());
-		routeOptions.put("frontend", routeDefination.getFrontend());
-		routeOptions.put("backend", routeDefination.getBackend());
-		routeOptions.put("plugins", routeDefination.getPlugins());
+
+		List<PluginDefinition> plugins = routeDefination.getPlugins();
+		List<Map<String, Object>> pluginOptions = new LinkedList<>();
+		if (plugins != null) {
+			plugins.forEach(plugin -> {
+				Map<String, Object> pluginOption = new HashMap<>();
+				pluginOption.put("type", plugin.getType());
+				pluginOption.put("order", plugin.getOrder());
+				pluginOption.put("plugin", plugin.getPlugin());
+				pluginOption.put("options", json2map(plugin.getConfig()));
+				pluginOptions.add(pluginOption);
+			});
+		}
+		routeOptions.put("plugins", pluginOptions);
+
+		FrontendDefinition frontend = routeDefination.getFrontend();
+		Map<String, Object> fOptions = new HashMap<>();
+		fOptions.put("path", frontend.getPath());
+		fOptions.put("method", frontend.getMethod());
+		fOptions.put("produces", toArray(frontend.getProduces()));
+		fOptions.put("consumes", toArray(frontend.getConsumes()));
+		routeOptions.put("frontend", fOptions);
+
+		BackendDefinition backend = routeDefination.getBackend();
+		Map<String, Object> bOptions = new HashMap<>();
+		bOptions.put("type", backend.getType());
+		bOptions.put("timeout", backend.getTimeout());
+		bOptions.put("urls", backend.getUrls());
+		bOptions.put("path", backend.getPath());
+		bOptions.put("method", backend.getMethod());
+		bOptions.put("algorithm", backend.getAlgorithm());
+		bOptions.put("registry", json2map(backend.getRegistry()));
+		bOptions.put("connection", json2map(backend.getConnection()));
+		bOptions.put("params", backend.getParams());
+		routeOptions.put("backend", bOptions);
 
 		return JacksonCodec.encode(routeOptions);
+	}
+
+	private String[] toArray(String source) {
+		if (source != null) {
+			return source.split(",");
+		}
+		return null;
 	}
 
 	public void closeRoute(Integer id) {
@@ -441,7 +483,7 @@ public class ManageService {
 	}
 
 	private String convertGatewayOptions(GatewayEntity entity) {
-		GatewayDefination defination = convert(entity);
+		GatewayDefinition defination = convert(entity);
 		Map<String, Object> gatewayOptions = new HashMap<>();
 		gatewayOptions.put("cluster", defination.getCluster());
 		gatewayOptions.put("gateway", defination.getName());
@@ -491,30 +533,30 @@ public class ManageService {
 		keyValueClient.deleteKey(key);
 	}
 
-	public List<AppDefination> appList() {
+	public List<AppDefinition> appList() {
 		List<AppEntity> es = appDao.list();
 		if (es == null || es.isEmpty()) {
 			return Collections.emptyList();
 		} else {
 			return es.stream().map(ae -> {
-				AppDefination app = JacksonCodec.decode(ae.getJson(), AppDefination.class);
+				AppDefinition app = JacksonCodec.decode(ae.getJson(), AppDefinition.class);
 				app.setId(ae.getId());
 				return app;
 			}).collect(Collectors.toList());
 		}
 	}
 
-	public AppDefination getAppById(Integer id) {
+	public AppDefinition getAppById(Integer id) {
 		AppEntity ae = appDao.find(id);
 		if (ae != null) {
-			AppDefination app = JacksonCodec.decode(ae.getJson(), AppDefination.class);
+			AppDefinition app = JacksonCodec.decode(ae.getJson(), AppDefinition.class);
 			app.setId(ae.getId());
 			return app;
 		}
 		return null;
 	}
 
-	public void createApp(AppDefination defination) throws BusinessException {
+	public void createApp(AppDefinition defination) throws BusinessException {
 		if (defination.getName() == null || defination.getName().isEmpty()) {
 			throw new BusinessException(40301, "APP Name is empty");
 		}
@@ -533,7 +575,7 @@ public class ManageService {
 		appDao.create(ae);
 	}
 
-	public void updateApp(AppDefination defination) throws BusinessException {
+	public void updateApp(AppDefinition defination) throws BusinessException {
 		if (defination.getName() == null || defination.getName().isEmpty()) {
 			throw new BusinessException(40301, "APP Name is empty");
 		}

@@ -16,7 +16,7 @@
 
 package io.agate.manager.model;
 
-public class GatewayDefination {
+public class GatewayDefinition {
 
 	private Integer id;
 

@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.plugin.PluginOptions;
+import io.vertx.core.Vertx;
 
 public class FixedServiceAddressSupplier implements ServiceAddressSupplier {
 
@@ -28,7 +28,7 @@ public class FixedServiceAddressSupplier implements ServiceAddressSupplier {
 
 	private final String serviceId;
 
-	public FixedServiceAddressSupplier(RouteOptions routeOptions, PluginOptions pluginOptions) {
+	public FixedServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions) {
 		this.serviceId = routeOptions.getRoute();
 
 		for (Object url : routeOptions.getBackend().getUrls()) {

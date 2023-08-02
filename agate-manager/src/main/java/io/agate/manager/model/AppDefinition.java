@@ -1,6 +1,6 @@
 package io.agate.manager.model;
 
-public class AppDefination {
+public class AppDefinition {
 
 	private Integer id;
 

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.ClusterDefination;
+import io.agate.manager.model.ClusterDefinition;
 import io.agate.manager.service.BusinessException;
 import io.agate.manager.service.ClusterService;
 
@@ -36,7 +36,7 @@ public class ClusterController {
 	@RequestMapping("/list")
 	public ModelAndView list() {
 		ModelAndView mav = new ModelAndView("cluster/list");
-		List<ClusterDefination> clusters = clusterService.clusterList();
+		List<ClusterDefinition> clusters = clusterService.clusterList();
 		return mav.addObject("clusters", clusters);
 	}
 
@@ -49,7 +49,7 @@ public class ClusterController {
 	@RequestMapping("/update")
 	public ModelAndView update(Integer id) {
 		try {
-			ClusterDefination cluster = clusterService.getClusterById(id);
+			ClusterDefinition cluster = clusterService.getClusterById(id);
 			ModelAndView mav = new ModelAndView("cluster/edit").addObject("cluster", cluster);
 			return mav.addObject("action", "update");
 		} catch (Exception e) {
@@ -58,7 +58,7 @@ public class ClusterController {
 	}
 
 	@RequestMapping("/save")
-	public ModelAndView save(ClusterDefination clusterDefination, String action) {
+	public ModelAndView save(ClusterDefinition clusterDefination, String action) {
 		try {
 			if ("create".equals(action)) {
 				clusterService.createCluster(clusterDefination);
@@ -76,7 +76,7 @@ public class ClusterController {
 	@RequestMapping("/detail")
 	public ModelAndView detail(Integer id) {
 		try {
-			ClusterDefination cluster = clusterService.getClusterById(id);
+			ClusterDefinition cluster = clusterService.getClusterById(id);
 			return new ModelAndView("cluster/detail").addObject("cluster", cluster);
 		} catch (Exception e) {
 			return new ModelAndView("forward:/view/cluster/list");

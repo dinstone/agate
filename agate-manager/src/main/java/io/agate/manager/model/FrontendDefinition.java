@@ -13,58 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.agate.manager.model;
 
-public class PluginDefination {
+public class FrontendDefinition {
 
-	/**
-	 * 0: routing; 1: failure;
-	 */
-	private int type;
+	private String path;
 
-	private int order;
+	private String method;
 
-	private String plugin;
+	private String consumes;
 
-	private String config;
+	private String produces;
 
-	public int getOrder() {
-		return order;
+	public String getPath() {
+		return path;
 	}
 
-	public void setOrder(int order) {
-		this.order = order;
+	public void setPath(String path) {
+		this.path = path;
 	}
 
-	public String getPlugin() {
-		return plugin;
+	public String getMethod() {
+		return method;
 	}
 
-	public void setPlugin(String plugin) {
-		this.plugin = plugin;
+	public void setMethod(String method) {
+		this.method = method;
 	}
 
-	public int getType() {
-		return type;
+	public String getConsumes() {
+		return consumes;
 	}
 
-	public void setType(int type) {
-		this.type = type;
+	public void setConsumes(String consumes) {
+		this.consumes = consumes;
 	}
 
-	public String getConfig() {
-		return config;
+	public String getProduces() {
+		return produces;
 	}
 
-	public void setConfig(String config) {
-		this.config = config;
+	public void setProduces(String produces) {
+		this.produces = produces;
 	}
 
 	@Override
 	public String toString() {
-		return "PluginDefination [type=" + type + ", order=" + order + ", plugin=" + plugin + ", config=" + config
-				+ "]";
+		return "FrontendDefination [path=" + path + ", method=" + method + ", consumes=" + consumes + ", produces="
+				+ produces + "]";
 	}
 
 }

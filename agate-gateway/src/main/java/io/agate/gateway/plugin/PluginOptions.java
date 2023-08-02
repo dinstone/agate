@@ -16,6 +16,8 @@
 
 package io.agate.gateway.plugin;
 
+import java.util.Objects;
+
 import io.vertx.core.json.JsonObject;
 
 public class PluginOptions {
@@ -25,6 +27,11 @@ public class PluginOptions {
 	private String plugin;
 
 	private JsonObject options;
+
+	public PluginOptions(String plugin, JsonObject options) {
+		this.plugin = plugin;
+		this.options = options;
+	}
 
 	public PluginOptions(JsonObject value) {
 		fromJson(value);
@@ -92,6 +99,23 @@ public class PluginOptions {
 		}
 
 		return json;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(plugin);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PluginOptions other = (PluginOptions) obj;
+		return Objects.equals(plugin, other.plugin);
 	}
 
 	@Override

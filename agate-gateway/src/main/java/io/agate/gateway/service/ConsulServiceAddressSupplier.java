@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.plugin.PluginOptions;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -49,36 +48,30 @@ public class ConsulServiceAddressSupplier implements ServiceAddressSupplier {
 
 	private ConsulClient consulClient;
 
-	private PluginOptions pluginOptions;
-
-	public ConsulServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
+	public ConsulServiceAddressSupplier(Vertx vertx, RouteOptions routeOptions) {
 		this.vertx = vertx;
 		this.routeOptions = routeOptions;
-		this.pluginOptions = pluginOptions;
 
-		ConsulClientOptions consulOptions = getConsulOptions(pluginOptions);
-		this.consulClient = ConsulClient.create(vertx, consulOptions);
+		this.consulClient = createConsulClient(vertx, routeOptions);
 
-		refresh();
-
-		jobId = vertx.setPeriodic(5000, id -> {
+		this.jobId = vertx.setPeriodic(0, 5000, id -> {
 			refresh();
 		});
 	}
 
-	private ConsulClientOptions getConsulOptions(PluginOptions pluginOptions) {
+	private ConsulClient createConsulClient(Vertx vertx, RouteOptions routeOptions) {
 		// consul options
-		JsonObject consulJson = pluginOptions.getOptions().getJsonObject("consul");
+		JsonObject consulJson = routeOptions.getBackend().getRegistry();
 		if (consulJson != null) {
-			return new ConsulClientOptions(consulJson);
+			return ConsulClient.create(vertx, new ConsulClientOptions(consulJson));
 		} else {
-			return new ConsulClientOptions();
+			return ConsulClient.create(vertx, new ConsulClientOptions());
 		}
 	}
 
 	@SuppressWarnings({ "rawtypes" })
 	public void refresh() {
-		LOG.debug("{} service discovery url parse", routeOptions.getRoute());
+		LOG.debug("route [{}] service discovery url parse", routeOptions.getRoute());
 
 		List<ServiceAddress> serverUrls = new ArrayList<>();
 		List<Future> futureList = new ArrayList<>();

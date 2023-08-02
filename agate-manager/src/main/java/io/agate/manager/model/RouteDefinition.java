@@ -18,7 +18,7 @@ package io.agate.manager.model;
 
 import java.util.List;
 
-public class RouteDefination {
+public class RouteDefinition {
 
 	private Integer id;
 
@@ -30,11 +30,11 @@ public class RouteDefination {
 
 	private String remark;
 
-	private FrontendDefination frontend;
+	private FrontendDefinition frontend;
 
-	private BackendDefination backend;
+	private BackendDefinition backend;
 
-	private List<PluginDefination> plugins;
+	private List<PluginDefinition> plugins;
 
 	public Integer getId() {
 		return id;
@@ -76,27 +76,27 @@ public class RouteDefination {
 		this.status = status;
 	}
 
-	public FrontendDefination getFrontend() {
+	public FrontendDefinition getFrontend() {
 		return frontend;
 	}
 
-	public void setFrontend(FrontendDefination frontend) {
+	public void setFrontend(FrontendDefinition frontend) {
 		this.frontend = frontend;
 	}
 
-	public BackendDefination getBackend() {
+	public BackendDefinition getBackend() {
 		return backend;
 	}
 
-	public void setBackend(BackendDefination backend) {
+	public void setBackend(BackendDefinition backend) {
 		this.backend = backend;
 	}
 
-	public List<PluginDefination> getPlugins() {
+	public List<PluginDefinition> getPlugins() {
 		return plugins;
 	}
 
-	public void setPlugins(List<PluginDefination> plugins) {
+	public void setPlugins(List<PluginDefinition> plugins) {
 		this.plugins = plugins;
 	}
 
