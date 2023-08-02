@@ -3,6 +3,5 @@
 /.project
 /target/
 /logs/
-/data/
 /agate-manager.iml
 /config.db
