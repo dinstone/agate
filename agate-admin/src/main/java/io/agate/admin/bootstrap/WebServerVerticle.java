@@ -98,7 +98,7 @@ public class WebServerVerticle extends AbstractVerticle {
         mainRouter.route("/view/*").handler(sessionHandler).handler(checkHandler);
 
         // static handler
-        mainRouter.route().handler(StaticHandler.create().setCachingEnabled(true).setMaxAgeSeconds(300));
+        mainRouter.route().handler(StaticHandler.create().setCachingEnabled(false).setMaxAgeSeconds(300));
 
         return mainRouter;
     }

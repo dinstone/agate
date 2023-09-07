@@ -16,7 +16,7 @@
 				<th data-field="id">ID</th>
 				<th data-field="code">Code</th>
 				<th data-field="name">Name</th>
-				<th data-field="createTime" data-formatter="dateTimeFormatter">CreateTime</th>
+				<th data-field="instances" data-formatter="nodesFormatter">Nodes</th>
 				<th data-events="window.operateEvents" data-formatter="operateFormatter">Actions</th>
 			</tr>
 		</thead>
@@ -31,14 +31,14 @@
 					<h4>Add cluster</h4>
 				</div>
 				<div class="modal-body">
-					<div id="tip" class="alert alert-info">${error}</div>
+					<div id="tip" class="alert alert-info" hidden="on"></div>
 					<form role="form" action="/view/cluster/save" method="post">
 						<input name="action" value="${action}" type="hidden"> <input name="id" value="${cluster.id}" type="hidden">
 						<div class="form-group">
-							<label>Code (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="code" value="${cluster.code}">
+							<label>Code (Global Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="code">
 						</div>
 						<div class="form-group">
-							<label>Name (Cluster Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name" value="${cluster.name}">
+							<label>Name (Cluster Uniqueness) <i class="glyphicon glyphicon-star red"></i></label> <input type="text" class="form-control" name="name">
 						</div>
 					</form>
 				</div>
@@ -76,11 +76,11 @@
 </section>
 
 <script>
-	function dateTimeFormatter(value, row, index) {
+	function nodesFormatter(value, row, index) {
 		if (value == null) {
 			return "";
 		}
-		return new Date(value).toLocaleString();
+		return value.length;
 	}
 
 	function operateFormatter(value, row, index) {
@@ -134,6 +134,26 @@
 		});
 		$('#addSave').click(function(e) {
 			e.preventDefault();
+			var cv = $('#addModal input[name=code]').val();
+			var nv = $('#addModal input[name=name]').val();
+
+			$.ajax({
+				type : 'POST',
+				url : '/api/cluster/add',
+				data : {
+					"code" : cv,
+					"name" : nv
+				},
+				success : function(data) {
+					if (data) {
+						$('#table').bootstrapTable('destroy').bootstrapTable({
+							height : '100%',
+							data : data
+						})
+					}
+				}
+			});
+
 			initTable();
 		});
 		$('#editSave').click(function(e) {

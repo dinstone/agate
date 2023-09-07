@@ -31,47 +31,47 @@ import io.agate.admin.bootstrap.ApplicationBootstrap;
 @SpringBootApplication
 public class ApplicationLauncher implements ApplicationRunner {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationLauncher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ApplicationLauncher.class);
 
-    @Autowired
-    private ApplicationContext applicationContext;
+	@Autowired
+	private ApplicationContext applicationContext;
 
-    public static void main(String[] args) {
-        ConfigurableApplicationContext context = null;
-        try {
-            context = SpringApplication.run(ApplicationLauncher.class, args);
-        } catch (Exception e) {
-            LOG.error("agate admin application start error", e);
-            if (context != null) {
-                SpringApplication.exit(context, new ExitCodeGenerator() {
+	public static void main(String[] args) {
+		ConfigurableApplicationContext context = null;
+		try {
+			context = SpringApplication.run(ApplicationLauncher.class, args);
+		} catch (Exception e) {
+			LOG.error("agate admin application start error", e);
+			if (context != null) {
+				SpringApplication.exit(context, new ExitCodeGenerator() {
 
-                    @Override
-                    public int getExitCode() {
-                        return -1;
-                    }
-                });
-            }
-        }
-    }
+					@Override
+					public int getExitCode() {
+						return -1;
+					}
+				});
+			}
+		}
+	}
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        ApplicationBootstrap bootstrap = new ApplicationBootstrap(applicationContext);
-        try {
-            bootstrap.start();
-            // add shutdown hook
-            Runtime.getRuntime().addShutdownHook(new Thread("ShutdownHook") {
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		ApplicationBootstrap bootstrap = new ApplicationBootstrap(applicationContext);
+		try {
+			bootstrap.start();
+			// add shutdown hook
+			Runtime.getRuntime().addShutdownHook(new Thread("ShutdownHook") {
 
-                @Override
-                public void run() {
-                    bootstrap.stop();
-                }
-            });
-        } catch (Exception e) {
-            bootstrap.stop();
+				@Override
+				public void run() {
+					bootstrap.stop();
+				}
+			});
+		} catch (Exception e) {
+			bootstrap.stop();
 
-            throw e;
-        }
-    }
+			throw e;
+		}
+	}
 
 }

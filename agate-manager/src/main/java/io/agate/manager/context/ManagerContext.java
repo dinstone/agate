@@ -27,8 +27,8 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import io.agate.manager.service.ClusterService;
-import io.agate.manager.service.ManageService;
+import io.agate.domain.service.ClusterService;
+import io.agate.domain.service.ManageService;
 
 @Component
 public class ManagerContext implements ApplicationListener<ApplicationStartedEvent> {

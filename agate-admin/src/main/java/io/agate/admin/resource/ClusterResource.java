@@ -15,39 +15,39 @@
  */
 package io.agate.admin.resource;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.dinstone.vertx.web.annotation.BeanParam;
 import com.dinstone.vertx.web.annotation.Context;
 import com.dinstone.vertx.web.annotation.Get;
 import com.dinstone.vertx.web.annotation.Produces;
 import com.dinstone.vertx.web.annotation.WebHandler;
 
-import io.agate.admin.model.ClusterEntity;
+import io.agate.domain.model.ClusterDefinition;
+import io.agate.domain.service.BusinessException;
+import io.agate.domain.service.ClusterService;
 import io.vertx.ext.web.RoutingContext;
 
 @Component
 @WebHandler("/cluster")
 public class ClusterResource {
 
-    @Get
-    @Produces("application/json")
-    public List<ClusterEntity> list(@Context RoutingContext rc) {
-        List<ClusterEntity> cel = new ArrayList<>();
+	@Autowired
+	private ClusterService clusterService;
 
-        for (int i = 0; i < 15; i++) {
-            ClusterEntity e = new ClusterEntity();
-            e.setId(i);
-            e.setName("ce-" + i);
-            e.setCode("product");
-            e.setCreateTime(new Date());
+	@Get
+	@Produces("application/json")
+	public List<ClusterDefinition> list(@Context RoutingContext rc) {
+		return clusterService.clusterList();
+	}
 
-            cel.add(e);
-        }
-        return cel;
-    }
-
+	@Get
+	@Produces("application/json")
+	public boolean add(@BeanParam ClusterDefinition clusterDefinition) throws BusinessException {
+		clusterService.createCluster(clusterDefinition);
+		return true;
+	}
 }

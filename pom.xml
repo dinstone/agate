@@ -127,6 +127,7 @@
         <module>agate-gateway</module>
         <module>agate-manager</module>
         <module>agate-admin</module>
+        <module>agate-domain</module>
     </modules>
 
     <name>agate</name>

@@ -55,9 +55,10 @@
 					<div class="nav-canvas">
 						<div class="nav-sm nav nav-stacked"></div>
 						<ul class="nav nav-pills nav-stacked main-menu">
-							<li><a id="routes" class="ajax-link" href="/view/route/index.html"><i class="glyphicon glyphicon-list"></i><span> Routes</span></a></li>
-							<li><a id="gateways" class="ajax-link" href="/view/gateway/index.html"><i class="glyphicon glyphicon-random"></i><span> Gateways</span></a></li>
-							<li><a id="clusters" class="ajax-link" href="/view/cluster/index.html"><i class="glyphicon glyphicon-magnet"></i><span> Clusters</span></a></li>
+							<li><a id="welcome" class="ajax-link" href="/view/home/index.html"><i class="glyphicon glyphicon-home"></i><span> Welcome</span></a></li>
+							<li><a id="clusters" class="ajax-link" href="/view/cluster/index.html"><i class="glyphicon glyphicon-th"></i><span> Clusters</span></a></li>
+							<li><a id="gateways" class="ajax-link" href="/view/gateway/index.html"><i class="glyphicon glyphicon-globe"></i><span> Gateways</span></a></li>
+							<li><a id="apps" class="ajax-link" href="/view/app/index.html"><i class="glyphicon glyphicon-tasks"></i><span> Applications</span></a></li>
 						</ul>
 					</div>
 				</div>
@@ -68,7 +69,7 @@
 		<!--/fluid-row-->
 		<hr>
 		<footer class="row">
-			<p class="col-md-9 col-sm-9 col-xs-12 copyright">&copy; 2019~2022 Agate Manager</p>
+			<p class="col-md-9 col-sm-9 col-xs-12 copyright">&copy; 2019~2023 Agate Manager</p>
 			<p class="col-md-3 col-sm-3 col-xs-12 powered-by">
 				Powered by: <a href="http://usman.it/free-responsive-admin-template">Charisma</a>
 			</p>
@@ -128,7 +129,7 @@
 		// get location hash
 		var hash = window.location.hash;
 		if (hash == '') {
-			hash = 'routes';
+			hash = 'welcome';
 		} else {
 			hash = hash.substr(1);
 		}

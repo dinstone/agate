@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agate.manager.context;
+package io.agate.admin;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +29,7 @@ import com.orbitz.consul.KeyValueClient;
 
 @Configuration
 @ComponentScan("io.agate.domain")
-public class ManagerConfig {
+public class ApplicationConfig {
 
 	@Autowired
 	private Environment environment;

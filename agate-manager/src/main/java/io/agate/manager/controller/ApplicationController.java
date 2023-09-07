@@ -24,10 +24,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.manager.model.AppDefinition;
-import io.agate.manager.model.GatewayDefinition;
-import io.agate.manager.service.BusinessException;
-import io.agate.manager.service.ManageService;
+import io.agate.domain.model.AppDefinition;
+import io.agate.domain.model.GatewayDefinition;
+import io.agate.domain.service.BusinessException;
+import io.agate.domain.service.ManageService;
 
 @Controller
 @RequestMapping("/view/app")
