@@ -28,9 +28,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.orbitz.consul.KeyValueClient;
-import com.orbitz.consul.model.kv.Value;
-
 import io.agate.domain.dao.AppDao;
 import io.agate.domain.dao.GatewayDao;
 import io.agate.domain.dao.RouteDao;
@@ -43,6 +40,7 @@ import io.agate.domain.model.FrontendDefinition;
 import io.agate.domain.model.GatewayDefinition;
 import io.agate.domain.model.PluginDefinition;
 import io.agate.domain.model.RouteDefinition;
+import io.agate.domain.port.CatalogStore;
 import io.agate.domain.utils.JacksonCodec;
 
 @Component
@@ -62,7 +60,7 @@ public class ManageService {
 	private AppDao appDao;
 
 	@Autowired
-	private KeyValueClient keyValueClient;
+	private CatalogStore catalogStore;
 
 	public void createGateway(GatewayDefinition defination) throws BusinessException {
 		// app param check
@@ -412,17 +410,17 @@ public class ManageService {
 	public void gatewayRefresh() {
 		// clear deleted gateway
 		String key = "agate/gateway";
-		List<String> ks = keyValueClient.getKeys(key);
+		List<String> ks = catalogStore.getKeys(key);
 		for (String k : ks) {
-			Optional<Value> v = keyValueClient.getValue(k);
+			Optional<String> v = catalogStore.getValue(k);
 			if (v.isPresent()) {
-				String[] gps = v.get().getKey().split("/");
+				String[] gps = k.split("/");
 				GatewayEntity g = gatewayDao.find(gps[2], gps[3]);
 				if (g == null || g.getStatus() == STATUS_CLOSE) {
-					keyValueClient.deleteKey(k);
+					catalogStore.deleteKey(k);
 
 					key = "agate/route/" + gps[2] + "/" + gps[3];
-					keyValueClient.deleteKey(key);
+					catalogStore.deleteKey(key);
 				}
 			}
 		}
@@ -466,19 +464,18 @@ public class ManageService {
 
 	private boolean existRouteKey(GatewayEntity ge, RouteEntity re) {
 		String key = routeKey(ge, re);
-		Optional<Value> value = keyValueClient.getValue(key);
-		return value.isPresent();
+		return catalogStore.getValue(key).isPresent();
 	}
 
 	private void createRouteKey(GatewayEntity ge, RouteEntity re) {
 		String key = routeKey(ge, re);
 		String value = convertRouteOptions(ge, re);
-		keyValueClient.putValue(key, value);
+		catalogStore.putValue(key, value);
 	}
 
 	private void deleteRouteKey(GatewayEntity ge, RouteEntity re) {
 		String key = routeKey(ge, re);
-		keyValueClient.deleteKey(key);
+		catalogStore.deleteKey(key);
 	}
 
 	private String convertGatewayOptions(GatewayEntity entity) {
@@ -517,19 +514,19 @@ public class ManageService {
 
 	private boolean existGatewayKey(GatewayEntity ge) {
 		String key = gatewayKey(ge);
-		Optional<Value> value = keyValueClient.getValue(key);
+		Optional<String> value = catalogStore.getValue(key);
 		return value.isPresent();
 	}
 
 	private void createGatewayKey(GatewayEntity ge) {
 		String key = gatewayKey(ge);
 		String value = convertGatewayOptions(ge);
-		keyValueClient.putValue(key, value);
+		catalogStore.putValue(key, value);
 	}
 
 	private void deleteGatewayKey(GatewayEntity ge) {
 		String key = gatewayKey(ge);
-		keyValueClient.deleteKey(key);
+		catalogStore.deleteKey(key);
 	}
 
 	public List<AppDefinition> appList() {

@@ -15,9 +15,9 @@
  */
 package io.agate.domain.service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,15 +26,12 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.orbitz.consul.CatalogClient;
-import com.orbitz.consul.model.ConsulResponse;
-import com.orbitz.consul.model.catalog.CatalogService;
-
 import io.agate.domain.dao.ClusterDao;
 import io.agate.domain.dao.GatewayDao;
 import io.agate.domain.entity.ClusterEntity;
 import io.agate.domain.model.ClusterDefinition;
 import io.agate.domain.model.InstanceDefinition;
+import io.agate.domain.port.CatalogStore;
 
 @Component
 public class ClusterService {
@@ -42,7 +39,7 @@ public class ClusterService {
 	private List<InstanceDefinition> clusterInstances = new CopyOnWriteArrayList<>();
 
 	@Autowired
-	private CatalogClient catalogClient;
+	private CatalogStore catalogStore;
 
 	@Autowired
 	private ClusterDao clusterDao;
@@ -72,12 +69,18 @@ public class ClusterService {
 	}
 
 	public void clusterRefresh() {
-		List<InstanceDefinition> instances = new ArrayList<>();
-		ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService("agate-gateway");
-		for (CatalogService e : consulResponse.getResponse()) {
-			instances.add(createInstance(e.getServiceMeta()));
+		List<Map<String, String>> metas = catalogStore.getMetas("agate-gateway");
+		if (metas == null) {
+			return;
 		}
 
+		List<InstanceDefinition> instances = new LinkedList<>();
+		for (Map<String, String> meta : metas) {
+			InstanceDefinition instance = createInstance(meta);
+			if (instance != null) {
+				instances.add(instance);
+			}
+		}
 		for (InstanceDefinition defination : instances) {
 			if (!clusterInstances.contains(defination)) {
 				clusterInstances.add(defination);

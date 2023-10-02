@@ -15,6 +15,8 @@
  */
 package io.agate.admin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -22,19 +24,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import com.google.common.net.HostAndPort;
-import com.orbitz.consul.CatalogClient;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.Consul.Builder;
-import com.orbitz.consul.KeyValueClient;
+
+import io.agate.domain.adapter.ConsulCatalogStore;
+import io.agate.domain.adapter.EmptyCatalogStore;
+import io.agate.domain.port.CatalogStore;
 
 @Configuration
 @ComponentScan("io.agate.domain")
 public class ApplicationConfig {
 
+	private static final Logger LOG = LoggerFactory.getLogger(ApplicationConfig.class);
+
 	@Autowired
 	private Environment environment;
 
-	@Bean
 	Consul consul() {
 		String host = environment.getProperty("consul.host");
 		String port = environment.getProperty("consul.port");
@@ -48,13 +53,13 @@ public class ApplicationConfig {
 	}
 
 	@Bean
-	KeyValueClient keyValueClient(Consul consul) {
-		return consul.keyValueClient();
-	}
-
-	@Bean
-	CatalogClient catalogClient(Consul consul) {
-		return consul.catalogClient();
+	CatalogStore catalogStore() {
+		try {
+			return new ConsulCatalogStore(consul());
+		} catch (Exception e) {
+			LOG.warn("create consul catalog store error [{}], will use empty catalog store.", e.getMessage());
+		}
+		return new EmptyCatalogStore();
 	}
 
 }
