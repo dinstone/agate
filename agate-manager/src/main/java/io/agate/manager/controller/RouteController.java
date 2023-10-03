@@ -34,6 +34,11 @@ public class RouteController {
 	@Autowired
 	private ManageService manageService;
 
+	@RequestMapping("/error")
+	public ModelAndView error() {
+		throw new RuntimeException("error test");
+	}
+
 	@RequestMapping("/list")
 	public ModelAndView list(Integer appId) {
 		AppDefinition appDefination = manageService.getAppById(appId);
