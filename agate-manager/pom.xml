@@ -102,7 +102,7 @@
 
         <dependency>
             <groupId>io.agate</groupId>
-            <artifactId>agate-domain</artifactId>
+            <artifactId>agate-admin-business</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

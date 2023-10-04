@@ -18,8 +18,8 @@ package io.agate.manager.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.agate.domain.model.PluginDefinition;
-import io.agate.domain.utils.JacksonCodec;
+import io.agate.admin.business.model.PluginDefinition;
+import io.agate.admin.utils.JacksonCodec;
 
 public class JacksonCodecTest {
 

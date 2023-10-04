@@ -24,11 +24,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import io.agate.domain.model.ClusterDefinition;
-import io.agate.domain.model.GatewayDefinition;
-import io.agate.domain.service.BusinessException;
-import io.agate.domain.service.ClusterService;
-import io.agate.domain.service.ManageService;
+import io.agate.admin.business.BusinessException;
+import io.agate.admin.business.model.ClusterDefinition;
+import io.agate.admin.business.model.GatewayDefinition;
+import io.agate.admin.business.service.ClusterService;
+import io.agate.admin.business.service.ManageService;
 
 @Controller
 @RequestMapping("/view/gateway")

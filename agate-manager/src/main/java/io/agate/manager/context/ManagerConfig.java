@@ -27,12 +27,12 @@ import com.google.common.net.HostAndPort;
 import com.orbitz.consul.Consul;
 import com.orbitz.consul.Consul.Builder;
 
-import io.agate.domain.adapter.ConsulCatalogStore;
-import io.agate.domain.adapter.EmptyCatalogStore;
-import io.agate.domain.port.CatalogStore;
+import io.agate.admin.business.port.CatalogStore;
+import io.agate.admin.store.ConsulCatalogStore;
+import io.agate.admin.store.EmptyCatalogStore;
 
 @Configuration
-@ComponentScan("io.agate.domain")
+@ComponentScan("io.agate.admin")
 public class ManagerConfig {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ManagerConfig.class);

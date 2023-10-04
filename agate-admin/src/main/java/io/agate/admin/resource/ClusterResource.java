@@ -26,9 +26,9 @@ import com.dinstone.vertx.web.annotation.Get;
 import com.dinstone.vertx.web.annotation.Produces;
 import com.dinstone.vertx.web.annotation.WebHandler;
 
-import io.agate.domain.model.ClusterDefinition;
-import io.agate.domain.service.BusinessException;
-import io.agate.domain.service.ClusterService;
+import io.agate.admin.business.BusinessException;
+import io.agate.admin.business.model.ClusterDefinition;
+import io.agate.admin.business.service.ClusterService;
 import io.vertx.ext.web.RoutingContext;
 
 @Component
