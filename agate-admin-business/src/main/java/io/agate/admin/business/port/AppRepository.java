@@ -3,6 +3,7 @@ package io.agate.admin.business.port;
 import java.util.List;
 
 import io.agate.admin.business.model.AppDefinition;
+import io.agate.admin.business.model.RouteDefinition;
 
 public interface AppRepository {
 
@@ -17,5 +18,9 @@ public interface AppRepository {
 	AppDefinition find(Integer id);
 
 	void delete(Integer id);
+
+	int total();
+
+	List<AppDefinition> find(int start, int size);
 
 }

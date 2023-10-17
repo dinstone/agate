@@ -23,6 +23,8 @@ public class RouteEntity {
 
 	private Integer appId;
 
+	private String appName;
+
 	private String name;
 
 	private int status;
@@ -87,6 +89,14 @@ public class RouteEntity {
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+	public String getAppName() {
+		return appName;
+	}
+
+	public void setAppName(String appName) {
+		this.appName = appName;
 	}
 
 	@Override

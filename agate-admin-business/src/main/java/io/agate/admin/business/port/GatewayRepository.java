@@ -24,4 +24,8 @@ public interface GatewayRepository {
 
 	void updateStatus(GatewayDefinition entity);
 
+	List<GatewayDefinition> find(String name, int start, int size);
+
+	int total(String name);
+
 }

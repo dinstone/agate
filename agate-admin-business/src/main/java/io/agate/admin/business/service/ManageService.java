@@ -32,6 +32,10 @@ import io.agate.admin.business.model.FrontendDefinition;
 import io.agate.admin.business.model.GatewayDefinition;
 import io.agate.admin.business.model.PluginDefinition;
 import io.agate.admin.business.model.RouteDefinition;
+import io.agate.admin.business.param.GatewayQuery;
+import io.agate.admin.business.param.PageList;
+import io.agate.admin.business.param.PageQuery;
+import io.agate.admin.business.param.RouteQuery;
 import io.agate.admin.business.port.AppRepository;
 import io.agate.admin.business.port.CatalogStore;
 import io.agate.admin.business.port.GatewayRepository;
@@ -474,6 +478,75 @@ public class ManageService {
 
 	public void deleteApp(Integer id) throws BusinessException {
 		appRepository.delete(id);
+	}
+
+	public PageList<GatewayDefinition> gatewayList(GatewayQuery query) {
+		if (query.getPageSize() == null || query.getPageSize() <= 0) {
+			List<GatewayDefinition> list = gatewayRepository.find(query.getName(), 0, Integer.MAX_VALUE);
+			return new PageList<GatewayDefinition>(list);
+		}
+
+		int pageIndex = 1;
+		if (query.getPageIndex() != null && query.getPageIndex() > 0) {
+			pageIndex = query.getPageIndex();
+		}
+
+		int size = query.getPageSize();
+		int start = (pageIndex - 1) * size;
+
+		int total = gatewayRepository.total(query.getName());
+		if (start < total) {
+			List<GatewayDefinition> list = gatewayRepository.find(query.getName(), start, size);
+			return new PageList<GatewayDefinition>(list);
+		} else {
+			return new PageList<GatewayDefinition>(total);
+		}
+	}
+
+	public PageList<AppDefinition> appList(PageQuery query) {
+		if (query.getPageSize() == null || query.getPageSize() <= 0) {
+			List<AppDefinition> list = appRepository.find(0, Integer.MAX_VALUE);
+			return new PageList<AppDefinition>(list);
+		}
+
+		int pageIndex = 1;
+		if (query.getPageIndex() != null && query.getPageIndex() > 0) {
+			pageIndex = query.getPageIndex();
+		}
+
+		int size = query.getPageSize();
+		int start = (pageIndex - 1) * size;
+
+		int total = appRepository.total();
+		if (start < total) {
+			List<AppDefinition> list = appRepository.find(start, size);
+			return new PageList<AppDefinition>(list);
+		} else {
+			return new PageList<AppDefinition>(total);
+		}
+	}
+
+	public PageList<RouteDefinition> routeList(RouteQuery query) {
+		if (query.getPageSize() == null || query.getPageSize() <= 0) {
+			List<RouteDefinition> list = routeRepository.find(query.getAppId(), 0, Integer.MAX_VALUE);
+			return new PageList<RouteDefinition>(list);
+		}
+
+		int pageIndex = 1;
+		if (query.getPageIndex() != null && query.getPageIndex() > 0) {
+			pageIndex = query.getPageIndex();
+		}
+
+		int size = query.getPageSize();
+		int start = (pageIndex - 1) * size;
+
+		int total = routeRepository.total(query.getAppId());
+		if (start < total) {
+			List<RouteDefinition> list = routeRepository.find(query.getAppId(), start, size);
+			return new PageList<RouteDefinition>(list);
+		} else {
+			return new PageList<RouteDefinition>(total);
+		}
 	}
 
 }

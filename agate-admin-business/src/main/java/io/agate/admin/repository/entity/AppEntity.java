@@ -25,6 +25,8 @@ public class AppEntity {
 
 	private Integer gwId;
 
+	private String gwName;
+
 	private String json;
 
 	private Date createTime;
@@ -77,6 +79,14 @@ public class AppEntity {
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+	public String getGwName() {
+		return gwName;
+	}
+
+	public void setGwName(String gwName) {
+		this.gwName = gwName;
 	}
 
 	@Override

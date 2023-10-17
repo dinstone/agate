@@ -26,4 +26,8 @@ public interface RouteRepository {
 
 	void deleteByGatewayId(Integer gwId);
 
+	int total(Integer appId);
+
+	List<RouteDefinition> find(Integer appId, int start, int size);
+
 }

@@ -86,7 +86,7 @@ public class AppRepositoryDao implements AppRepository {
 
 	@Override
 	public AppDefinition find(Integer id) {
-		String sql = "select * from t_app where id=?";
+		String sql = "select a.*, g.name gwName from t_app a, t_gateway g where a.gwId=g.id and a.id=?";
 		List<AppEntity> ares = jdbcTemplate.query(sql, new Object[] { id },
 				BeanPropertyRowMapper.newInstance(AppEntity.class));
 		if (!ares.isEmpty()) {
@@ -98,6 +98,9 @@ public class AppRepositoryDao implements AppRepository {
 	private AppDefinition convert(AppEntity appEntity) {
 		AppDefinition app = JacksonCodec.decode(appEntity.getJson(), AppDefinition.class);
 		app.setId(appEntity.getId());
+		app.setName(appEntity.getName());
+		app.setGwId(appEntity.getGwId());
+		app.setGwName(appEntity.getGwName());
 		return app;
 	}
 
@@ -105,6 +108,23 @@ public class AppRepositoryDao implements AppRepository {
 	public void delete(Integer id) {
 		String sql = "delete from t_app where id=?";
 		jdbcTemplate.update(sql, new Object[] { id });
+	}
+
+	@Override
+	public int total() {
+		String sql = "select count(1) from t_app";
+		return jdbcTemplate.queryForObject(sql, Integer.class);
+	}
+
+	@Override
+	public List<AppDefinition> find(int start, int size) {
+		String sql = "select a.*, g.name gwName from t_app a,t_gateway g where a.gwId=g.id order by a.id limit ?,?";
+		List<AppEntity> ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AppEntity.class),
+				new Object[] { start, size });
+		if (!ges.isEmpty()) {
+			return ges.stream().map(ge -> convert(ge)).collect(Collectors.toList());
+		}
+		return Collections.emptyList();
 	}
 
 }

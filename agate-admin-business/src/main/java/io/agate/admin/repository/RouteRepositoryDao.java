@@ -142,4 +142,21 @@ public class RouteRepositoryDao implements RouteRepository {
 		jdbcTemplate.update(sql, new Object[] { gwId });
 	}
 
+	@Override
+	public List<RouteDefinition> find(Integer appId, int start, int size) {
+		String sql = "select * from t_route where appId=? order by id limit ?,?";
+		List<RouteEntity> res = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteEntity.class),
+				new Object[] { appId, start, size });
+		if (!res.isEmpty()) {
+			return res.stream().map(re -> convert(re)).collect(Collectors.toList());
+		}
+		return Collections.emptyList();
+	}
+
+	@Override
+	public int total(Integer appId) {
+		String sql = "select count(1) from t_route where appId=?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, new Object[] { appId });
+	}
+
 }

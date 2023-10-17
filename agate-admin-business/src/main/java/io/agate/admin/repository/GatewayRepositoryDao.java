@@ -40,8 +40,8 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	public boolean gatewayNameExist(GatewayDefinition entity) {
 		if (entity.getId() != null) {
 			String sql = "select count(1) from t_gateway where cluster=? and name=? and id<>?";
-			Integer count = jdbcTemplate.queryForObject(sql,
-					new Object[] { entity.getCluster(), entity.getName(), entity.getId() }, Integer.class);
+			Integer count = jdbcTemplate.queryForObject(sql, Integer.class,
+					new Object[] { entity.getCluster(), entity.getName(), entity.getId() });
 			return count != null && count > 0;
 		} else {
 			String sql = "select count(1) from t_gateway where cluster=? and name=?";
@@ -143,6 +143,36 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	public void updateStatus(GatewayDefinition definition) {
 		String sql = "update t_gateway set status=?,updatetime=? where id=?";
 		jdbcTemplate.update(sql, new Object[] { definition.getStatus(), new Date(), definition.getId() });
+	}
+
+	@Override
+	public List<GatewayDefinition> find(String name, int start, int size) {
+		List<GatewayEntity> ges = null;
+		if (name != null) {
+			String sql = "select * from t_gateway where name=? order by id limit ?,?";
+			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class),
+					new Object[] { name, start, size });
+		} else {
+			String sql = "select * from t_gateway order by id limit ?,?";
+			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class),
+					new Object[] { start, size });
+		}
+
+		if (!ges.isEmpty()) {
+			return ges.stream().map(ge -> convert(ge)).collect(Collectors.toList());
+		}
+		return Collections.emptyList();
+	}
+
+	@Override
+	public int total(String name) {
+		if (name != null) {
+			String sql = "select count(1) from t_gateway where name=?";
+			return jdbcTemplate.queryForObject(sql, Integer.class, new Object[] { name });
+		} else {
+			String sql = "select count(1) from t_gateway";
+			return jdbcTemplate.queryForObject(sql, Integer.class);
+		}
 	}
 
 }

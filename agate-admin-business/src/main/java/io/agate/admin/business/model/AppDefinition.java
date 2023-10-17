@@ -23,6 +23,8 @@ public class AppDefinition {
 
 	private Integer gwId;
 
+	private String gwName;
+
 	private String domain;
 
 	private String prefix;
@@ -65,6 +67,14 @@ public class AppDefinition {
 
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
+	}
+
+	public String getGwName() {
+		return gwName;
+	}
+
+	public void setGwName(String gwName) {
+		this.gwName = gwName;
 	}
 
 }
