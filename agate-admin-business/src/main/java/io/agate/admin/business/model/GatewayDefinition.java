@@ -19,7 +19,9 @@ public class GatewayDefinition {
 
 	private Integer id;
 
-	private String cluster;
+	private String ccode;
+
+	private String cname;
 
 	private String name;
 
@@ -59,12 +61,20 @@ public class GatewayDefinition {
 		this.remark = remark;
 	}
 
-	public String getCluster() {
-		return cluster;
+	public String getCcode() {
+		return ccode;
 	}
 
-	public void setCluster(String cluster) {
-		this.cluster = cluster;
+	public void setCcode(String ccode) {
+		this.ccode = ccode;
+	}
+
+	public String getCname() {
+		return cname;
+	}
+
+	public void setCname(String cname) {
+		this.cname = cname;
 	}
 
 	public String getHost() {

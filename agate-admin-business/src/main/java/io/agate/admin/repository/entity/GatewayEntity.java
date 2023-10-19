@@ -19,7 +19,9 @@ import java.util.Date;
 
 public class GatewayEntity {
 
-	private String cluster;
+	private String ccode;
+
+	private String cname;
 
 	private Integer id;
 
@@ -33,12 +35,20 @@ public class GatewayEntity {
 
 	private Date updateTime;
 
-	public String getCluster() {
-		return cluster;
+	public String getCcode() {
+		return ccode;
 	}
 
-	public void setCluster(String cluster) {
-		this.cluster = cluster;
+	public void setCcode(String ccode) {
+		this.ccode = ccode;
+	}
+
+	public String getCname() {
+		return cname;
+	}
+
+	public void setCname(String cname) {
+		this.cname = cname;
 	}
 
 	public Integer getId() {
@@ -87,12 +97,6 @@ public class GatewayEntity {
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
-	}
-
-	@Override
-	public String toString() {
-		return "GatewayEntity [cluster=" + cluster + ", id=" + id + ", name=" + name + ", status=" + status + ", json="
-				+ json + ", createTime=" + createTime + ", updateTime=" + updateTime + "]";
 	}
 
 }

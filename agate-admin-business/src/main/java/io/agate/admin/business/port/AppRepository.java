@@ -3,7 +3,6 @@ package io.agate.admin.business.port;
 import java.util.List;
 
 import io.agate.admin.business.model.AppDefinition;
-import io.agate.admin.business.model.RouteDefinition;
 
 public interface AppRepository {
 

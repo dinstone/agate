@@ -72,7 +72,7 @@ public class ManageService {
 		if (definition.getName() == null || definition.getName().isEmpty()) {
 			throw new BusinessException(40101, "Gateway Name is empty");
 		}
-		if (definition.getCluster() == null) {
+		if (definition.getCcode() == null) {
 			throw new BusinessException(40102, "Cluster is empty");
 		}
 		if (definition.getPort() == null || definition.getPort() <= 0) {
@@ -262,7 +262,7 @@ public class ManageService {
 		AppDefinition appDefination = getAppById(routeDefinition.getAppId());
 
 		Map<String, Object> routeOptions = new HashMap<>();
-		routeOptions.put("cluster", GatewayDefinition.getCluster());
+		routeOptions.put("cluster", GatewayDefinition.getCcode());
 		routeOptions.put("gateway", GatewayDefinition.getName());
 		routeOptions.put("appNmae", appDefination.getName());
 		routeOptions.put("prefix", appDefination.getPrefix());
@@ -379,7 +379,7 @@ public class ManageService {
 	}
 
 	private String routeKey(GatewayDefinition gd, RouteDefinition rd) {
-		return "agate/route/" + gd.getCluster() + "/" + gd.getName() + "/" + rd.getName();
+		return "agate/route/" + gd.getCcode() + "/" + gd.getName() + "/" + rd.getName();
 	}
 
 	private boolean existRouteKey(GatewayDefinition gd, RouteDefinition rd) {
@@ -400,7 +400,7 @@ public class ManageService {
 
 	private String convertGatewayOptions(GatewayDefinition defination) {
 		Map<String, Object> gatewayOptions = new HashMap<>();
-		gatewayOptions.put("cluster", defination.getCluster());
+		gatewayOptions.put("cluster", defination.getCcode());
 		gatewayOptions.put("gateway", defination.getName());
 		gatewayOptions.put("remark", defination.getRemark());
 
@@ -428,7 +428,7 @@ public class ManageService {
 	}
 
 	private String gatewayKey(GatewayDefinition gd) {
-		return "agate/gateway/" + gd.getCluster() + "/" + gd.getName();
+		return "agate/gateway/" + gd.getCcode() + "/" + gd.getName();
 	}
 
 	private boolean existGatewayKey(GatewayDefinition gd) {
@@ -482,7 +482,7 @@ public class ManageService {
 
 	public PageList<GatewayDefinition> gatewayList(GatewayQuery query) {
 		if (query.getPageSize() == null || query.getPageSize() <= 0) {
-			List<GatewayDefinition> list = gatewayRepository.find(query.getName(), 0, Integer.MAX_VALUE);
+			List<GatewayDefinition> list = gatewayRepository.find(query.getCcode(), 0, Integer.MAX_VALUE);
 			return new PageList<GatewayDefinition>(list);
 		}
 
@@ -494,10 +494,10 @@ public class ManageService {
 		int size = query.getPageSize();
 		int start = (pageIndex - 1) * size;
 
-		int total = gatewayRepository.total(query.getName());
+		int total = gatewayRepository.total(query.getCcode());
 		if (start < total) {
-			List<GatewayDefinition> list = gatewayRepository.find(query.getName(), start, size);
-			return new PageList<GatewayDefinition>(list);
+			List<GatewayDefinition> list = gatewayRepository.find(query.getCcode(), start, size);
+			return new PageList<GatewayDefinition>(list, total);
 		} else {
 			return new PageList<GatewayDefinition>(total);
 		}
@@ -520,7 +520,7 @@ public class ManageService {
 		int total = appRepository.total();
 		if (start < total) {
 			List<AppDefinition> list = appRepository.find(start, size);
-			return new PageList<AppDefinition>(list);
+			return new PageList<AppDefinition>(list, total);
 		} else {
 			return new PageList<AppDefinition>(total);
 		}
@@ -543,7 +543,7 @@ public class ManageService {
 		int total = routeRepository.total(query.getAppId());
 		if (start < total) {
 			List<RouteDefinition> list = routeRepository.find(query.getAppId(), start, size);
-			return new PageList<RouteDefinition>(list);
+			return new PageList<RouteDefinition>(list, total);
 		} else {
 			return new PageList<RouteDefinition>(total);
 		}

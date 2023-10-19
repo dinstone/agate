@@ -36,7 +36,7 @@ public class ClusterRepositoryDao implements ClusterRepository {
 	@Override
 	public boolean clusterNameExist(String code) {
 		String sql = "select count(1) from t_cluster where code=?";
-		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { code }, Integer.class);
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, code);
 		return count != null && count > 0;
 	}
 
@@ -65,6 +65,7 @@ public class ClusterRepositoryDao implements ClusterRepository {
 		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ClusterDefinition.class));
 	}
 
+	@SuppressWarnings("unused")
 	private ClusterDefinition convert(ClusterEntity ce) {
 		ClusterDefinition cd = new ClusterDefinition();
 		cd.setId(ce.getId());
@@ -76,8 +77,8 @@ public class ClusterRepositoryDao implements ClusterRepository {
 	@Override
 	public ClusterDefinition find(Integer id) {
 		String sql = "select * from t_cluster where id=?";
-		List<ClusterDefinition> apps = jdbcTemplate.query(sql, new Object[] { id },
-				BeanPropertyRowMapper.newInstance(ClusterDefinition.class));
+		List<ClusterDefinition> apps = jdbcTemplate.query(sql,
+				BeanPropertyRowMapper.newInstance(ClusterDefinition.class), id);
 		if (!apps.isEmpty()) {
 			return apps.get(0);
 		}
@@ -87,8 +88,8 @@ public class ClusterRepositoryDao implements ClusterRepository {
 	@Override
 	public ClusterDefinition find(String code) {
 		String sql = "select * from t_cluster where code=?";
-		List<ClusterDefinition> apps = jdbcTemplate.query(sql, new Object[] { code },
-				BeanPropertyRowMapper.newInstance(ClusterDefinition.class));
+		List<ClusterDefinition> apps = jdbcTemplate.query(sql,
+				BeanPropertyRowMapper.newInstance(ClusterDefinition.class), code);
 		if (!apps.isEmpty()) {
 			return apps.get(0);
 		}
@@ -98,7 +99,7 @@ public class ClusterRepositoryDao implements ClusterRepository {
 	@Override
 	public void delete(Integer id) {
 		String sql = "delete from t_cluster where id=?";
-		jdbcTemplate.update(sql, new Object[] { id });
+		jdbcTemplate.update(sql, id);
 	}
 
 }

@@ -81,7 +81,7 @@
 										<c:forEach items="${gateways}" var="gateway">
 											<tr class="line">
 												<td><a href="${contextPath}/view/gateway/detail?id=${gateway.id}">${gateway.name}</a></td>
-												<td>${gateway.cluster}</td>
+												<td>${gateway.cname}</td>
 												<td>${gateway.host}:${gateway.port}</td>
 												<td>${gateway.remark}</td>
 												<c:if test="${gateway.status > 0}">

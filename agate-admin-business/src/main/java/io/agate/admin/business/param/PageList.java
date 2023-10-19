@@ -13,12 +13,17 @@ public class PageList<T> {
 
 	public PageList(List<T> list) {
 		if (list != null) {
-			total = list.size();
+			this.total = list.size();
 		}
 		this.list = list;
 	}
 
 	public PageList(int total) {
+		this.total = total;
+	}
+
+	public PageList(List<T> list, int total) {
+		this.list = list;
 		this.total = total;
 	}
 

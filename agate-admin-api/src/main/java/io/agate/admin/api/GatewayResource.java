@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +33,7 @@ public class GatewayResource {
 	}
 
 	@PostMapping("/save")
-	public boolean add(@RequestBody GatewayDefinition gatewayDefinition) throws BusinessException {
+	public boolean save(@RequestBody GatewayDefinition gatewayDefinition) throws BusinessException {
 		if (gatewayDefinition.getId() == null) {
 			manageService.createGateway(gatewayDefinition);
 		} else {
@@ -42,12 +43,24 @@ public class GatewayResource {
 	}
 
 	@DeleteMapping("/delete")
-	public boolean add(@RequestBody Integer[] ids) throws BusinessException {
+	public boolean delete(@RequestBody Integer[] ids) throws BusinessException {
 		if (ids != null) {
 			for (Integer id : ids) {
 				manageService.deleteGateway(id);
 			}
 		}
+		return true;
+	}
+
+	@PutMapping("/start")
+	public boolean start(Integer id) throws BusinessException {
+		manageService.startGateway(id);
+		return true;
+	}
+
+	@PutMapping("/close")
+	public boolean close(Integer id) throws BusinessException {
+		manageService.closeGateway(id);
 		return true;
 	}
 }

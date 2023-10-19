@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +33,7 @@ public class RouteResource {
 	}
 
 	@PostMapping("/save")
-	public boolean add(@RequestBody RouteDefinition appDefinition) throws BusinessException {
+	public boolean save(@RequestBody RouteDefinition appDefinition) throws BusinessException {
 		if (appDefinition.getId() == null) {
 			manageService.createRoute(appDefinition);
 		} else {
@@ -42,12 +43,24 @@ public class RouteResource {
 	}
 
 	@DeleteMapping("/delete")
-	public boolean add(@RequestBody Integer[] ids) throws BusinessException {
+	public boolean delete(@RequestBody Integer[] ids) throws BusinessException {
 		if (ids != null) {
 			for (Integer id : ids) {
 				manageService.deleteRoute(id);
 			}
 		}
+		return true;
+	}
+
+	@PutMapping("/start")
+	public boolean start(Integer id) throws BusinessException {
+		manageService.startRoute(id);
+		return true;
+	}
+
+	@PutMapping("/close")
+	public boolean close(Integer id) throws BusinessException {
+		manageService.closeRoute(id);
 		return true;
 	}
 }

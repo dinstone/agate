@@ -86,12 +86,25 @@ public class ClusterService {
 		try {
 			if (serviceMeta != null) {
 				instance.setInstanceId(serviceMeta.get("instanceId"));
-				instance.setClusterCode(serviceMeta.get("cluster"));
+				instance.setClusterCode(serviceMeta.get("clusterCode"));
+				instance.setManageHost(serviceMeta.get("manageHost"));
+				instance.setManagePort(integer(serviceMeta.get("managePort")));
 			}
 		} catch (Exception e) {
 			// ignore
 		}
 		return instance;
+	}
+
+	private int integer(String v) {
+		if (v != null) {
+			try {
+				return Integer.parseInt(v);
+			} catch (Exception e) {
+				// ignore exception
+			}
+		}
+		return 0;
 	}
 
 	public void createCluster(ClusterDefinition defination) throws BusinessException {

@@ -107,7 +107,7 @@ public class ManageVerticle extends AbstractVerticle {
 		serviceId = clusterCode + "$" + manageHost + ":" + managePort;
 
 		// init gateway node
-		clusterNodeMeta.put("cluster", clusterCode);
+		clusterNodeMeta.put("clusterCode", clusterCode);
 		clusterNodeMeta.put("instanceId", serviceId);
 		clusterNodeMeta.put("manageHost", manageHost);
 		clusterNodeMeta.put("managePort", String.valueOf(managePort));

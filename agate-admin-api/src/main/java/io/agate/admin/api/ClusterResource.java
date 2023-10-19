@@ -27,7 +27,7 @@ public class ClusterResource {
 	}
 
 	@PostMapping("/save")
-	public boolean add(@RequestBody ClusterDefinition clusterDefinition) throws BusinessException {
+	public boolean save(@RequestBody ClusterDefinition clusterDefinition) throws BusinessException {
 		if (clusterDefinition.getId() == null) {
 			clusterService.createCluster(clusterDefinition);
 		} else {
@@ -37,7 +37,7 @@ public class ClusterResource {
 	}
 
 	@DeleteMapping("/delete")
-	public boolean add(@RequestBody Integer[] ids) throws BusinessException {
+	public boolean delete(@RequestBody Integer[] ids) throws BusinessException {
 		if (ids != null) {
 			for (Integer id : ids) {
 				clusterService.deleteCluster(id);

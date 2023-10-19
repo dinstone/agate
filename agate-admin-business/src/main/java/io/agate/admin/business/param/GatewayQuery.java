@@ -2,14 +2,14 @@ package io.agate.admin.business.param;
 
 public class GatewayQuery extends PageQuery {
 
-	private String name;
+	private String ccode;
 
-	public String getName() {
-		return name;
+	public String getCcode() {
+		return ccode;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setCcode(String ccode) {
+		this.ccode = ccode;
 	}
 
 }

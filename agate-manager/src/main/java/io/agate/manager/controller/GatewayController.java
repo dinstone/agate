@@ -89,7 +89,7 @@ public class GatewayController {
 		ModelAndView mav = new ModelAndView("gateway/detail");
 		try {
 			GatewayDefinition gateway = manageService.getGatewayById(id);
-			ClusterDefinition cluster = clusterService.getClusterByCode(gateway.getCluster());
+			ClusterDefinition cluster = clusterService.getClusterByCode(gateway.getCcode());
 			mav.addObject("cluster", cluster);
 			mav.addObject("gateway", gateway);
 			mav.addObject("action", "detail");

@@ -37,24 +37,23 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	private JdbcTemplate jdbcTemplate;
 
 	@Override
-	public boolean gatewayNameExist(GatewayDefinition entity) {
-		if (entity.getId() != null) {
-			String sql = "select count(1) from t_gateway where cluster=? and name=? and id<>?";
-			Integer count = jdbcTemplate.queryForObject(sql, Integer.class,
-					new Object[] { entity.getCluster(), entity.getName(), entity.getId() });
+	public boolean gatewayNameExist(GatewayDefinition gateway) {
+		if (gateway.getId() != null) {
+			String sql = "select count(1) from t_gateway where ccode=? and name=? and id<>?";
+			Integer count = jdbcTemplate.queryForObject(sql, Integer.class, gateway.getCcode(), gateway.getName(),
+					gateway.getId());
 			return count != null && count > 0;
 		} else {
-			String sql = "select count(1) from t_gateway where cluster=? and name=?";
-			Integer count = jdbcTemplate.queryForObject(sql, new Object[] { entity.getCluster(), entity.getName() },
-					Integer.class);
+			String sql = "select count(1) from t_gateway where ccode=? and name=?";
+			Integer count = jdbcTemplate.queryForObject(sql, Integer.class, gateway.getCcode(), gateway.getName());
 			return count != null && count > 0;
 		}
 	}
 
 	@Override
 	public boolean hasGatewaysByClusterCode(String cluster) {
-		String sql = "select count(1) from t_gateway where cluster=?";
-		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { cluster }, Integer.class);
+		String sql = "select count(1) from t_gateway where ccode=?";
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, cluster);
 		return count != null && count > 0;
 	}
 
@@ -66,14 +65,15 @@ public class GatewayRepositoryDao implements GatewayRepository {
 		entity.setCreateTime(now);
 		entity.setUpdateTime(now);
 
-		String sql = "insert into t_gateway(cluster,name,json,status,createtime,updatetime) values(?,?,?,?,?,?)";
-		jdbcTemplate.update(sql, new Object[] { entity.getCluster(), entity.getName(), entity.getJson(),
-				entity.getStatus(), entity.getCreateTime(), entity.getUpdateTime() });
+		String sql = "insert into t_gateway(ccode,name,json,status,createtime,updatetime) values(?,?,?,?,?,?)";
+		jdbcTemplate.update(sql, entity.getCcode(), entity.getName(), entity.getJson(), entity.getStatus(),
+				entity.getCreateTime(), entity.getUpdateTime());
 	}
 
 	private GatewayEntity convert(GatewayDefinition gd) {
 		GatewayEntity ge = new GatewayEntity();
-		ge.setCluster(gd.getCluster());
+		ge.setCcode(gd.getCcode());
+		ge.setCname(gd.getCname());
 		ge.setId(gd.getId());
 		ge.setName(gd.getName());
 		ge.setStatus(gd.getStatus());
@@ -87,9 +87,9 @@ public class GatewayRepositoryDao implements GatewayRepository {
 		Date now = new Date();
 		entity.setUpdateTime(now);
 
-		String sql = "update t_gateway set cluster=?,name=?,json=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { entity.getCluster(), entity.getName(), entity.getJson(),
-				entity.getUpdateTime(), entity.getId() });
+		String sql = "update t_gateway set ccode=?,name=?,json=?,updatetime=? where id=?";
+		jdbcTemplate.update(sql, entity.getCcode(), entity.getName(), entity.getJson(), entity.getUpdateTime(),
+				entity.getId());
 	}
 
 	@Override
@@ -105,7 +105,8 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	private GatewayDefinition convert(GatewayEntity ge) {
 		GatewayDefinition gd = JacksonCodec.decode(ge.getJson(), GatewayDefinition.class);
 		gd.setId(ge.getId());
-		gd.setCluster(ge.getCluster());
+		gd.setCcode(ge.getCcode());
+		gd.setCname(ge.getCname());
 		gd.setName(ge.getName());
 		gd.setStatus(ge.getStatus());
 		return gd;
@@ -113,9 +114,8 @@ public class GatewayRepositoryDao implements GatewayRepository {
 
 	@Override
 	public GatewayDefinition find(Integer id) {
-		String sql = "select * from t_gateway where id=?";
-		List<GatewayEntity> apps = jdbcTemplate.query(sql, new Object[] { id },
-				BeanPropertyRowMapper.newInstance(GatewayEntity.class));
+		String sql = "select g.*,c.name cname from t_gateway g, t_cluster c where g.ccode=c.code and g.id=?";
+		List<GatewayEntity> apps = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class), id);
 		if (!apps.isEmpty()) {
 			return convert(apps.get(0));
 		}
@@ -124,9 +124,9 @@ public class GatewayRepositoryDao implements GatewayRepository {
 
 	@Override
 	public GatewayDefinition find(String cluster, String gateway) {
-		String sql = "select * from t_gateway where cluster=? and name=?";
-		List<GatewayEntity> apps = jdbcTemplate.query(sql, new Object[] { cluster, gateway },
-				BeanPropertyRowMapper.newInstance(GatewayEntity.class));
+		String sql = "select * from t_gateway where ccode=? and name=?";
+		List<GatewayEntity> apps = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class),
+				cluster, gateway);
 		if (!apps.isEmpty()) {
 			return convert(apps.get(0));
 		}
@@ -136,26 +136,24 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	@Override
 	public void delete(Integer id) {
 		String sql = "delete from t_gateway where id=?";
-		jdbcTemplate.update(sql, new Object[] { id });
+		jdbcTemplate.update(sql, id);
 	}
 
 	@Override
 	public void updateStatus(GatewayDefinition definition) {
 		String sql = "update t_gateway set status=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { definition.getStatus(), new Date(), definition.getId() });
+		jdbcTemplate.update(sql, definition.getStatus(), new Date(), definition.getId());
 	}
 
 	@Override
-	public List<GatewayDefinition> find(String name, int start, int size) {
+	public List<GatewayDefinition> find(String ccode, int start, int size) {
 		List<GatewayEntity> ges = null;
-		if (name != null) {
-			String sql = "select * from t_gateway where name=? order by id limit ?,?";
-			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class),
-					new Object[] { name, start, size });
+		if (ccode != null) {
+			String sql = "select g.*,c.name cname from t_gateway g, t_cluster c where g.ccode=c.code and g.ccode=? order by id limit ?,?";
+			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class), ccode, start, size);
 		} else {
-			String sql = "select * from t_gateway order by id limit ?,?";
-			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class),
-					new Object[] { start, size });
+			String sql = "select g.*,c.name cname from t_gateway g, t_cluster c where g.ccode=c.code order by id limit ?,?";
+			ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(GatewayEntity.class), start, size);
 		}
 
 		if (!ges.isEmpty()) {
@@ -165,10 +163,10 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	}
 
 	@Override
-	public int total(String name) {
-		if (name != null) {
-			String sql = "select count(1) from t_gateway where name=?";
-			return jdbcTemplate.queryForObject(sql, Integer.class, new Object[] { name });
+	public int total(String ccode) {
+		if (ccode != null) {
+			String sql = "select count(1) from t_gateway where ccode=?";
+			return jdbcTemplate.queryForObject(sql, Integer.class, ccode);
 		} else {
 			String sql = "select count(1) from t_gateway";
 			return jdbcTemplate.queryForObject(sql, Integer.class);

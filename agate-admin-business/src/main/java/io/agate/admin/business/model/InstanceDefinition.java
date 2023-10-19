@@ -23,6 +23,10 @@ public class InstanceDefinition {
 
 	private String instanceId;
 
+	private String manageHost;
+
+	private int managePort;
+
 	public String getInstanceId() {
 		return instanceId;
 	}
@@ -37,6 +41,22 @@ public class InstanceDefinition {
 
 	public void setClusterCode(String clusterCode) {
 		this.clusterCode = clusterCode;
+	}
+
+	public String getManageHost() {
+		return manageHost;
+	}
+
+	public void setManageHost(String manageHost) {
+		this.manageHost = manageHost;
+	}
+
+	public int getManagePort() {
+		return managePort;
+	}
+
+	public void setManagePort(int managePort) {
+		this.managePort = managePort;
 	}
 
 	@Override
