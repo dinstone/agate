@@ -16,7 +16,6 @@
 package io.agate.admin.business.service;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -84,16 +83,16 @@ public class ManageService {
 		}
 	}
 
-	public void updateGateway(GatewayDefinition defination) throws BusinessException {
+	public void updateGateway(GatewayDefinition definition) throws BusinessException {
 		// app logic check
-		if (defination.getId() == null) {
+		if (definition.getId() == null) {
 			throw new BusinessException(40108, "Gateway id is invalid");
 		}
 
 		// app param check
-		gatewayParamCheck(defination);
+		gatewayParamCheck(definition);
 
-		gatewayRepository.update(defination);
+		gatewayRepository.update(definition);
 	}
 
 	public List<GatewayDefinition> gatewayList() {
@@ -157,28 +156,22 @@ public class ManageService {
 		if (route.getName() == null || route.getName().isEmpty()) {
 			throw new BusinessException(40201, "Route name is empty");
 		}
-		FrontendDefinition frontendDefination = route.getFrontend();
-		if (frontendDefination == null) {
-			throw new BusinessException(40202, "frontend defination is null");
+		FrontendDefinition frontendDefinition = route.getFrontend();
+		if (frontendDefinition == null) {
+			throw new BusinessException(40202, "frontend definition is null");
 		}
-		if (frontendDefination.getPath() == null || frontendDefination.getPath().isEmpty()) {
+		if (frontendDefinition.getPath() == null || frontendDefinition.getPath().isEmpty()) {
 			throw new BusinessException(40203, "request path is empty");
 		}
-		BackendDefinition backendDefination = route.getBackend();
-		if (backendDefination == null) {
-			throw new BusinessException(40204, "backend defination is null");
+		BackendDefinition backendDefinition = route.getBackend();
+		if (backendDefinition == null) {
+			throw new BusinessException(40204, "backend definition is null");
 		}
-		if (backendDefination.getUrls() == null || backendDefination.getUrls().isEmpty()) {
+		if (backendDefinition.getUrls() == null || backendDefinition.getUrls().isEmpty()) {
 			throw new BusinessException(40205, "routing urls is null");
 		}
-
-		for (Iterator<String> iterator = backendDefination.getUrls().iterator(); iterator.hasNext();) {
-			String next = iterator.next();
-			if (next == null || next.isEmpty()) {
-				iterator.remove();
-			}
-		}
-		if (backendDefination.getUrls().isEmpty()) {
+        backendDefinition.getUrls().removeIf(next -> next == null || next.isEmpty());
+		if (backendDefinition.getUrls().isEmpty()) {
 			throw new BusinessException(40205, "routing urls is null");
 		}
 
@@ -215,12 +208,7 @@ public class ManageService {
 		if (backend.getUrls() == null || backend.getUrls().isEmpty()) {
 			throw new BusinessException(40205, "backend urls is null");
 		}
-		for (Iterator<String> iterator = backend.getUrls().iterator(); iterator.hasNext();) {
-			String next = iterator.next();
-			if (next == null || next.isEmpty()) {
-				iterator.remove();
-			}
-		}
+        backend.getUrls().removeIf(next -> next == null || next.isEmpty());
 		if (backend.getUrls().isEmpty()) {
 			throw new BusinessException(40205, "routing urls is null");
 		}
@@ -259,14 +247,14 @@ public class ManageService {
 	}
 
 	private String convertRouteOptions(GatewayDefinition GatewayDefinition, RouteDefinition routeDefinition) {
-		AppDefinition appDefination = getAppById(routeDefinition.getAppId());
+		AppDefinition appDefinition = getAppById(routeDefinition.getAppId());
 
 		Map<String, Object> routeOptions = new HashMap<>();
 		routeOptions.put("cluster", GatewayDefinition.getCcode());
 		routeOptions.put("gateway", GatewayDefinition.getName());
-		routeOptions.put("appNmae", appDefination.getName());
-		routeOptions.put("prefix", appDefination.getPrefix());
-		routeOptions.put("domain", appDefination.getDomain());
+		routeOptions.put("appName", appDefinition.getName());
+		routeOptions.put("prefix", appDefinition.getPrefix());
+		routeOptions.put("domain", appDefinition.getDomain());
 		routeOptions.put("route", routeDefinition.getName());
 
 		List<PluginDefinition> plugins = routeDefinition.getPlugins();
@@ -347,16 +335,16 @@ public class ManageService {
 
 		// iterator gateway
 		List<GatewayDefinition> ges = gatewayRepository.list();
-		for (GatewayDefinition gateway : ges) {
-			if (gateway.getStatus() == STATUS_START) {
-				if (!existGatewayKey(gateway)) {
-					createGatewayKey(gateway);
+		for (GatewayDefinition gd : ges) {
+			if (gd.getStatus() == STATUS_START) {
+				if (!existGatewayKey(gd)) {
+					createGatewayKey(gd);
 				}
 
-				routeRefresh(gateway);
+				routeRefresh(gd);
 			} else {
-				if (existGatewayKey(gateway)) {
-					deleteGatewayKey(gateway);
+				if (existGatewayKey(gd)) {
+					deleteGatewayKey(gd);
 				}
 			}
 		}
@@ -398,18 +386,18 @@ public class ManageService {
 		catalogStore.deleteKey(key);
 	}
 
-	private String convertGatewayOptions(GatewayDefinition defination) {
+	private String convertGatewayOptions(GatewayDefinition gd) {
 		Map<String, Object> gatewayOptions = new HashMap<>();
-		gatewayOptions.put("cluster", defination.getCcode());
-		gatewayOptions.put("gateway", defination.getName());
-		gatewayOptions.put("remark", defination.getRemark());
+		gatewayOptions.put("cluster", gd.getCcode());
+		gatewayOptions.put("gateway", gd.getName());
+		gatewayOptions.put("remark", gd.getRemark());
 
-		Map<String, Object> serverOptions = json2map(defination.getServerConfig());
-		serverOptions.put("host", defination.getHost());
-		serverOptions.put("port", defination.getPort());
+		Map<String, Object> serverOptions = json2map(gd.getServerConfig());
+		serverOptions.put("host", gd.getHost());
+		serverOptions.put("port", gd.getPort());
 		gatewayOptions.put("serverOptions", serverOptions);
 
-		Map<String, Object> clientOptions = json2map(defination.getClientConfig());
+		Map<String, Object> clientOptions = json2map(gd.getClientConfig());
 		gatewayOptions.put("clientOptions", clientOptions);
 
 		return JacksonCodec.encode(gatewayOptions);
@@ -456,24 +444,24 @@ public class ManageService {
 		return appRepository.find(id);
 	}
 
-	public void createApp(AppDefinition defination) throws BusinessException {
-		if (defination.getName() == null || defination.getName().isEmpty()) {
+	public void createApp(AppDefinition definition) throws BusinessException {
+		if (definition.getName() == null || definition.getName().isEmpty()) {
 			throw new BusinessException(40301, "APP Name is empty");
 		}
 		// app logic check
-		if (appRepository.appNameExist(defination.getName())) {
+		if (appRepository.appNameExist(definition.getName())) {
 			throw new BusinessException(40107, "APP Name is not unique");
 		}
 
-		appRepository.create(defination);
+		appRepository.create(definition);
 	}
 
-	public void updateApp(AppDefinition defination) throws BusinessException {
-		if (defination.getName() == null || defination.getName().isEmpty()) {
+	public void updateApp(AppDefinition definition) throws BusinessException {
+		if (definition.getName() == null || definition.getName().isEmpty()) {
 			throw new BusinessException(40301, "APP Name is empty");
 		}
 
-		appRepository.update(defination);
+		appRepository.update(definition);
 	}
 
 	public void deleteApp(Integer id) throws BusinessException {

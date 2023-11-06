@@ -76,7 +76,7 @@
         </dependency>
         <dependency>
             <groupId>io.agate</groupId>
-            <artifactId>agate-admin-business</artifactId>
+            <artifactId>agate-admin-core</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

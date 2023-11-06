@@ -5,7 +5,7 @@
         <artifactId>agate</artifactId>
         <version>1.0.0</version>
     </parent>
-    <artifactId>agate-admin-business</artifactId>
+    <artifactId>agate-admin-core</artifactId>
 
     <dependencyManagement>
         <dependencies>
