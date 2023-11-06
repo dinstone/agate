@@ -9,34 +9,32 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 
 # Quick start
 
-## Install gateway and manager 
+## Startup gateway and admin 
 
-- step1: pull source and build docker images
+- step1: pull source and build
 
 ```shell
 git pull https://github.com/dinstone/agate.git
 
-// remove old version
-cd agate/agate-docker
-docker-compose stop
-docker-compose rm
-
-// build new images
+// build
 cd agate
-mvn clean install
+mvn clean package
 ```
 
-- step2: start agate docker containers
+- step2: start agate admin and gateway
 
 ```shell
-cd agate/agate-docker
-docker-compose up -d
+cd agate/agate-admin-api
+mvn exec:java -Dexec.mainClass=io.agate.admin.AgateAdminApplication
+
+cd agate/agate-gateway
+mvn exec:java -Dexec.mainClass=io.agate.gateway.verticle.LaunchVerticle
 ```
 
-- step3: test agate manager and gateway services
+- step3: test agate admin and gateway services
 
 ```shell
-access agate manager using username/password = agate/123456 by url http://localhost:8080/	
+access agate admin using username/password = agate/123456 by url http://localhost:8888/	
 ```
 
 ## Config Route and Url rewrite
