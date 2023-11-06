@@ -46,7 +46,7 @@ public class AgateAdminApplication {
 		try {
 			SpringApplication.run(AgateAdminApplication.class, args);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("application bootstrap error", e);
 		}
 	}
 

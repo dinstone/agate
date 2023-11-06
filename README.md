@@ -7,9 +7,9 @@ Agate is a cloud-native, fast, scalable, and async API Gateway. its core values 
 - Vert.x 4.3
 - Consul 1.7
 
-# Qucik start
+# Quick start
 
-## Install gateway and mananger 
+## Install gateway and manager 
 
 - step1: pull source and build docker images
 
@@ -55,13 +55,13 @@ http://localhost:4002/user-provider/(?<url>.*) --> http://user-provider/:url
 
 # Feature
 
-- Access Logging
-- Rate Limit
+- Logging
 - Tracing
 - Metrics
-- Security Athen
+- Rate Limit
 - Circuit Breaker
 - Gray Deployment
+- Security Authenticate
 - Routing: Http Reverse Proxy
 - Routing: Http Service Discovery
 

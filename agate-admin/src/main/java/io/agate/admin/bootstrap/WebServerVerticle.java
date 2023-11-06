@@ -104,10 +104,9 @@ public class WebServerVerticle extends AbstractVerticle {
     }
 
     private SessionHandler createSessionHandler() {
-        SessionHandler sessionHandler = SessionHandler
+        return SessionHandler
                 .create(LocalSessionStore.create(vertx, LocalSessionStore.DEFAULT_SESSION_MAP_NAME, 3600000))
                 .setSessionTimeout(60000).setNagHttps(false);
-        return sessionHandler;
     }
 
 }
