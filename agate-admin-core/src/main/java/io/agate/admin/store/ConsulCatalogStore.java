@@ -15,62 +15,62 @@
  */
 package io.agate.admin.store;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import com.orbitz.consul.CatalogClient;
-import com.orbitz.consul.Consul;
-import com.orbitz.consul.KeyValueClient;
-import com.orbitz.consul.model.ConsulResponse;
-import com.orbitz.consul.model.catalog.CatalogService;
-
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.Response;
+import com.ecwid.consul.v1.catalog.CatalogServiceRequest;
+import com.ecwid.consul.v1.catalog.model.CatalogService;
+import com.ecwid.consul.v1.kv.model.GetValue;
 import io.agate.admin.business.port.CatalogStore;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ConsulCatalogStore implements CatalogStore {
 
-	private CatalogClient catalogClient;
+    private final ConsulClient consulClient;
 
-	private KeyValueClient keyValueClient;
+    public ConsulCatalogStore(ConsulClient consulClient) {
+        this.consulClient = consulClient;
+    }
 
-	public ConsulCatalogStore(Consul consul) {
-		catalogClient = consul.catalogClient();
-		keyValueClient = consul.keyValueClient();
-	}
+    @Override
+    public List<Map<String, String>> getMetas(String service) {
+        CatalogServiceRequest request = CatalogServiceRequest.newBuilder().build();
+        Response<List<CatalogService>> consulResponse = consulClient.getCatalogService(service, request);
 
-	@Override
-	public List<Map<String, String>> getMetas(String service) {
-		ConsulResponse<List<CatalogService>> consulResponse = catalogClient.getService(service);
+        List<Map<String, String>> instances = new LinkedList<>();
+        for (CatalogService cs : consulResponse.getValue()) {
+            Map<String, String> instance = cs.getServiceMeta();
+            if (instance != null) {
+                instances.add(instance);
+            }
+        }
+        return instances;
+    }
 
-		List<Map<String, String>> instances = new LinkedList<>();
-		for (CatalogService e : consulResponse.getResponse()) {
-			Map<String, String> instance = e.getServiceMeta();
-			if (instance != null) {
-				instances.add(instance);
-			}
-		}
-		return instances;
-	}
+    @Override
+    public void deleteKey(String key) {
+        consulClient.deleteKVValue(key);
+    }
 
-	@Override
-	public void deleteKey(String key) {
-		keyValueClient.deleteKey(key);
-	}
+    @Override
+    public List<String> getKeys(String key) {
+        Response<List<GetValue>> rv = consulClient.getKVValues(key);
+        if (rv.getValue() == null) {
+            return Collections.emptyList();
+        }
+        return rv.getValue().stream().map(GetValue::getValue).collect(Collectors.toList());
+    }
 
-	@Override
-	public List<String> getKeys(String key) {
-		return keyValueClient.getKeys(key);
-	}
+    @Override
+    public Optional<String> getValue(String k) {
+        Response<GetValue> rv = consulClient.getKVValue(k);
+        return Optional.of(rv.getValue().getValue());
+    }
 
-	@Override
-	public Optional<String> getValue(String k) {
-		return keyValueClient.getValue(k).map(v -> v.getValue().get());
-	}
-
-	@Override
-	public void putValue(String key, String value) {
-		keyValueClient.putValue(key, value);
-	}
+    @Override
+    public void putValue(String key, String value) {
+        consulClient.setKVValue(key, value);
+    }
 
 }

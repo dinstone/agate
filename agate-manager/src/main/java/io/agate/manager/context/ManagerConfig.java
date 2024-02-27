@@ -15,6 +15,10 @@
  */
 package io.agate.manager.context;
 
+import com.ecwid.consul.v1.ConsulClient;
+import io.agate.admin.business.port.CatalogStore;
+import io.agate.admin.store.ConsulCatalogStore;
+import io.agate.admin.store.EmptyCatalogStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-
-import com.google.common.net.HostAndPort;
-import com.orbitz.consul.Consul;
-import com.orbitz.consul.Consul.Builder;
-
-import io.agate.admin.business.port.CatalogStore;
-import io.agate.admin.store.ConsulCatalogStore;
-import io.agate.admin.store.EmptyCatalogStore;
 
 @Configuration
 @ComponentScan("io.agate.admin")
@@ -40,16 +36,11 @@ public class ManagerConfig {
 	@Autowired
 	private Environment environment;
 
-	Consul consul() {
+	ConsulClient consul() {
 		String host = environment.getProperty("consul.host");
 		String port = environment.getProperty("consul.port");
 
-		Builder builder = Consul.builder();
-		if (host != null && port != null) {
-			HostAndPort hostAndPort = HostAndPort.fromParts(host, Integer.parseInt(port));
-			builder.withHostAndPort(hostAndPort);
-		}
-		return builder.build();
+		return new ConsulClient(host, Integer.parseInt(port));
 	}
 
 	@Bean
