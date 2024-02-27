@@ -15,39 +15,24 @@
  */
 package io.agate.gateway;
 
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.security.cert.X509Certificate;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import io.netty.handler.codec.DecoderResult;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.Cookie;
-import io.vertx.core.http.HttpConnection;
-import io.vertx.core.http.HttpFrame;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerFileUpload;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.http.HttpVersion;
-import io.vertx.core.http.ServerWebSocket;
-import io.vertx.core.http.StreamPriority;
+import io.vertx.core.http.*;
 import io.vertx.core.http.impl.HttpServerRequestInternal;
+import io.vertx.core.net.HostAndPort;
 import io.vertx.core.net.NetSocket;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.security.cert.X509Certificate;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @ExtendWith(VertxExtension.class)
 public class RouteTest {
@@ -235,6 +220,16 @@ public class RouteTest {
         }
 
         @Override
+        public Future<Void> writeEarlyHints(MultiMap headers) {
+            return null;
+        }
+
+        @Override
+        public void writeEarlyHints(MultiMap headers, Handler<AsyncResult<Void>> handler) {
+
+        }
+
+        @Override
         public Future<Void> end(String chunk) {
             // TODO Auto-generated method stub
             return null;
@@ -284,7 +279,7 @@ public class RouteTest {
 
         @Override
         public HttpServerResponse sendFile(String filename, long offset, long length,
-                Handler<AsyncResult<Void>> resultHandler) {
+                                           Handler<AsyncResult<Void>> resultHandler) {
             // TODO Auto-generated method stub
             return null;
         }
@@ -335,6 +330,11 @@ public class RouteTest {
         public int streamId() {
             // TODO Auto-generated method stub
             return 0;
+        }
+
+        @Override
+        public Future<HttpServerResponse> push(HttpMethod method, HostAndPort authority, String path, MultiMap headers) {
+            return null;
         }
 
         @Override
@@ -452,6 +452,11 @@ public class RouteTest {
         @Override
         public String query() {
             // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public HostAndPort authority() {
             return null;
         }
 
@@ -684,7 +689,7 @@ public class RouteTest {
 
         path = "/delete/index/8000";
         route(router, HttpMethod.DELETE, path);
-        
+
         path = "/delete/index/4000";
         route(router, HttpMethod.DELETE, path);
     }

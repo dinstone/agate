@@ -12,7 +12,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>2.6.6</version>
+                <version>2.7.18</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -43,17 +43,19 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>com.orbitz.consul</groupId>
             <artifactId>consul-client</artifactId>
-            <version>1.4.2</version>
+            <version>1.5.3</version>
         </dependency>
 
     </dependencies>
