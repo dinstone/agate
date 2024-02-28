@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020~2023 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2024 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,15 @@
  */
 package io.agate.gateway.utils;
 
+import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.vertx.core.json.JsonObject;
 
 public class ConfigUtil {
 
@@ -32,7 +31,7 @@ public class ConfigUtil {
 
     /**
      * load config resource from file path or class path.
-     * 
+     *
      * @param resourceLocation
      * @return
      */
@@ -49,7 +48,7 @@ public class ConfigUtil {
         }
 
         if (resourceStream == null) {
-            LOG.warn("file not found from class path:", resourceLocation);
+            LOG.warn("file not found from class path:{}", resourceLocation);
             throw new RuntimeException("failed to load config : " + resourceLocation);
         }
 
@@ -59,11 +58,9 @@ public class ConfigUtil {
             LOG.error("failed to load config : " + resourceLocation, e);
             throw new RuntimeException("failed to load config : " + resourceLocation, e);
         } finally {
-            if (resourceStream != null) {
-                try {
-                    resourceStream.close();
-                } catch (IOException e) {
-                }
+            try {
+                resourceStream.close();
+            } catch (IOException ignored) {
             }
         }
     }

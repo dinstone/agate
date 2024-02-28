@@ -31,6 +31,7 @@
 		</Logger>
 
 		<Root level="info">
+			<AppenderRef ref="console-appender" />
 			<AppenderRef ref="all-appender" />
 			<AppenderRef ref="error-appender" />
 		</Root>

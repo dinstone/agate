@@ -22,8 +22,9 @@
         <vertx.version>4.5.4</vertx.version>
         <junit-jupiter.version>5.4.0</junit-jupiter.version>
 
-        <slf4j.version>1.7.13</slf4j.version>
-        <log4j.version>2.17.1</log4j.version>
+        <log4j2.version>2.17.1</log4j2.version>
+        <slf4j.version>1.7.25</slf4j.version>
+
         <main.verticle>io.agate.gateway.verticle.LaunchVerticle</main.verticle>
     </properties>
 
@@ -40,28 +41,29 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- SLF4J API -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-        <!-- SLF4J To Log4j2 Bridge -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
         <!-- Log4j 2.x Implement -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${log4j.version}</version>
+            <version>${log4j2.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
+            <version>${log4j2.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j2.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -116,14 +118,6 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${exec-maven-plugin.version}</version>
@@ -142,6 +136,7 @@
                 <executions>
                     <execution>
                         <id>repackage</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
@@ -149,6 +144,27 @@
                 </executions>
                 <configuration>
                     <mainClass>io.agate.gateway.AgateGatewayLauncher</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.13</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>agate/gateway</repository>
+                    <tag>${project.version}</tag>
+                    <buildArgs>
+                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                    </buildArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -188,7 +204,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>install</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>build</goal>
                         </goals>

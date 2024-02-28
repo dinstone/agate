@@ -67,6 +67,7 @@
                 <executions>
                     <execution>
                         <id>repackage</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
@@ -74,6 +75,27 @@
                 </executions>
                 <configuration>
                     <mainClass>io.agate.admin.AgateAdminApplication</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.13</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>agate/admin</repository>
+                    <tag>${project.version}</tag>
+                    <buildArgs>
+                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                    </buildArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -112,7 +134,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>install</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>build</goal>
                         </goals>

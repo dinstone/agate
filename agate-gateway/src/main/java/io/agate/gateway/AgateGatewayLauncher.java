@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020~2023 dinstone<dinstone@163.com>
+ * Copyright (C) 2020~2024 dinstone<dinstone@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ public class AgateGatewayLauncher extends Launcher {
         // config from command line
         if (!config.isEmpty()) {
             this.config = config;
-        } else if (System.getProperty("config") != null) {
-            this.config = ConfigUtil.loadConfig(System.getProperty("config"));
+        } else if (System.getProperty("config.file") != null) {
+            this.config = ConfigUtil.loadConfig(System.getProperty("config.file"));
         } else {
             this.config = ConfigUtil.loadConfig(DEFAULT_GATEWAY_CONFIG);
         }

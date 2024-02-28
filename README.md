@@ -23,12 +23,27 @@ mvn clean package
 
 - step2: start agate admin and gateway
 
+Windows:
 ```shell
-cd agate/agate-admin-api
-mvn exec:java -Dexec.mainClass=io.agate.admin.AgateAdminApplication
+cd agate-script
+ .\agate-install.bat 
+```
 
-cd agate/agate-gateway
-mvn exec:java -Dexec.mainClass=io.agate.gateway.verticle.LaunchVerticle
+Linux:
+```shell
+cd agate-script
+ ./agate-install.sh
+```
+
+or execute the following command:
+```shell
+cd agate
+mvn clean install
+
+cd agate-script
+docker compose stop
+echo y | docker compose rm
+docker compose up -d
 ```
 
 - step3: test agate admin and gateway services

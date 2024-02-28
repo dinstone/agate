@@ -12,7 +12,7 @@
 		"system.instances": 1
 	},
 	"consul": {
-		"host": "192.168.1.120",
+		"host": "localhost",
 		"port": 8500
 	}
 }

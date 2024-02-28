@@ -1,8 +1,17 @@
 version: '3.7'
 
 services:
+  consul:
+    image: consul:1.7
+    container_name: agate-consul
+    # restart: always
+    ports:
+      - 8500:8500
+    volumes:
+      - ./consul:/consul/data
+
   gateway:
-    image: agate/gateway:latest
+    image: agate/gateway:1.0.0
     # build: ./
     container_name: agate-gateway
     # restart: always
@@ -10,30 +19,23 @@ services:
       - 5454:5454
       - 4004:4004
     volumes:
-      - ./gateway/logs:/agate/gateway/logs
-      - ./gateway/config.json:/agate/gateway/config.json
+      - ./gateway/logs:/agate-gateway/logs
+      - ./gateway/config:/agate-gateway/config
     depends_on:
       - consul
-  
-  manager:
-    image: agate/manager
+
+  admin:
+    image: agate/admin:1.0.0
     # build: ./
-    container_name: agate-manager
+    container_name: agate-admin
     # restart: always
     ports:
-      - 8080:8080
+      - 8888:8888
+    environment:
+      ACTIVE_PROFILE: "install"
     volumes:
-      - ./manager/logs:/agate/manager/logs
-      - ./manager/data:/agate/manager/data
-      - ./manager/application.properties:/agate/manager/application.properties
+      - ./admin/logs:/agate-admin/logs
+      - ./admin/data:/agate-admin/data
+      - ./admin/config:/agate-admin/config
     depends_on:
       - consul
-  
-  consul:
-    image: consul
-    container_name: agate-consul
-    # restart: always
-    ports:
-      - 8500:8500
-    volumes:
-      - ./consul:/consul/data
