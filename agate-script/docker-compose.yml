@@ -16,7 +16,7 @@ services:
     container_name: agate-gateway
     # restart: always
     ports:
-      - 5454:5454
+      - 4444:4444
       - 4004:4004
     volumes:
       - ./gateway/logs:/agate-gateway/logs
