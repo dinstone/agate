@@ -116,6 +116,74 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>dockerfile-maven-plugin</artifactId>
+                    <version>1.4.13</version>
+                    <executions>
+                        <execution>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <repository>agate/gateway</repository>
+                        <tag>${project.version}</tag>
+                        <buildArgs>
+                            <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+                        </buildArgs>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.google.cloud.tools</groupId>
+                    <artifactId>jib-maven-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <executions>
+                        <execution>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <from>
+                            <image>openjdk:19-jdk-alpine</image>
+                        </from>
+                        <to>
+                            <image>192.168.1.120:5000/agate/agate-gateway</image>
+                            <tags>
+                                <tag>${project.version}</tag>
+                            </tags>
+                            <auth>
+                                <!--连接镜像仓库的账号和密码 -->
+                                <username>username</username>
+                                <password>password</password>
+                            </auth>
+                        </to>
+                        <allowInsecureRegistries>true</allowInsecureRegistries>
+                        <container>
+                            <jvmFlags>
+                                <jvmFlag>-Djava.awt.headless=true</jvmFlag>
+                                <jvmFlag>-Duser.timezone=PRC</jvmFlag>
+                                <jvmFlag>-Dspring.profiles.active=release</jvmFlag>
+                            </jvmFlags>
+                            <creationTime>${maven.build.timestamp}</creationTime>
+                            <workingDirectory>/</workingDirectory>
+                            <mainClass>io.agate.gateway.AgateGatewayLauncher</mainClass>
+                            <ports>
+                                <port>5454</port>
+                                <port>4444</port>
+                            </ports>
+                        </container>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -145,71 +213,6 @@
                 <configuration>
                     <mainClass>io.agate.gateway.AgateGatewayLauncher</mainClass>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.4.13</version>
-                <executions>
-                    <execution>
-                        <id>default</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <repository>agate/gateway</repository>
-                    <tag>${project.version}</tag>
-                    <buildArgs>
-                        <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
-                    </buildArgs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <from>
-                        <image>openjdk:19-jdk-alpine</image>
-                    </from>
-                    <to>
-                        <image>192.168.1.120:5000/agate/agate-gateway</image>
-                        <tags>
-                            <tag>${project.version}</tag>
-                        </tags>
-                        <auth>
-                            <!--连接镜像仓库的账号和密码 -->
-                            <username>username</username>
-                            <password>password</password>
-                        </auth>
-                    </to>
-                    <allowInsecureRegistries>true</allowInsecureRegistries>
-                    <container>
-                        <jvmFlags>
-                            <jvmFlag>-Djava.awt.headless=true</jvmFlag>
-                            <jvmFlag>-Duser.timezone=PRC</jvmFlag>
-                            <jvmFlag>-Dspring.profiles.active=release</jvmFlag>
-                        </jvmFlags>
-                        <creationTime>${maven.build.timestamp}</creationTime>
-                        <workingDirectory>/</workingDirectory>
-                        <mainClass>io.agate.gateway.AgateGatewayLauncher</mainClass>
-                        <ports>
-                            <port>5454</port>
-                            <port>4444</port>
-                        </ports>
-                    </container>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
