@@ -156,10 +156,7 @@
 
     <modules>
         <module>agate-gateway</module>
-        <module>agate-manager</module>
         <module>agate-admin</module>
-        <module>agate-admin-api</module>
-        <module>agate-admin-core</module>
     </modules>
 
     <name>agate</name>
