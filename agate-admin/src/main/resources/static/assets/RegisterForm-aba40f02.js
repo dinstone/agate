@@ -1,0 +1,1 @@
+import{_ as e}from"./RegisterForm.vue_vue_type_script_setup_true_lang-0d0ee5c2.js";import"./useForm-1b49b077.js";import"./index-9d34d1b9.js";/* empty css                   */import"./tsxHelper-ddf8f698.js";/* empty css                  *//* empty css                  */import"./useValidator-4108ca93.js";export{e as default};
