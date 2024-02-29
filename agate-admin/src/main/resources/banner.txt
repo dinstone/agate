@@ -1,4 +1,0 @@
-   __    ___    __   ____  ____ 
-  /__\  / __)  /__\ (_  _)( ___) AppName: ${spring.application.name}
- /(__)\( (_-. /(__)\  )(   )__)  Version: ${application.version}
-(__)(__)\___/(__)(__)(__) (____) Vertx-V: ${vertx.version}

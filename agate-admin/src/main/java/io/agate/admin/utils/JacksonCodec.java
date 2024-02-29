@@ -15,8 +15,13 @@
  */
 package io.agate.admin.utils;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -55,6 +60,32 @@ public class JacksonCodec {
         } catch (Exception e) {
             throw new RuntimeException("Failed to decode: " + e.getMessage(), e);
         }
+    }
+
+    public static <T> List<T> decodeList(String str, Class<T> clazz) {
+        if (str == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return objectMapper.readValue(str, getCollectionType(List.class, clazz));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode: " + e.getMessage(), e);
+        }
+    }
+
+    public static <K, V> Map<K, V> decodeMap(String str, Class<K> key, Class<V> val) {
+        if (str == null) {
+            return Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(str, getCollectionType(Map.class, key, val));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode: " + e.getMessage(), e);
+        }
+    }
+
+    private static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
+        return objectMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
     }
 
 }
