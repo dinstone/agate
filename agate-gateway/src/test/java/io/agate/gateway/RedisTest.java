@@ -18,8 +18,8 @@ public class RedisTest {
                 .onSuccess(conn -> {
                     // use the connection
                     long ts = System.currentTimeMillis();
-                    conn.send(Request.cmd(Command.EVAL, script, "limit:liziba:view", ts - 3000, 5)).onSuccess(r -> {
-                        System.out.println(r.get(0));
+                    conn.send(Request.cmd(Command.EVAL, script, 1, "limit:liziba:view", ts, ts - 3000, 5)).onSuccess(r -> {
+                        System.out.println(r);
                     }).onFailure(e -> e.printStackTrace());
                 });
 
