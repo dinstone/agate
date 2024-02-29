@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.agate</groupId>
     <artifactId>agate</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -155,11 +155,11 @@
     </profiles>
 
     <modules>
-        <module>agate-gateway</module>
         <module>agate-admin</module>
+        <module>agate-gateway</module>
     </modules>
 
     <name>agate</name>
     <inceptionYear>2020~2024</inceptionYear>
-    <description>Agate is async API Gateway</description>
+    <description>Agate is an asynchronous API gateway</description>
 </project>

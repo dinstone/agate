@@ -10,22 +10,8 @@ services:
     volumes:
       - ./consul:/consul/data
 
-  gateway:
-    image: agate/gateway:1.0.0
-    # build: ./
-    container_name: agate-gateway
-    # restart: always
-    ports:
-      - 4444:4444
-      - 4004:4004
-    volumes:
-      - ./gateway/logs:/agate-gateway/logs
-      - ./gateway/config:/agate-gateway/config
-    depends_on:
-      - consul
-
   admin:
-    image: agate/admin:1.0.0
+    image: agate/admin:1.2.0
     # build: ./
     container_name: agate-admin
     # restart: always
@@ -37,5 +23,19 @@ services:
       - ./admin/logs:/agate-admin/logs
       - ./admin/data:/agate-admin/data
       - ./admin/config:/agate-admin/config
+    depends_on:
+      - consul
+
+  gateway:
+    image: agate/gateway:1.2.0
+    # build: ./
+    container_name: agate-gateway
+    # restart: always
+    ports:
+      - 4444:4444
+      - 4004:4004
+    volumes:
+      - ./gateway/logs:/agate-gateway/logs
+      - ./gateway/config:/agate-gateway/config
     depends_on:
       - consul
