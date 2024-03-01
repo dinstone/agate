@@ -36,6 +36,6 @@ public abstract class RouteHandlerPlugin {
 		return false;
 	}
 
-	public void destory() {
+	public void destroy() {
 	}
 }

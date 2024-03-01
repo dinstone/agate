@@ -17,7 +17,7 @@ package io.agate.gateway.handler;
 
 public abstract class OrderedHandler implements RouteHandler, Comparable<OrderedHandler> {
 
-	private int order;
+	private final int order;
 
 	public OrderedHandler(int order) {
 		this.order = order;

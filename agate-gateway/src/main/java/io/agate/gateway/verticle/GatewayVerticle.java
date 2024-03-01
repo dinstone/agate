@@ -206,7 +206,7 @@ public class GatewayVerticle extends AbstractVerticle {
 	}
 
 	private void registDeployer() {
-		applicationContext.getClusterDeploy().get(gatewayName).regist(this);
+		applicationContext.getClusterDeploy().get(gatewayName).registry(this);
 	}
 
 	private void removeDeployer() {

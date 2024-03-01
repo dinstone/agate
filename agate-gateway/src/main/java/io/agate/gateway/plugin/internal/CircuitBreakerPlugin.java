@@ -44,7 +44,7 @@ public class CircuitBreakerPlugin extends RouteHandlerPlugin {
     }
 
     @Override
-    public void destory() {
+    public void destroy() {
         synchronized (this) {
             if (circuitBreaker != null) {
                 circuitBreaker.close();

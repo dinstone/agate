@@ -58,7 +58,7 @@ public class RouteDeploy {
 	public void destory() {
 		synchronized (this) {
 			if (plugins != null) {
-				plugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destory());
+				plugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destroy());
 			}
 		}
 	}
@@ -68,10 +68,9 @@ public class RouteDeploy {
 		if (routeOptions.getPlugins() != null) {
 			globalPlugins.addAll(routeOptions.getPlugins());
 		}
-		List<RouteHandlerPlugin> routePlugins = globalPlugins.stream().distinct()
+        return globalPlugins.stream().distinct()
 				.map(pluginOptions -> pluginFactory.createPlugin(routeOptions, pluginOptions))
 				.collect(Collectors.toList());
-		return routePlugins;
 	}
 
 	public List<RouteHandler> getRoutingHandlers(Vertx vertx) {

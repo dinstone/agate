@@ -21,8 +21,6 @@ import io.vertx.core.json.JsonObject;
 
 public class PluginOptions {
 
-	private int order;
-
 	private String plugin;
 
 	private JsonObject options;
@@ -34,14 +32,6 @@ public class PluginOptions {
 
 	public PluginOptions(JsonObject value) {
 		fromJson(value);
-	}
-
-	public int getOrder() {
-		return order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
 	}
 
 	public String getPlugin() {
@@ -67,11 +57,6 @@ public class PluginOptions {
 		for (java.util.Map.Entry<String, Object> member : json) {
 			Object value = member.getValue();
 			switch (member.getKey()) {
-			case "order":
-				if (value instanceof Number) {
-					this.setOrder(((Number) value).intValue());
-				}
-				break;
 			case "plugin":
 				if (value instanceof String) {
 					this.setPlugin((String) value);
@@ -89,7 +74,6 @@ public class PluginOptions {
 	public JsonObject toJson() {
 		JsonObject json = new JsonObject();
 
-		json.put("order", order);
 		if (plugin != null) {
 			json.put("plugin", plugin);
 		}
@@ -119,7 +103,7 @@ public class PluginOptions {
 
 	@Override
 	public String toString() {
-		return "PluginOptions [order=" + order + ", plugin=" + plugin + ", options=" + options + "]";
+		return "PluginOptions [plugin=" + plugin + ", options=" + options + "]";
 	}
 
 }

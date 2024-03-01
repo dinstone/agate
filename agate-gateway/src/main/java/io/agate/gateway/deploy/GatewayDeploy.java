@@ -62,7 +62,7 @@ public class GatewayDeploy {
         return gatewayVerticles;
     }
 
-    public void regist(GatewayVerticle verticle) {
+    public void registry(GatewayVerticle verticle) {
         gatewayVerticles.add(verticle);
     }
 
@@ -78,7 +78,7 @@ public class GatewayDeploy {
         return routeDeployCaches.get(route);
     }
 
-    public void registRouteDeploy(RouteDeploy routeDeploy) {
+    public void registryRouteDeploy(RouteDeploy routeDeploy) {
         routeDeployCaches.put(routeDeploy.getRoute(), routeDeploy);
     }
 

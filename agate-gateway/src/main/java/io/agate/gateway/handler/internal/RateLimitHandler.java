@@ -15,52 +15,45 @@
  */
 package io.agate.gateway.handler.internal;
 
+import io.agate.gateway.handler.OrderedHandler;
+import io.agate.gateway.options.RouteOptions;
+import io.agate.gateway.plugin.internal.RedisRateLimiter;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.RateLimiter;
-
-import io.agate.gateway.handler.OrderedHandler;
-import io.agate.gateway.options.RouteOptions;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
-
 /**
  * rate limit handler.
- * 
- * @author dinstone
  *
+ * @author dinstone
  */
 public class RateLimitHandler extends OrderedHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
-	private RouteOptions routeOptions;
+    private RouteOptions routeOptions;
 
-	private RateLimiter rateLimiter;
+    private RedisRateLimiter rateLimiter;
 
-	public RateLimitHandler(RouteOptions routeOptions, RateLimiter rateLimiter) {
-		super(400);
+    public RateLimitHandler(RouteOptions routeOptions, RedisRateLimiter rateLimiter) {
+        super(400);
 
-		this.routeOptions = routeOptions;
-		this.rateLimiter = rateLimiter;
-	}
+        this.routeOptions = routeOptions;
+        this.rateLimiter = rateLimiter;
+    }
 
-	@Override
-	public void handle(RoutingContext rc) {
-		if (rateLimiter == null) {
-			rc.next();
-			return;
-		}
-
-		if (rateLimiter.tryAcquire()) {
-			rc.next();
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("{} rate limit than {}/s", routeOptions.getRoute(), rateLimiter.getRate());
-			}
-			rc.fail(new HttpException(429, "too many requests, rate limit " + rateLimiter.getRate() + "/s"));
-		}
-	}
+    @Override
+    public void handle(RoutingContext rc) {
+        rateLimiter.acquire().onSuccess(b -> {
+            if (b) {
+                rc.next();
+            } else {
+                rc.fail(new HttpException(429, "too many requests, rate limit " + rateLimiter.getCount() + "/" + rateLimiter.getPeriod()));
+            }
+        }).onFailure(e -> {
+            rc.fail(new HttpException(429, "rate limit error: " + e.getMessage()));
+        });
+    }
 
 }

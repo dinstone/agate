@@ -262,7 +262,7 @@ public class DeployVerticle extends AbstractVerticle {
 			if (ar.succeeded()) {
 				LOG.info("deploy route success : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
 
-				gatewayDeploy.registRouteDeploy(routeDeploy);
+				gatewayDeploy.registryRouteDeploy(routeDeploy);
 				message.reply(true);
 			} else {
 				LOG.warn("deploy route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());

@@ -43,7 +43,7 @@ public class HttpProxyPlugin extends RouteHandlerPlugin {
 	}
 
 	@Override
-	public void destory() {
+	public void destroy() {
 		synchronized (this) {
 			if (httpClient != null) {
 				httpClient.close();

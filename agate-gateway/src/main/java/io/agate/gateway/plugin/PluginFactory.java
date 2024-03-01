@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.agate.gateway.plugin.internal.RateLimitPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +40,18 @@ public class PluginFactory {
 	private final List<PluginOptions> globalPlugins = new LinkedList<>();
 
 	public PluginFactory() {
-		registPlugin(HttpProxyPlugin.class);
-		registPlugin(ProxyReplyPlugin.class);
-		registPlugin(RestfulFailurePlugin.class);
+		registerPlugin(HttpProxyPlugin.class);
+		registerPlugin(ProxyReplyPlugin.class);
+		registerPlugin(RestfulFailurePlugin.class);
+
+		registerPlugin(RateLimitPlugin.class);
 
 		globalPlugins.add(new PluginOptions(HttpProxyPlugin.class.getSimpleName(), null));
 		globalPlugins.add(new PluginOptions(ProxyReplyPlugin.class.getSimpleName(), null));
 		globalPlugins.add(new PluginOptions(RestfulFailurePlugin.class.getSimpleName(), null));
 	}
 
-	private void registPlugin(Class<? extends RouteHandlerPlugin> pluginClass) {
+	private void registerPlugin(Class<? extends RouteHandlerPlugin> pluginClass) {
 		PLUGIN_MAP.put(pluginClass.getSimpleName(), pluginClass);
 	}
 

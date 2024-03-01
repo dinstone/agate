@@ -23,7 +23,7 @@ import io.vertx.tracing.zipkin.ZipkinTracer;
 
 public class ZipkinTracingHandler extends OrderedHandler {
 
-	private RouteOptions routeOptions;
+	private final RouteOptions routeOptions;
 
 	public ZipkinTracingHandler(RouteOptions routeOptions) {
 		super(200);

@@ -15,8 +15,6 @@
  */
 package io.agate.gateway.plugin.internal;
 
-import com.google.common.util.concurrent.RateLimiter;
-
 import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.RateLimitHandler;
 import io.agate.gateway.options.RouteOptions;
@@ -26,14 +24,22 @@ import io.vertx.core.Vertx;
 
 public class RateLimitPlugin extends RouteHandlerPlugin {
 
+    private RedisRateLimiter limiter;
+
     public RateLimitPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
         super(routeOptions, pluginOptions);
     }
 
     @Override
     public RouteHandler createHandler(Vertx vertx) {
-        RateLimiter limiter = RateLimiter.create(pluginOptions.getOptions().getDouble("permitsPerSecond", 0d));
+        limiter = new RedisRateLimiter(vertx, routeOptions, pluginOptions.getOptions());
         return new RateLimitHandler(routeOptions, limiter);
     }
 
+    @Override
+    public void destroy() {
+        if (limiter!=null){
+            limiter.destroy();
+        }
+    }
 }
