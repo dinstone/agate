@@ -15,21 +15,16 @@
  */
 package io.agate.gateway.plugin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import io.agate.gateway.plugin.internal.RateLimitPlugin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.agate.gateway.context.ApplicationContext;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.internal.HttpProxyPlugin;
 import io.agate.gateway.plugin.internal.ProxyReplyPlugin;
+import io.agate.gateway.plugin.internal.RateLimitPlugin;
 import io.agate.gateway.plugin.internal.RestfulFailurePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class PluginFactory {
 

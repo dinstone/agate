@@ -267,7 +267,7 @@ public class DeployVerticle extends AbstractVerticle {
 			} else {
 				LOG.warn("deploy route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
 
-				routeDeploy.destory();
+				routeDeploy.destroy();
 				message.fail(500, ar.cause().getMessage());
 			}
 		});
@@ -299,7 +299,7 @@ public class DeployVerticle extends AbstractVerticle {
 		}
 		CompositeFuture.all(futures).onComplete(ar -> {
 			gatewayDeploy.removeRouteDeploy(routeDeploy);
-			routeDeploy.destory();
+			routeDeploy.destroy();
 			if (ar.succeeded()) {
 				LOG.info("remove route success : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
 				message.reply(true);

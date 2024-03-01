@@ -88,7 +88,7 @@ public class GatewayDeploy {
 
     public void destroy() {
         for (RouteDeploy deploy : routeDeployCaches.values()) {
-            deploy.destory();
+            deploy.destroy();
         }
         routeDeployCaches.clear();
 

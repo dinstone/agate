@@ -16,6 +16,7 @@
 package io.agate.gateway.deploy;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.agate.gateway.context.ApplicationContext;
@@ -55,20 +56,20 @@ public class RouteDeploy {
 		return gatewayOptions;
 	}
 
-	public void destory() {
+	public void destroy() {
 		synchronized (this) {
 			if (plugins != null) {
-				plugins.stream().filter(rp -> rp != null).forEach(rp -> rp.destroy());
+				plugins.stream().filter(Objects::nonNull).forEach(RouteHandlerPlugin::destroy);
 			}
 		}
 	}
 
 	private List<RouteHandlerPlugin> createPlugins() {
-		List<PluginOptions> globalPlugins = pluginFactory.getGlobalPlugins();
+		List<PluginOptions> pluginOpionsList = pluginFactory.getGlobalPlugins();
 		if (routeOptions.getPlugins() != null) {
-			globalPlugins.addAll(routeOptions.getPlugins());
+			pluginOpionsList.addAll(routeOptions.getPlugins());
 		}
-        return globalPlugins.stream().distinct()
+        return pluginOpionsList.stream().distinct()
 				.map(pluginOptions -> pluginFactory.createPlugin(routeOptions, pluginOptions))
 				.collect(Collectors.toList());
 	}
