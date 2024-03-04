@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import io.agate.admin.business.model.RouteDefinition;
 import io.agate.admin.business.port.RouteRepository;
 import io.agate.admin.repository.entity.RouteEntity;
-import io.agate.admin.utils.JacksonCodec;
+import io.agate.admin.utils.JsonUtil;
 
 @Component
 public class RouteRepositoryDao implements RouteRepository {
@@ -56,7 +56,7 @@ public class RouteRepositoryDao implements RouteRepository {
 	}
 
 	private RouteDefinition convert(RouteEntity re) {
-		RouteDefinition rd = JacksonCodec.decode(re.getJson(), RouteDefinition.class);
+		RouteDefinition rd = JsonUtil.decode(re.getJson(), RouteDefinition.class);
 		rd.setId(re.getId());
 		rd.setName(re.getName());
 		rd.setAppId(re.getAppId());
@@ -64,14 +64,14 @@ public class RouteRepositoryDao implements RouteRepository {
 		return rd;
 	}
 
-	private RouteEntity convert(RouteDefinition defination) {
+	private RouteEntity convert(RouteDefinition definition) {
 		RouteEntity entity = new RouteEntity();
-		entity.setId(defination.getId());
-		entity.setName(defination.getName());
-		entity.setAppId(defination.getAppId());
-		entity.setStatus(defination.getStatus());
+		entity.setId(definition.getId());
+		entity.setName(definition.getName());
+		entity.setAppId(definition.getAppId());
+		entity.setStatus(definition.getStatus());
 
-		entity.setJson(JacksonCodec.encode(defination));
+		entity.setJson(JsonUtil.encode(definition));
 		return entity;
 	}
 

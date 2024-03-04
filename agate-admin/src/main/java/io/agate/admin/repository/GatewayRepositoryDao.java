@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import io.agate.admin.business.model.GatewayDefinition;
 import io.agate.admin.business.port.GatewayRepository;
 import io.agate.admin.repository.entity.GatewayEntity;
-import io.agate.admin.utils.JacksonCodec;
+import io.agate.admin.utils.JsonUtil;
 
 @Component
 public class GatewayRepositoryDao implements GatewayRepository {
@@ -77,7 +77,7 @@ public class GatewayRepositoryDao implements GatewayRepository {
 		ge.setId(gd.getId());
 		ge.setName(gd.getName());
 		ge.setStatus(gd.getStatus());
-		ge.setJson(JacksonCodec.encode(gd));
+		ge.setJson(JsonUtil.encode(gd));
 		return ge;
 	}
 
@@ -103,7 +103,7 @@ public class GatewayRepositoryDao implements GatewayRepository {
 	}
 
 	private GatewayDefinition convert(GatewayEntity ge) {
-		GatewayDefinition gd = JacksonCodec.decode(ge.getJson(), GatewayDefinition.class);
+		GatewayDefinition gd = JsonUtil.decode(ge.getJson(), GatewayDefinition.class);
 		gd.setId(ge.getId());
 		gd.setCcode(ge.getCcode());
 		gd.setCname(ge.getCname());

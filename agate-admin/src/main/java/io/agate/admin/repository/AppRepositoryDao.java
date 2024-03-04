@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import io.agate.admin.business.model.AppDefinition;
 import io.agate.admin.business.port.AppRepository;
 import io.agate.admin.repository.entity.AppEntity;
-import io.agate.admin.utils.JacksonCodec;
+import io.agate.admin.utils.JsonUtil;
 
 @Component
 public class AppRepositoryDao implements AppRepository {
@@ -44,14 +44,14 @@ public class AppRepositoryDao implements AppRepository {
 	}
 
 	@Override
-	public void create(AppDefinition defination) {
+	public void create(AppDefinition definition) {
 		AppEntity entity = new AppEntity();
-		entity.setGwId(defination.getGwId());
-		entity.setName(defination.getName());
+		entity.setGwId(definition.getGwId());
+		entity.setName(definition.getName());
 		Date createTime = new Date();
 		entity.setCreateTime(createTime);
 		entity.setUpdateTime(createTime);
-		entity.setJson(JacksonCodec.encode(defination));
+		entity.setJson(JsonUtil.encode(definition));
 
 		String sql = "insert into t_app(id,name,gwId,json,createtime,updatetime) values(?,?,?,?,?,?)";
 		jdbcTemplate.update(sql, new Object[] { entity.getId(), entity.getName(), entity.getGwId(), entity.getJson(),
@@ -59,14 +59,14 @@ public class AppRepositoryDao implements AppRepository {
 	}
 
 	@Override
-	public void update(AppDefinition defination) {
+	public void update(AppDefinition definition) {
 		AppEntity entity = new AppEntity();
-		entity.setId(defination.getId());
-		entity.setGwId(defination.getGwId());
-		entity.setName(defination.getName());
+		entity.setId(definition.getId());
+		entity.setGwId(definition.getGwId());
+		entity.setName(definition.getName());
 		Date updateTime = new Date();
 		entity.setUpdateTime(updateTime);
-		entity.setJson(JacksonCodec.encode(defination));
+		entity.setJson(JsonUtil.encode(definition));
 
 		String sql = "update t_app set name=?,gwId=?,json=?,updatetime=? where id=?";
 		jdbcTemplate.update(sql, new Object[] { entity.getName(), entity.getGwId(), entity.getJson(),
@@ -96,7 +96,7 @@ public class AppRepositoryDao implements AppRepository {
 	}
 
 	private AppDefinition convert(AppEntity appEntity) {
-		AppDefinition app = JacksonCodec.decode(appEntity.getJson(), AppDefinition.class);
+		AppDefinition app = JsonUtil.decode(appEntity.getJson(), AppDefinition.class);
 		app.setId(appEntity.getId());
 		app.setName(appEntity.getName());
 		app.setGwId(appEntity.getGwId());

@@ -15,6 +15,8 @@
  */
 package io.agate.admin.api;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,21 +27,28 @@ import org.springframework.web.bind.annotation.RestController;
 import io.agate.admin.business.BusinessException;
 import io.agate.admin.business.model.UserDefinition;
 import io.agate.admin.business.service.AuthenService;
+import io.agate.admin.utils.JwtTokenUtil;
 
 @RestController
 @RequestMapping("/authen")
 public class AuthenResource {
 
-	@Autowired
-	private AuthenService authenService;
+    @Autowired
+    private AuthenService authenService;
 
-	@PostMapping("/login")
-	public UserDefinition login(@RequestBody UserDefinition user) throws BusinessException {
-		return authenService.authen(user.getUsername(), user.getPassword());
-	}
+    @PostMapping("/login")
+    public UserDefinition login(@RequestBody UserDefinition user, HttpServletResponse response) throws BusinessException {
+        UserDefinition ud = authenService.authen(user.getUsername(), user.getPassword());
 
-	@PutMapping("/logout")
-	public boolean logout(String username) throws BusinessException {
-		return true;
-	}
+        String token = JwtTokenUtil.createToken(ud.getUsername(), ud.getRole());
+        ud.setPassword(token);
+        response.addHeader(JwtTokenUtil.TOKEN_HEADER, JwtTokenUtil.TOKEN_PREFIX + token);
+
+        return ud;
+    }
+
+    @PutMapping("/logout")
+    public boolean logout(String username) throws BusinessException {
+        return true;
+    }
 }

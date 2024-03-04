@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.agate.admin.business.BusinessException;
 import io.agate.admin.business.model.AppDefinition;
+import io.agate.admin.business.param.AppDetail;
 import io.agate.admin.business.param.PageList;
 import io.agate.admin.business.param.PageQuery;
 import io.agate.admin.business.service.ManageService;
@@ -42,7 +43,7 @@ public class AppsResource {
 	}
 
 	@GetMapping("/detail")
-	public AppDefinition detail(Integer id) {
+	public AppDetail detail(Integer id) {
 		return manageService.getAppById(id);
 	}
 

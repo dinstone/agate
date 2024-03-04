@@ -31,6 +31,7 @@ import io.agate.admin.business.model.FrontendDefinition;
 import io.agate.admin.business.model.GatewayDefinition;
 import io.agate.admin.business.model.PluginDefinition;
 import io.agate.admin.business.model.RouteDefinition;
+import io.agate.admin.business.param.AppDetail;
 import io.agate.admin.business.param.GatewayQuery;
 import io.agate.admin.business.param.PageList;
 import io.agate.admin.business.param.PageQuery;
@@ -39,7 +40,7 @@ import io.agate.admin.business.port.AppRepository;
 import io.agate.admin.business.port.CatalogStore;
 import io.agate.admin.business.port.GatewayRepository;
 import io.agate.admin.business.port.RouteRepository;
-import io.agate.admin.utils.JacksonCodec;
+import io.agate.admin.utils.JsonUtil;
 
 @Component
 public class ManageService {
@@ -247,7 +248,7 @@ public class ManageService {
 	}
 
 	private String convertRouteOptions(GatewayDefinition GatewayDefinition, RouteDefinition routeDefinition) {
-		AppDefinition appDefinition = getAppById(routeDefinition.getAppId());
+		AppDefinition appDefinition = appRepository.find(routeDefinition.getAppId());
 
 		Map<String, Object> routeOptions = new HashMap<>();
 		routeOptions.put("cluster", GatewayDefinition.getCcode());
@@ -292,7 +293,7 @@ public class ManageService {
 		bOptions.put("params", backend.getParams());
 		routeOptions.put("backend", bOptions);
 
-		return JacksonCodec.encode(routeOptions);
+		return JsonUtil.encode(routeOptions);
 	}
 
 	private String[] toArray(String source) {
@@ -400,14 +401,14 @@ public class ManageService {
 		Map<String, Object> clientOptions = json2map(gd.getClientConfig());
 		gatewayOptions.put("clientOptions", clientOptions);
 
-		return JacksonCodec.encode(gatewayOptions);
+		return JsonUtil.encode(gatewayOptions);
 	}
 
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> json2map(String json) {
 		Map<String, Object> options = new HashMap<>();
 		if (json != null && !json.isEmpty()) {
-			Map<String, Object> configs = JacksonCodec.decode(json, Map.class);
+			Map<String, Object> configs = JsonUtil.decode(json, Map.class);
 			if (configs != null) {
 				options.putAll(configs);
 			}
@@ -440,8 +441,10 @@ public class ManageService {
 		return appRepository.list();
 	}
 
-	public AppDefinition getAppById(Integer id) {
-		return appRepository.find(id);
+	public AppDetail getAppById(Integer id) {
+		AppDefinition app = appRepository.find(id);
+		GatewayDefinition gateway = gatewayRepository.find(app.getGwId());
+		return new AppDetail(app, gateway);
 	}
 
 	public void createApp(AppDefinition definition) throws BusinessException {

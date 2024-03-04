@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-public class JacksonCodec {
+public class JsonUtil {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
