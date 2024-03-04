@@ -1,0 +1,1 @@
+import{r as a}from"./index-5586c822.js";const s=s=>a.get({url:"/apps/list",params:s}),p=s=>a.get({url:"/apps/detail",params:s}),e=s=>a.post({url:"/apps/save",data:s}),t=s=>a.delete({url:"/apps/delete",data:s});export{p as a,t as d,s as g,e as s};

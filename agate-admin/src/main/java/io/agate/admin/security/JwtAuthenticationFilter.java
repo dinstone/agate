@@ -4,7 +4,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.FilterChain;
@@ -18,7 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 
-import io.agate.admin.utils.JwtTokenUtil;
+import io.agate.admin.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 
 
@@ -30,9 +29,9 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String header = request.getHeader(JwtTokenUtil.TOKEN_HEADER);
+        String header = request.getHeader(JwtUtil.TOKEN_HEADER);
 
-        if (header == null || !header.startsWith(JwtTokenUtil.TOKEN_PREFIX)) {
+        if (header == null || !header.startsWith(JwtUtil.TOKEN_PREFIX)) {
             chain.doFilter(request, response);
             return;
         }
@@ -44,11 +43,11 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String token) {
-        token = token.replace(JwtTokenUtil.TOKEN_PREFIX, "");
-        Claims claims = JwtTokenUtil.checkJWT(token);
+        token = token.replace(JwtUtil.TOKEN_PREFIX, "");
+        Claims claims = JwtUtil.checkJWT(token);
         if (claims != null) {
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-            Object role = claims.get("role");
+            Object role = JwtUtil.getUserRole(claims);
             if (role != null) {
                 authorities.add(new SimpleGrantedAuthority(role.toString()));
             }

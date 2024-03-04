@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.agate.admin.business.BusinessException;
 import io.agate.admin.business.model.UserDefinition;
 import io.agate.admin.business.service.AuthenService;
-import io.agate.admin.utils.JwtTokenUtil;
+import io.agate.admin.utils.JwtUtil;
 
 @RestController
 @RequestMapping("/authen")
@@ -40,10 +40,11 @@ public class AuthenResource {
     public UserDefinition login(@RequestBody UserDefinition user, HttpServletResponse response) throws BusinessException {
         UserDefinition ud = authenService.authen(user.getUsername(), user.getPassword());
 
-        String token = JwtTokenUtil.createToken(ud.getUsername(), ud.getRole());
-        ud.setPassword(token);
-        response.addHeader(JwtTokenUtil.TOKEN_HEADER, JwtTokenUtil.TOKEN_PREFIX + token);
+        String token = JwtUtil.createToken(ud.getUsername(), ud.getRole());
+        String bearerToken = JwtUtil.TOKEN_PREFIX + token;
+        response.addHeader(JwtUtil.TOKEN_HEADER, bearerToken);
 
+        ud.setPassword(bearerToken);
         return ud;
     }
 
