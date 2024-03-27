@@ -30,7 +30,7 @@ public class AgateVerticleFactory implements VerticleFactory {
 
     private static final String AGATE_PREFIX = "agate";
 
-    private ApplicationContext context;
+    private final ApplicationContext context;
 
     public AgateVerticleFactory(ApplicationContext context) {
         this.context = context;
@@ -47,13 +47,7 @@ public class AgateVerticleFactory implements VerticleFactory {
 
     @Override
     public void createVerticle(String verticleName, ClassLoader classLoader, Promise<Callable<Verticle>> promise) {
-        promise.complete(new Callable<Verticle>() {
-
-            @Override
-            public Verticle call() throws Exception {
-                return createVerticle(verticleName);
-            }
-        });
+        promise.complete(() -> createVerticle(verticleName));
 
     }
 

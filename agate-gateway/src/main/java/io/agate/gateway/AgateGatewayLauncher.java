@@ -32,7 +32,6 @@ import io.vertx.core.tracing.TracingOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxJmxMetricsOptions;
 import io.vertx.micrometer.impl.VertxMetricsFactoryImpl;
-import io.vertx.tracing.zipkin.ZipkinTracerFactory;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 
 public class AgateGatewayLauncher extends Launcher {
@@ -41,9 +40,9 @@ public class AgateGatewayLauncher extends Launcher {
 
     private static final String DEFAULT_GATEWAY_CONFIG = "config.json";
 
-    private JsonObject config;
-
     private ApplicationContext appContext;
+
+    private JsonObject config;
 
     public static void main(String[] args) {
         // disable DnsResolver
@@ -55,7 +54,7 @@ public class AgateGatewayLauncher extends Launcher {
         }
 
         if (args == null || args.length == 0) {
-            args = new String[] { "run", AgateVerticleFactory.verticleName(LaunchVerticle.class) };
+            args = new String[]{"run", AgateVerticleFactory.verticleName(LaunchVerticle.class)};
         }
         new AgateGatewayLauncher().dispatch(args);
     }
@@ -112,24 +111,21 @@ public class AgateGatewayLauncher extends Launcher {
         if (options.getServiceName() == null || options.getServiceName().isEmpty()) {
             options.setServiceName("agate-gateway");
         }
-        options.setFactory(new ZipkinTracerFactory());
         return options;
     }
 
     private MicrometerMetricsOptions metricsOptions() {
-        VertxJmxMetricsOptions jmxo = new VertxJmxMetricsOptions().setEnabled(true);
+        VertxJmxMetricsOptions options = new VertxJmxMetricsOptions().setEnabled(true);
         return new MicrometerMetricsOptions().setFactory(new VertxMetricsFactoryImpl()).setEnabled(true)
-            .setJvmMetricsEnabled(true).setJmxMetricsOptions(jmxo);
+                .setJvmMetricsEnabled(true).setJmxMetricsOptions(options);
     }
 
     public void afterStartingVertx(Vertx vertx) {
-        vertx.exceptionHandler(t -> {
-            LOG.warn("default exception handler", t);
-        });
+        vertx.exceptionHandler(t -> LOG.warn("default exception handler", t));
 
         try {
             appContext = new ApplicationContext(config);
-            // regist agate verticle factory
+            // register agate verticle factory
             vertx.registerVerticleFactory(new AgateVerticleFactory(appContext));
         } catch (RuntimeException e) {
             vertx.close();

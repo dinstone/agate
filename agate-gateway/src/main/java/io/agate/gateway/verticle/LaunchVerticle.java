@@ -27,7 +27,6 @@ import io.agate.gateway.context.AddressConstant;
 import io.agate.gateway.context.AgateVerticleFactory;
 import io.agate.gateway.context.ApplicationContext;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -39,15 +38,15 @@ import io.vertx.ext.consul.Watch;
 import io.vertx.ext.consul.WatchResult;
 
 /**
- * launch the verticles and init gateway context.
- * 
+ * control the system,deploy,manage verticle launch and init gateway context.
+ *
  * @author dinstone
  */
 public class LaunchVerticle extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(LaunchVerticle.class);
 
-    private ApplicationContext appContext;
+    private final ApplicationContext appContext;
 
     private Watch<KeyValueList> clusterWatch;
 
@@ -67,7 +66,7 @@ public class LaunchVerticle extends AbstractVerticle {
         DeploymentOptions dvdOptions = new DeploymentOptions().setConfig(config).setInstances(1);
         Future<String> dvf = deploy(AgateVerticleFactory.verticleName(DeployVerticle.class), dvdOptions);
 
-        CompositeFuture.all(svf, dvf).compose(f -> manage()).compose(f -> watch()).onComplete(ar -> {
+        Future.all(svf, dvf).compose(f -> manage()).compose(f -> watch()).onComplete(ar -> {
             if (ar.succeeded()) {
                 startPromise.complete();
             } else {
@@ -89,9 +88,7 @@ public class LaunchVerticle extends AbstractVerticle {
     }
 
     private Future<String> deploy(String verticleName, DeploymentOptions deployOptions) {
-        return Future.future(promise -> {
-            vertx.deployVerticle(verticleName, deployOptions, promise);
-        });
+        return Future.future(promise -> vertx.deployVerticle(verticleName, deployOptions, promise));
     }
 
     private Future<String> manage() {
@@ -101,19 +98,17 @@ public class LaunchVerticle extends AbstractVerticle {
 
     /**
      * Watch config and deploy
-     * 
-     * @return
      */
     private Future<Void> watch() {
         return Future.future(p -> {
             clusterWatch = Watch.keyPrefix("agate/gateway/" + appContext.getClusterCode(), vertx,
-                new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
-                    try {
-                        watchGatewayEventHandle(ar);
-                    } catch (Exception e) {
-                        LOG.warn("handle gateway watch event error", e);
-                    }
-                }).start();
+                    new ConsulClientOptions(appContext.getConsulOptions()).setTimeout(0)).setHandler(ar -> {
+                try {
+                    watchGatewayEventHandle(ar);
+                } catch (Exception e) {
+                    LOG.warn("handle gateway watch event error", e);
+                }
+            }).start();
             p.complete();
         });
     }
@@ -124,19 +119,19 @@ public class LaunchVerticle extends AbstractVerticle {
             return;
         }
 
-        Map<String, KeyValue> pkvMap = new HashMap<String, KeyValue>();
+        Map<String, KeyValue> pkvMap = new HashMap<>();
         if (wr.prevResult() != null && wr.prevResult().getList() != null) {
             wr.prevResult().getList().forEach(kv -> {
-                if (kv.getValue() != null && kv.getValue().length() > 0) {
+                if (kv.getValue() != null && !kv.getValue().isEmpty()) {
                     pkvMap.put(kv.getKey(), kv);
                 }
             });
         }
 
-        Map<String, KeyValue> nkvMap = new HashMap<String, KeyValue>();
+        Map<String, KeyValue> nkvMap = new HashMap<>();
         if (wr.nextResult() != null && wr.nextResult().getList() != null) {
             wr.nextResult().getList().forEach(kv -> {
-                if (kv.getValue() != null && kv.getValue().length() > 0) {
+                if (kv.getValue() != null && !kv.getValue().isEmpty()) {
                     nkvMap.put(kv.getKey(), kv);
                 }
             });
@@ -144,8 +139,8 @@ public class LaunchVerticle extends AbstractVerticle {
 
         // create: next have and prev not;
         // update: next have and prev have, modify index not equal
-        List<KeyValue> cList = new LinkedList<KeyValue>();
-        List<KeyValue> uList = new LinkedList<KeyValue>();
+        List<KeyValue> cList = new LinkedList<>();
+        List<KeyValue> uList = new LinkedList<>();
         nkvMap.forEach((k, nkv) -> {
             KeyValue pkv = pkvMap.get(k);
             if (pkv == null) {
@@ -156,7 +151,7 @@ public class LaunchVerticle extends AbstractVerticle {
         });
 
         // delete: prev have and next not;
-        List<KeyValue> dList = new LinkedList<KeyValue>();
+        List<KeyValue> dList = new LinkedList<>();
         pkvMap.forEach((k, pkv) -> {
             if (!nkvMap.containsKey(k)) {
                 dList.add(pkv);

@@ -33,98 +33,99 @@ import io.agate.admin.utils.JsonUtil;
 @Component
 public class AppRepositoryDao implements AppRepository {
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Override
-	public boolean appNameExist(String name) {
-		String sql = "select count(1) from t_app where name=?";
-		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { name }, Integer.class);
-		return count != null && count > 0;
-	}
+    @Override
+    public boolean appNameExist(String name) {
+        String sql = "select count(1) from t_app where name=?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name);
+        return count != null && count > 0;
+    }
 
-	@Override
-	public void create(AppDefinition definition) {
-		AppEntity entity = new AppEntity();
-		entity.setGwId(definition.getGwId());
-		entity.setName(definition.getName());
-		Date createTime = new Date();
-		entity.setCreateTime(createTime);
-		entity.setUpdateTime(createTime);
-		entity.setJson(JsonUtil.encode(definition));
+    @Override
+    public void create(AppDefinition definition) {
+        AppEntity entity = new AppEntity();
+        entity.setGwId(definition.getGwId());
+        entity.setName(definition.getName());
+        Date createTime = new Date();
+        entity.setCreateTime(createTime);
+        entity.setUpdateTime(createTime);
+        entity.setJson(JsonUtil.encode(definition));
 
-		String sql = "insert into t_app(id,name,gwId,json,createtime,updatetime) values(?,?,?,?,?,?)";
-		jdbcTemplate.update(sql, new Object[] { entity.getId(), entity.getName(), entity.getGwId(), entity.getJson(),
-				entity.getCreateTime(), entity.getUpdateTime() });
-	}
+        String sql = "insert into t_app(id,name,gwId,json,createtime,updatetime) values(?,?,?,?,?,?)";
+        jdbcTemplate.update(sql, new Object[]{entity.getId(), entity.getName(), entity.getGwId(), entity.getJson(),
+                entity.getCreateTime(), entity.getUpdateTime()});
+    }
 
-	@Override
-	public void update(AppDefinition definition) {
-		AppEntity entity = new AppEntity();
-		entity.setId(definition.getId());
-		entity.setGwId(definition.getGwId());
-		entity.setName(definition.getName());
-		Date updateTime = new Date();
-		entity.setUpdateTime(updateTime);
-		entity.setJson(JsonUtil.encode(definition));
+    @Override
+    public void update(AppDefinition definition) {
+        AppEntity entity = new AppEntity();
+        entity.setId(definition.getId());
+        entity.setGwId(definition.getGwId());
+        entity.setName(definition.getName());
+        Date updateTime = new Date();
+        entity.setUpdateTime(updateTime);
+        entity.setJson(JsonUtil.encode(definition));
 
-		String sql = "update t_app set name=?,gwId=?,json=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { entity.getName(), entity.getGwId(), entity.getJson(),
-				entity.getUpdateTime(), entity.getId() });
-	}
+        String sql = "update t_app set name=?,gwId=?,json=?,updatetime=? where id=?";
+        jdbcTemplate.update(sql, new Object[]{entity.getName(), entity.getGwId(), entity.getJson(),
+                entity.getUpdateTime(), entity.getId()});
+    }
 
-	@Override
-	public List<AppDefinition> list() {
-		String sql = "select * from t_app";
-		List<AppEntity> es = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AppEntity.class));
-		if (es == null || es.isEmpty()) {
-			return Collections.emptyList();
-		} else {
-			return es.stream().map(ae -> convert(ae)).collect(Collectors.toList());
-		}
-	}
+    @Override
+    public List<AppDefinition> list() {
+        String sql = "select * from t_app";
+        List<AppEntity> es = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AppEntity.class));
+        if (es.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return es.stream().map(this::convert).collect(Collectors.toList());
+        }
+    }
 
-	@Override
-	public AppDefinition find(Integer id) {
-		String sql = "select a.*, g.name gwName from t_app a, t_gateway g where a.gwId=g.id and a.id=?";
-		List<AppEntity> ares = jdbcTemplate.query(sql, new Object[] { id },
-				BeanPropertyRowMapper.newInstance(AppEntity.class));
-		if (!ares.isEmpty()) {
-			return convert(ares.get(0));
-		}
-		return null;
-	}
+    @Override
+    public AppDefinition find(Integer id) {
+        String sql = "select a.*, g.name gwName from t_app a, t_gateway g where a.gwId=g.id and a.id=?";
+        List<AppEntity> ares = jdbcTemplate.query(sql,
+                BeanPropertyRowMapper.newInstance(AppEntity.class), id);
+        if (!ares.isEmpty()) {
+            return convert(ares.get(0));
+        }
+        return null;
+    }
 
-	private AppDefinition convert(AppEntity appEntity) {
-		AppDefinition app = JsonUtil.decode(appEntity.getJson(), AppDefinition.class);
-		app.setId(appEntity.getId());
-		app.setName(appEntity.getName());
-		app.setGwId(appEntity.getGwId());
-		app.setGwName(appEntity.getGwName());
-		return app;
-	}
+    private AppDefinition convert(AppEntity appEntity) {
+        AppDefinition app = JsonUtil.decode(appEntity.getJson(), AppDefinition.class);
+        app.setId(appEntity.getId());
+        app.setName(appEntity.getName());
+        app.setGwId(appEntity.getGwId());
+        app.setGwName(appEntity.getGwName());
+        return app;
+    }
 
-	@Override
-	public void delete(Integer id) {
-		String sql = "delete from t_app where id=?";
-		jdbcTemplate.update(sql, new Object[] { id });
-	}
+    @Override
+    public void delete(Integer id) {
+        String sql = "delete from t_app where id=?";
+        jdbcTemplate.update(sql, new Object[]{id});
+    }
 
-	@Override
-	public int total() {
-		String sql = "select count(1) from t_app";
-		return jdbcTemplate.queryForObject(sql, Integer.class);
-	}
+    @Override
+    public int total() {
+        String sql = "select count(1) from t_app";
+        Integer t = jdbcTemplate.queryForObject(sql, Integer.class);
+        return t == null ? 0 : t;
+    }
 
-	@Override
-	public List<AppDefinition> find(int start, int size) {
-		String sql = "select a.*, g.name gwName from t_app a,t_gateway g where a.gwId=g.id order by a.id limit ?,?";
-		List<AppEntity> ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AppEntity.class),
-				new Object[] { start, size });
-		if (!ges.isEmpty()) {
-			return ges.stream().map(ge -> convert(ge)).collect(Collectors.toList());
-		}
-		return Collections.emptyList();
-	}
+    @Override
+    public List<AppDefinition> find(int start, int size) {
+        String sql = "select a.*, g.name gwName from t_app a,t_gateway g where a.gwId=g.id order by a.id limit ?,?";
+        List<AppEntity> ges = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AppEntity.class),
+                new Object[]{start, size});
+        if (!ges.isEmpty()) {
+            return ges.stream().map(this::convert).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
 
 }

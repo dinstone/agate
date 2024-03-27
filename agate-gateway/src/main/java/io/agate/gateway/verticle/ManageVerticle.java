@@ -29,6 +29,7 @@ import io.vertx.ext.consul.ServiceOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +49,9 @@ public class ManageVerticle extends AbstractVerticle {
 
     private static final int DEFAULT_PORT = 5454;
 
-    private Map<String, String> clusterNodeMeta = new HashMap<String, String>();
+    private final Map<String, String> clusterNodeMeta = new HashMap<>();
 
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
 
     private HttpServerOptions serverOptions;
 
@@ -82,7 +83,7 @@ public class ManageVerticle extends AbstractVerticle {
         } else {
             try {
                 List<InetAddress> pas = NetworkUtil.getPrivateAddresses();
-                if (pas != null && pas.size() > 0) {
+                if (!pas.isEmpty()) {
                     manageHost = pas.get(0).getHostAddress();
                 }
             } catch (Exception e) {
@@ -108,7 +109,7 @@ public class ManageVerticle extends AbstractVerticle {
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
-        launch().compose(server -> regist(server)).onComplete(startPromise);
+        launch().compose(this::register).onComplete(startPromise);
     }
 
     @Override
@@ -120,26 +121,21 @@ public class ManageVerticle extends AbstractVerticle {
      * create and start http server
      */
     private Future<HttpServer> launch() {
-        return Future.future(promise -> {
-            vertx.createHttpServer(serverOptions).requestHandler(createRouter()).listen(ar -> {
-                if (ar.succeeded()) {
-                    LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                    promise.complete(ar.result());
-                } else {
-                    LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
-                    promise.fail(ar.cause());
-                }
-            });
-        });
+        return Future.future(promise -> vertx.createHttpServer(serverOptions).requestHandler(createRouter()).listen(ar -> {
+            if (ar.succeeded()) {
+                LOG.info("manage verticle start success, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+                promise.complete(ar.result());
+            } else {
+                LOG.error("manage verticle start failed, {}:{}", serverOptions.getHost(), serverOptions.getPort());
+                promise.fail(ar.cause());
+            }
+        }));
     }
 
     /**
-     * regist manage to consol service
-     *
-     * @param server
-     * @return
+     * register manage to consul service
      */
-    private Future<Void> regist(HttpServer server) {
+    private Future<Void> register(HttpServer server) {
         return Future.future(promise -> {
             String url = "http://" + manageHost + ":" + managePort + "/health";
             CheckOptions checkOptions = new CheckOptions().setId(serviceId).setName("gateway health check").setHttp(url)
@@ -148,10 +144,10 @@ public class ManageVerticle extends AbstractVerticle {
                     .setAddress(manageHost).setPort(managePort).setMeta(clusterNodeMeta).setCheckOptions(checkOptions);
             consulClient.registerService(serviceOptions, ar -> {
                 if (ar.succeeded()) {
-                    LOG.info("gateway service regist  success {}", serviceId);
+                    LOG.info("gateway service register success {}", serviceId);
                     promise.complete();
                 } else {
-                    LOG.error("gateway service regist failed {}", serviceId);
+                    LOG.error("gateway service register failed {}", serviceId);
                     promise.fail(ar.cause());
                 }
             });
@@ -161,9 +157,7 @@ public class ManageVerticle extends AbstractVerticle {
     private Router createRouter() {
         Router mainRouter = Router.router(vertx);
         mainRouter.route().failureHandler(failureHandler()).handler(BodyHandler.create(false));
-        mainRouter.route("/health").handler(rc -> {
-            rc.end("OK");
-        });
+        mainRouter.route("/health").handler(rc -> rc.end("OK"));
 
         //
         // gateway start and close

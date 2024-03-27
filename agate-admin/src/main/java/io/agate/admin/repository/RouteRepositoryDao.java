@@ -33,130 +33,125 @@ import io.agate.admin.utils.JsonUtil;
 @Component
 public class RouteRepositoryDao implements RouteRepository {
 
-	@Autowired
-	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-	@Override
-	public boolean routeNameExist(String name) {
-		String sql = "select count(1) from t_route where name=?";
-		Integer count = jdbcTemplate.queryForObject(sql, new Object[] { name }, Integer.class);
-		return count != null && count > 0;
-	}
+    @Override
+    public boolean routeNameExist(String name) {
+        String sql = "select count(1) from t_route where name=?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name);
+        return count != null && count > 0;
+    }
 
-	@Override
-	public void create(RouteDefinition definition) {
-		RouteEntity entity = convert(definition);
-		Date now = new Date();
-		entity.setCreateTime(now);
-		entity.setUpdateTime(now);
+    @Override
+    public void create(RouteDefinition definition) {
+        RouteEntity entity = convert(definition);
+        Date now = new Date();
+        entity.setCreateTime(now);
+        entity.setUpdateTime(now);
 
-		String sql = "insert into t_route(appId,name,status,json,createtime,updatetime) values(?,?,?,?,?,?)";
-		jdbcTemplate.update(sql, new Object[] { entity.getAppId(), entity.getName(), entity.getStatus(),
-				entity.getJson(), entity.getCreateTime(), entity.getUpdateTime() });
-	}
+        String sql = "insert into t_route(appId,name,status,json,createtime,updatetime) values(?,?,?,?,?,?)";
+        jdbcTemplate.update(sql, new Object[]{entity.getAppId(), entity.getName(), entity.getStatus(),
+                entity.getJson(), entity.getCreateTime(), entity.getUpdateTime()});
+    }
 
-	private RouteDefinition convert(RouteEntity re) {
-		RouteDefinition rd = JsonUtil.decode(re.getJson(), RouteDefinition.class);
-		rd.setId(re.getId());
-		rd.setName(re.getName());
-		rd.setAppId(re.getAppId());
-		rd.setStatus(re.getStatus());
-		return rd;
-	}
+    private RouteDefinition convert(RouteEntity re) {
+        RouteDefinition rd = JsonUtil.decode(re.getJson(), RouteDefinition.class);
+        rd.setId(re.getId());
+        rd.setName(re.getName());
+        rd.setAppId(re.getAppId());
+        rd.setStatus(re.getStatus());
+        return rd;
+    }
 
-	private RouteEntity convert(RouteDefinition definition) {
-		RouteEntity entity = new RouteEntity();
-		entity.setId(definition.getId());
-		entity.setName(definition.getName());
-		entity.setAppId(definition.getAppId());
-		entity.setStatus(definition.getStatus());
+    private RouteEntity convert(RouteDefinition definition) {
+        RouteEntity entity = new RouteEntity();
+        entity.setId(definition.getId());
+        entity.setName(definition.getName());
+        entity.setAppId(definition.getAppId());
+        entity.setStatus(definition.getStatus());
 
-		entity.setJson(JsonUtil.encode(definition));
-		return entity;
-	}
+        entity.setJson(JsonUtil.encode(definition));
+        return entity;
+    }
 
-	@Override
-	public void update(RouteDefinition definition) {
-		RouteEntity entity = convert(definition);
-		entity.setUpdateTime(new Date());
+    @Override
+    public void update(RouteDefinition definition) {
+        RouteEntity entity = convert(definition);
+        entity.setUpdateTime(new Date());
 
-		String sql = "update t_route set appId=?,name=?,json=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { entity.getAppId(), entity.getName(), entity.getJson(),
-				entity.getUpdateTime(), entity.getId() });
-	}
+        String sql = "update t_route set appId=?,name=?,json=?,updatetime=? where id=?";
+        jdbcTemplate.update(sql, new Object[]{entity.getAppId(), entity.getName(), entity.getJson(),
+                entity.getUpdateTime(), entity.getId()});
+    }
 
-	@Override
-	public List<RouteDefinition> list() {
-		String sql = "select * from t_route";
-		return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteDefinition.class));
-	}
+    @Override
+    public List<RouteDefinition> list() {
+        String sql = "select * from t_route";
+        return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteDefinition.class));
+    }
 
-	@Override
-	public List<RouteDefinition> list(Integer appId) {
-		String sql = "select * from t_route where appId=?";
-		List<RouteEntity> aes = jdbcTemplate.query(sql, new Object[] { appId },
-				BeanPropertyRowMapper.newInstance(RouteEntity.class));
-		if (aes != null) {
-			return aes.stream().map(re -> convert(re)).collect(Collectors.toList());
-		}
-		return Collections.emptyList();
-	}
+    @Override
+    public List<RouteDefinition> list(Integer appId) {
+        String sql = "select * from t_route where appId=?";
+        List<RouteEntity> aes = jdbcTemplate.query(sql,
+                BeanPropertyRowMapper.newInstance(RouteEntity.class), appId);
+        return aes.stream().map(this::convert).collect(Collectors.toList());
+    }
 
-	@Override
-	public List<RouteDefinition> listByGatewayId(Integer gwId) {
-		String sql = "select r.* from t_route r, t_app a where r.appId=a.id and a.gwId=?";
-		List<RouteEntity> aes = jdbcTemplate.query(sql, new Object[] { gwId },
-				BeanPropertyRowMapper.newInstance(RouteEntity.class));
-		if (aes != null) {
-			return aes.stream().map(re -> convert(re)).collect(Collectors.toList());
-		}
-		return Collections.emptyList();
-	}
+    @Override
+    public List<RouteDefinition> listByGatewayId(Integer gwId) {
+        String sql = "select r.* from t_route r, t_app a where r.appId=a.id and a.gwId=?";
+        List<RouteEntity> aes = jdbcTemplate.query(sql,
+                BeanPropertyRowMapper.newInstance(RouteEntity.class), gwId);
+        return aes.stream().map(this::convert).collect(Collectors.toList());
+    }
 
-	@Override
-	public RouteDefinition find(Integer id) {
-		String sql = "select * from t_route where id=?";
-		List<RouteEntity> ares = jdbcTemplate.query(sql, new Object[] { id },
-				BeanPropertyRowMapper.newInstance(RouteEntity.class));
-		if (!ares.isEmpty()) {
-			return convert(ares.get(0));
-		}
-		return null;
-	}
+    @Override
+    public RouteDefinition find(Integer id) {
+        String sql = "select * from t_route where id=?";
+        List<RouteEntity> ares = jdbcTemplate.query(sql,
+                BeanPropertyRowMapper.newInstance(RouteEntity.class), id);
+        if (!ares.isEmpty()) {
+            return convert(ares.get(0));
+        }
+        return null;
+    }
 
-	@Override
-	public void delete(Integer id) {
-		String sql = "delete from t_route where id=?";
-		jdbcTemplate.update(sql, new Object[] { id });
-	}
+    @Override
+    public void delete(Integer id) {
+        String sql = "delete from t_route where id=?";
+        jdbcTemplate.update(sql, new Object[]{id});
+    }
 
-	@Override
-	public void updateStatus(RouteDefinition entity) {
-		String sql = "update t_route set status=?,updatetime=? where id=?";
-		jdbcTemplate.update(sql, new Object[] { entity.getStatus(), new Date(), entity.getId() });
-	}
+    @Override
+    public void updateStatus(RouteDefinition entity) {
+        String sql = "update t_route set status=?,updatetime=? where id=?";
+        jdbcTemplate.update(sql, new Object[]{entity.getStatus(), new Date(), entity.getId()});
+    }
 
-	@Override
-	public void deleteByGatewayId(Integer gwId) {
-		String sql = "delete from t_route where gwId=?";
-		jdbcTemplate.update(sql, new Object[] { gwId });
-	}
+    @Override
+    public void deleteByGatewayId(Integer gwId) {
+        String sql = "delete from t_route where gwId=?";
+        jdbcTemplate.update(sql, new Object[]{gwId});
+    }
 
-	@Override
-	public List<RouteDefinition> find(Integer appId, int start, int size) {
-		String sql = "select * from t_route where appId=? order by id limit ?,?";
-		List<RouteEntity> res = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteEntity.class),
-				new Object[] { appId, start, size });
-		if (!res.isEmpty()) {
-			return res.stream().map(re -> convert(re)).collect(Collectors.toList());
-		}
-		return Collections.emptyList();
-	}
+    @Override
+    public List<RouteDefinition> find(Integer appId, int start, int size) {
+        String sql = "select * from t_route where appId=? order by id limit ?,?";
+        List<RouteEntity> res = jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RouteEntity.class),
+                new Object[]{appId, start, size});
+        if (!res.isEmpty()) {
+            return res.stream().map(this::convert).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
 
-	@Override
-	public int total(Integer appId) {
-		String sql = "select count(1) from t_route where appId=?";
-		return jdbcTemplate.queryForObject(sql, Integer.class, new Object[] { appId });
-	}
+    @Override
+    public int total(Integer appId) {
+        String sql = "select count(1) from t_route where appId=?";
+        Integer t = jdbcTemplate.queryForObject(sql, Integer.class, appId);
+        return t == null ? 0 : t;
+    }
 
 }

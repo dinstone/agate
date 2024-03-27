@@ -25,36 +25,35 @@ import io.vertx.micrometer.MetricsService;
 
 /**
  * collect system runtime parameters.
- * 
- * @author dinstone
  *
+ * @author dinstone
  */
 public class SystemVerticle extends AbstractVerticle {
 
-	private MetricsService metricsService;
+    private MetricsService metricsService;
 
-	public SystemVerticle(ApplicationContext context) {
-	}
+    public SystemVerticle(ApplicationContext context) {
+    }
 
-	@Override
-	public void init(Vertx vertx, Context context) {
-		super.init(vertx, context);
+    @Override
+    public void init(Vertx vertx, Context context) {
+        super.init(vertx, context);
 
-		metricsService = MetricsService.create(vertx);
-	}
+        metricsService = MetricsService.create(vertx);
+    }
 
-	@Override
-	public void start(Promise<Void> startPromise) throws Exception {
-		vertx.eventBus().consumer(AddressConstant.APM_METRICS, message -> {
-			if (message.body() instanceof String) {
-				String baseName = (String) message.body();
-				message.reply(metricsService.getMetricsSnapshot(baseName));
-			} else {
-				message.reply(metricsService.getMetricsSnapshot());
-			}
-		});
+    @Override
+    public void start(Promise<Void> startPromise) throws Exception {
+        vertx.eventBus().consumer(AddressConstant.APM_METRICS, message -> {
+            if (message.body() instanceof String) {
+                String baseName = (String) message.body();
+                message.reply(metricsService.getMetricsSnapshot(baseName));
+            } else {
+                message.reply(metricsService.getMetricsSnapshot());
+            }
+        });
 
-		startPromise.complete();
-	}
+        startPromise.complete();
+    }
 
 }

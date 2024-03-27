@@ -30,11 +30,11 @@ import io.agate.gateway.verticle.GatewayVerticle;
  */
 public class GatewayDeploy {
 
-    private Map<String, RouteDeploy> routeDeployCaches = new ConcurrentHashMap<>();
+    private final Map<String, RouteDeploy> routeDeployCaches = new ConcurrentHashMap<>();
 
-    private List<GatewayVerticle> gatewayVerticles = new CopyOnWriteArrayList<>();
+    private final List<GatewayVerticle> gatewayVerticles = new CopyOnWriteArrayList<>();
 
-    private GatewayOptions gatewayOptions;
+    private final GatewayOptions gatewayOptions;
 
     private String deployId;
 

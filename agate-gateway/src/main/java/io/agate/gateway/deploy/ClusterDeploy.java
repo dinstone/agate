@@ -20,9 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ClusterDeploy {
 
-    private Map<String, GatewayDeploy> deployMap = new ConcurrentHashMap<>();
+    private final Map<String, GatewayDeploy> deployMap = new ConcurrentHashMap<>();
 
-    private String cluster;
+    private final String cluster;
 
     public ClusterDeploy(String cluster) {
         this.cluster = cluster;

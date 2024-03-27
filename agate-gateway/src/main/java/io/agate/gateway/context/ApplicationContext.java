@@ -29,7 +29,7 @@ public class ApplicationContext {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ApplicationContext.class);
 
-	private JsonObject config;
+	private final JsonObject config;
 
 	private String clusterCode;
 
@@ -51,7 +51,7 @@ public class ApplicationContext {
 		}
 	}
 
-	private void init() throws Exception {
+	private void init() {
 		LOG.debug("init application context start");
 
 		// cluster id

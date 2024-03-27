@@ -30,67 +30,67 @@ import io.vertx.core.Vertx;
 
 public class RouteDeploy {
 
-	private PluginFactory pluginFactory;
+    private final PluginFactory pluginFactory;
 
-	private GatewayOptions gatewayOptions;
+    private final GatewayOptions gatewayOptions;
 
-	private RouteOptions routeOptions;
+    private final RouteOptions routeOptions;
 
-	private List<RouteHandlerPlugin> plugins;
+    private List<RouteHandlerPlugin> plugins;
 
-	public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
-		this.pluginFactory = appContext.getPluginFactory();
-		this.gatewayOptions = gatewayOptions;
-		this.routeOptions = routeOptions;
-	}
+    public RouteDeploy(ApplicationContext appContext, GatewayOptions gatewayOptions, RouteOptions routeOptions) {
+        this.pluginFactory = appContext.getPluginFactory();
+        this.gatewayOptions = gatewayOptions;
+        this.routeOptions = routeOptions;
+    }
 
-	public String getRoute() {
-		return routeOptions.getRoute();
-	}
+    public String getRoute() {
+        return routeOptions.getRoute();
+    }
 
-	public RouteOptions getRouteOptions() {
-		return routeOptions;
-	}
+    public RouteOptions getRouteOptions() {
+        return routeOptions;
+    }
 
-	public GatewayOptions getGatewayOptions() {
-		return gatewayOptions;
-	}
+    public GatewayOptions getGatewayOptions() {
+        return gatewayOptions;
+    }
 
-	public void destroy() {
-		synchronized (this) {
-			if (plugins != null) {
-				plugins.stream().filter(Objects::nonNull).forEach(RouteHandlerPlugin::destroy);
-			}
-		}
-	}
+    public void destroy() {
+        synchronized (this) {
+            if (plugins != null) {
+                plugins.stream().filter(Objects::nonNull).forEach(RouteHandlerPlugin::destroy);
+            }
+        }
+    }
 
-	private List<RouteHandlerPlugin> createPlugins() {
-		List<PluginOptions> pluginOpionsList = pluginFactory.getGlobalPlugins();
-		if (routeOptions.getPlugins() != null) {
-			pluginOpionsList.addAll(routeOptions.getPlugins());
-		}
+    private List<RouteHandlerPlugin> createPlugins() {
+        List<PluginOptions> pluginOpionsList = pluginFactory.getGlobalPlugins();
+        if (routeOptions.getPlugins() != null) {
+            pluginOpionsList.addAll(routeOptions.getPlugins());
+        }
         return pluginOpionsList.stream().distinct()
-				.map(pluginOptions -> pluginFactory.createPlugin(routeOptions, pluginOptions))
-				.collect(Collectors.toList());
-	}
+                .map(pluginOptions -> pluginFactory.createPlugin(routeOptions, pluginOptions))
+                .collect(Collectors.toList());
+    }
 
-	public List<RouteHandler> getRoutingHandlers(Vertx vertx) {
-		return initPlugins().stream().filter(rp -> !rp.failure()).map(p -> p.createHandler(vertx)).sorted()
-				.collect(Collectors.toList());
-	}
+    public List<RouteHandler> getRoutingHandlers(Vertx vertx) {
+        return initPlugins().stream().filter(rp -> !rp.failure()).map(p -> p.createHandler(vertx)).sorted()
+                .collect(Collectors.toList());
+    }
 
-	public List<RouteHandler> getFailureHandlers(Vertx vertx) {
-		return initPlugins().stream().filter(rp -> rp.failure()).map(p -> p.createHandler(vertx)).sorted()
-				.collect(Collectors.toList());
-	}
+    public List<RouteHandler> getFailureHandlers(Vertx vertx) {
+        return initPlugins().stream().filter(rp -> rp.failure()).map(p -> p.createHandler(vertx)).sorted()
+                .collect(Collectors.toList());
+    }
 
-	private List<RouteHandlerPlugin> initPlugins() {
-		synchronized (this) {
-			if (plugins == null) {
-				plugins = createPlugins();
-			}
-		}
-		return plugins;
-	}
+    private List<RouteHandlerPlugin> initPlugins() {
+        synchronized (this) {
+            if (plugins == null) {
+                plugins = createPlugins();
+            }
+        }
+        return plugins;
+    }
 
 }
