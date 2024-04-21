@@ -146,13 +146,17 @@ public class GatewayVerticle extends AbstractVerticle {
                 // consumes
                 if (frontendOptions.getConsumes() != null) {
                     for (String consume : frontendOptions.getConsumes()) {
-                        route.consumes(consume);
+                        if (consume != null && !consume.isEmpty()) {
+                            route.consumes(consume);
+                        }
                     }
                 }
                 // produces
                 if (frontendOptions.getProduces() != null) {
                     for (String produce : frontendOptions.getProduces()) {
-                        route.produces(produce);
+                        if (produce != null && !produce.isEmpty()) {
+                            route.produces(produce);
+                        }
                     }
                 }
 
