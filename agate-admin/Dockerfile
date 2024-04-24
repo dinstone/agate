@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine
+FROM openjdk:19-jdk-alpine
 ARG JAR_FILE
 ENV APP_NAME=agate-admin
 ENV ACTIVE_PROFILE="release"

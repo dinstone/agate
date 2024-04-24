@@ -18,7 +18,7 @@
                     <artifactId>maven-license-plugin</artifactId>
                     <version>1.4.0</version>
                     <configuration>
-                        <header>license/ApacheV2.txt</header>
+                        <header>license-header/ApacheV2.txt</header>
                         <includes>
                             <include>src/main/java/**</include>
                             <include>src/test/java/**</include>
@@ -110,7 +110,7 @@
     </build>
     <profiles>
         <profile>
-            <id>docker</id>
+            <id>local</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>

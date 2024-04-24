@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine
+FROM openjdk:19-jdk-alpine
 ARG JAR_FILE
 ENV CONFIG_FILE="/agate-gateway/config/config.json"
 VOLUME /agate-gateway/config

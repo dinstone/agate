@@ -11,6 +11,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+
+        <main.class>io.agate.admin.AgateAdminApplication</main.class>
     </properties>
 
     <dependencyManagement>
@@ -149,7 +151,7 @@
                             <image>openjdk:19-jdk-alpine</image>
                         </from>
                         <to>
-                            <image>192.168.1.120:5000/agate/agate-admin</image>
+                            <image>192.168.1.120:5000/agate/admin</image>
                             <tags>
                                 <tag>${project.version}</tag>
                             </tags>
@@ -166,12 +168,18 @@
                                 <jvmFlag>-Duser.timezone=PRC</jvmFlag>
                                 <jvmFlag>-Dspring.profiles.active=release</jvmFlag>
                             </jvmFlags>
+                            <mainClass>${main.class}</mainClass>
+
+                            <appRoot>/agate-admin</appRoot>
+                            <workingDirectory>/agate-admin</workingDirectory>
                             <creationTime>${maven.build.timestamp}</creationTime>
-                            <workingDirectory>/</workingDirectory>
-                            <mainClass>io.agate.admin.AgateAdminApplication</mainClass>
                             <ports>
                                 <port>8888</port>
                             </ports>
+                            <volumes>
+                                <volume>/agate-admin/resources</volume>
+                                <volume>/agate-admin/logs</volume>
+                            </volumes>
                         </container>
                     </configuration>
                 </plugin>
@@ -192,7 +200,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>io.agate.admin.AgateAdminApplication</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
         </plugins>
