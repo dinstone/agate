@@ -115,73 +115,15 @@ public class GatewayVerticle extends AbstractVerticle {
     public Future<Void> deployRoute(RouteDeploy deploy) {
         Promise<Void> promise = Promise.promise();
         context.runOnContext(ar -> {
-            RouteOptions routeOptions = deploy.getRouteOptions();
             try {
-                if (routeMap.containsKey(routeOptions.getRoute())) {
+                if (routeMap.containsKey(deploy.getRouteName())) {
                     promise.complete();
                     return;
                 }
 
-                // create sub router
-                Router subRouter = Router.router(vertx);
-                // create route
-                Route route = subRouter.route().setName(routeOptions.getRoute());
-                // virtual host
-                String domain = routeOptions.getDomain();
-                if (domain != null && !domain.isEmpty()) {
-                    route.virtualHost(domain);
-                }
-                // path
-                FrontendOptions frontendOptions = routeOptions.getFrontend();
-                if (HttpUtil.pathIsRegex(frontendOptions.getPath())) {
-                    route = route.pathRegex(frontendOptions.getPath());
-                } else {
-                    route = route.path(frontendOptions.getPath());
-                }
-                // method
-                String method = frontendOptions.getMethod();
-                if (method != null && !method.isEmpty()) {
-                    route.method(HttpMethod.valueOf(method.toUpperCase()));
-                }
-                // consumes
-                if (frontendOptions.getConsumes() != null) {
-                    for (String consume : frontendOptions.getConsumes()) {
-                        if (consume != null && !consume.isEmpty()) {
-                            route.consumes(consume);
-                        }
-                    }
-                }
-                // produces
-                if (frontendOptions.getProduces() != null) {
-                    for (String produce : frontendOptions.getProduces()) {
-                        if (produce != null && !produce.isEmpty()) {
-                            route.produces(produce);
-                        }
-                    }
-                }
-
-                // routing handler
-                for (RouteHandler handler : deploy.getRoutingHandlers(vertx)) {
-                    route.handler(handler);
-                }
-                // failure handler
-                for (RouteHandler handler : deploy.getFailureHandlers(vertx)) {
-                    route.failureHandler(handler);
-                }
-
-                String mountPoint = routeOptions.getPrefix();
-                if (mountPoint != null && !mountPoint.isEmpty()) {
-                    if (!mountPoint.endsWith("*")) {
-                        mountPoint = mountPoint + "*";
-                    }
-                } else {
-                    mountPoint = "/*";
-                }
-
-                // mount sub router
-                Route mountedRoute = mountRouter(mountPoint, subRouter);
+                Route mountedRoute = mountRoute(deploy);
                 // cache route
-                routeMap.put(routeOptions.getRoute(), mountedRoute);
+                routeMap.put(deploy.getRouteName(), mountedRoute);
 
                 promise.complete();
             } catch (Exception e) {
@@ -192,11 +134,95 @@ public class GatewayVerticle extends AbstractVerticle {
         return promise.future();
     }
 
+    private Route mountRoute(RouteDeploy deploy) {
+        RouteOptions routeOptions = deploy.getRouteOptions();
+        // create sub router
+        Router subRouter = Router.router(vertx);
+        // create route
+        Route route = subRouter.route().setName(routeOptions.getRoute());
+        // virtual host
+        String domain = routeOptions.getDomain();
+        if (domain != null && !domain.isEmpty()) {
+            route.virtualHost(domain);
+        }
+        // path
+        FrontendOptions frontendOptions = routeOptions.getFrontend();
+        if (HttpUtil.pathIsRegex(frontendOptions.getPath())) {
+            route = route.pathRegex(frontendOptions.getPath());
+        } else {
+            route = route.path(frontendOptions.getPath());
+        }
+        // method
+        String method = frontendOptions.getMethod();
+        if (method != null && !method.isEmpty()) {
+            route.method(HttpMethod.valueOf(method.toUpperCase()));
+        }
+        // consumes
+        if (frontendOptions.getConsumes() != null) {
+            for (String consume : frontendOptions.getConsumes()) {
+                if (consume != null && !consume.isEmpty()) {
+                    route.consumes(consume);
+                }
+            }
+        }
+        // produces
+        if (frontendOptions.getProduces() != null) {
+            for (String produce : frontendOptions.getProduces()) {
+                if (produce != null && !produce.isEmpty()) {
+                    route.produces(produce);
+                }
+            }
+        }
+
+        // routing handler
+        for (RouteHandler handler : deploy.getRoutingHandlers(vertx)) {
+            route.handler(handler);
+        }
+        // failure handler
+        for (RouteHandler handler : deploy.getFailureHandlers(vertx)) {
+            route.failureHandler(handler);
+        }
+
+        String mountPoint = routeOptions.getPrefix();
+        if (mountPoint != null && !mountPoint.isEmpty()) {
+            if (!mountPoint.endsWith("*")) {
+                mountPoint = mountPoint + "*";
+            }
+        } else {
+            mountPoint = "/*";
+        }
+
+        // mount sub router
+        return mountRouter(mountPoint, subRouter);
+    }
+
+    public Future<Void> updateRoute(RouteDeploy deploy) {
+        Promise<Void> promise = Promise.promise();
+        context.runOnContext(ar -> {
+            try {
+                Route mountedRoute = mountRoute(deploy);
+
+                // unmount route
+                Route route = routeMap.remove(deploy.getRouteName());
+                if (route != null) {
+                    route.disable().remove();
+                }
+                // cache route
+                routeMap.put(deploy.getRouteName(), mountedRoute);
+
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+        return promise.future();
+    }
+
     public Future<Void> removeRoute(RouteDeploy deploy) {
         Promise<Void> promise = Promise.promise();
         context.runOnContext(ar -> {
             try {
-                Route route = routeMap.remove(deploy.getRoute());
+                Route route = routeMap.remove(deploy.getRouteName());
                 if (route != null) {
                     route.disable().remove();
                 }

@@ -285,7 +285,7 @@ public class DeployVerticle extends AbstractVerticle {
 
         List<Future<?>> futures = new LinkedList<>();
         for (GatewayVerticle gatewayVerticle : gatewayDeploy.getGatewayVerticles()) {
-            futures.add(gatewayVerticle.deployRoute(newDeploy));
+            futures.add(gatewayVerticle.updateRoute(newDeploy));
         }
         Future.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {

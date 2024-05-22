@@ -44,7 +44,7 @@ public class RouteDeploy {
         this.routeOptions = routeOptions;
     }
 
-    public String getRoute() {
+    public String getRouteName() {
         return routeOptions.getRoute();
     }
 

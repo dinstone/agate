@@ -79,11 +79,11 @@ public class GatewayDeploy {
     }
 
     public void registryRoute(RouteDeploy routeDeploy) {
-        routeDeployCaches.put(routeDeploy.getRoute(), routeDeploy);
+        routeDeployCaches.put(routeDeploy.getRouteName(), routeDeploy);
     }
 
     public void removeRoute(RouteDeploy routeDeploy) {
-        routeDeployCaches.remove(routeDeploy.getRoute());
+        routeDeployCaches.remove(routeDeploy.getRouteName());
     }
 
     public void destroy() {
