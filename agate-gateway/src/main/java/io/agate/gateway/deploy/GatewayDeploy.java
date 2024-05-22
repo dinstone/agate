@@ -25,7 +25,7 @@ import io.agate.gateway.verticle.GatewayVerticle;
 
 /**
  * gateway deployment info.
- * 
+ *
  * @author dinstone
  */
 public class GatewayDeploy {
@@ -62,27 +62,27 @@ public class GatewayDeploy {
         return gatewayVerticles;
     }
 
-    public void registry(GatewayVerticle verticle) {
+    public void registryVerticle(GatewayVerticle verticle) {
         gatewayVerticles.add(verticle);
     }
 
-    public void remove(GatewayVerticle verticle) {
+    public void removeVerticle(GatewayVerticle verticle) {
         gatewayVerticles.remove(verticle);
     }
 
-    public boolean containRoute(String route) {
+    public boolean hasRoute(String route) {
         return routeDeployCaches.containsKey(route);
     }
 
-    public RouteDeploy searchRoute(String route) {
+    public RouteDeploy getRoute(String route) {
         return routeDeployCaches.get(route);
     }
 
-    public void registryRouteDeploy(RouteDeploy routeDeploy) {
+    public void registryRoute(RouteDeploy routeDeploy) {
         routeDeployCaches.put(routeDeploy.getRoute(), routeDeploy);
     }
 
-    public void removeRouteDeploy(RouteDeploy routeDeploy) {
+    public void removeRoute(RouteDeploy routeDeploy) {
         routeDeployCaches.remove(routeDeploy.getRoute());
     }
 

@@ -17,15 +17,15 @@ package io.agate.gateway.context;
 
 public interface AddressConstant {
 
-	String GATEWAY_START = "gateway:start";
-	String GATEWAY_CLOSE = "gateway:close";
+    String GATEWAY_START = "gateway:start";
+    String GATEWAY_CLOSE = "gateway:close";
 
-	String ROUTE_DEPLOY = "route:deploy";
-	String ROUTE_REMOVE = "route:remove";
-	String ROUTE_RELOAD = "route:reload";
+    String ROUTE_DEPLOY = "route:deploy";
+    String ROUTE_REMOVE = "route:remove";
+    String ROUTE_UPDATE = "route:update";
 
-	String APM_METRICS = "apm.metrics";
+    String APM_METRICS = "apm.metrics";
 
-	String CIRCUIT_BREAKER = "vertx.circuit-breaker";
+    String CIRCUIT_BREAKER = "vertx.circuit-breaker";
 
 }

@@ -70,13 +70,10 @@ public class DeployVerticle extends AbstractVerticle {
     public void start() throws Exception {
         vertx.eventBus().consumer(AddressConstant.GATEWAY_START, this::startGateway);
         vertx.eventBus().consumer(AddressConstant.GATEWAY_CLOSE, this::closeGateway);
+
         vertx.eventBus().consumer(AddressConstant.ROUTE_DEPLOY, this::deployRoute);
+        vertx.eventBus().consumer(AddressConstant.ROUTE_UPDATE, this::updateRoute);
         vertx.eventBus().consumer(AddressConstant.ROUTE_REMOVE, this::removeRoute);
-    }
-
-    @Override
-    public void stop() throws Exception {
-
     }
 
     private void startGateway(Message<JsonObject> message) {
@@ -194,26 +191,25 @@ public class DeployVerticle extends AbstractVerticle {
             }
         });
 
+        // update route
         uList.forEach(kv -> {
             try {
                 JsonObject message = new JsonObject(kv.getValue());
-                vertx.eventBus().request(AddressConstant.ROUTE_REMOVE, message, ar -> {
-                    if (ar.succeeded()) {
-                        vertx.eventBus().send(AddressConstant.ROUTE_DEPLOY, message);
-                    }
-                });
+                vertx.eventBus().send(AddressConstant.ROUTE_UPDATE, message);
             } catch (Exception e) {
-                LOG.warn("route message is error", e);
+                LOG.warn("update route message is error", e);
             }
         });
+        // delete route
         dList.forEach(kv -> {
             try {
                 JsonObject message = new JsonObject(kv.getValue());
                 vertx.eventBus().send(AddressConstant.ROUTE_REMOVE, message);
             } catch (Exception e) {
-                LOG.warn("route message is error", e);
+                LOG.warn("delete route message is error", e);
             }
         });
+        // deploy route
         cList.forEach(kv -> {
             try {
                 JsonObject message = new JsonObject(kv.getValue());
@@ -244,13 +240,13 @@ public class DeployVerticle extends AbstractVerticle {
             message.fail(503, "gateway is not start");
             return;
         }
-        if (gatewayDeploy.containRoute(routeOptions.getRoute())) {
+        if (gatewayDeploy.hasRoute(routeOptions.getRoute())) {
             message.reply(false);
             return;
         }
 
-        GatewayOptions gatewayOptions = gatewayDeploy.getGatewayOptions();
-        RouteDeploy routeDeploy = new RouteDeploy(appContext, gatewayOptions, routeOptions);
+        RouteDeploy routeDeploy = new RouteDeploy(appContext, gatewayDeploy.getGatewayOptions(), routeOptions);
+        gatewayDeploy.registryRoute(routeDeploy);
 
         List<Future<?>> futures = new LinkedList<>();
         for (GatewayVerticle gatewayVerticle : gatewayDeploy.getGatewayVerticles()) {
@@ -259,13 +255,51 @@ public class DeployVerticle extends AbstractVerticle {
         Future.all(futures).onComplete(ar -> {
             if (ar.succeeded()) {
                 LOG.info("deploy route success : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
-
-                gatewayDeploy.registryRouteDeploy(routeDeploy);
                 message.reply(true);
             } else {
-                LOG.warn("deploy route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
-
+                gatewayDeploy.removeRoute(routeDeploy);
                 routeDeploy.destroy();
+                LOG.warn("deploy route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
+                message.fail(500, ar.cause().getMessage());
+            }
+        });
+    }
+
+    private void updateRoute(Message<JsonObject> message) {
+        RouteOptions routeOptions = new RouteOptions(message.body());
+        String error = checkRouteParams(routeOptions);
+        if (error != null) {
+            message.fail(400, error);
+            return;
+        }
+
+        GatewayDeploy gatewayDeploy = clusterDeploy.get(routeOptions.getGateway());
+        if (gatewayDeploy == null) {
+            message.fail(503, "gateway is not start");
+            return;
+        }
+
+        RouteDeploy oldDeploy = gatewayDeploy.getRoute(routeOptions.getRoute());
+        RouteDeploy newDeploy = new RouteDeploy(appContext, gatewayDeploy.getGatewayOptions(), routeOptions);
+        gatewayDeploy.registryRoute(newDeploy);
+
+        List<Future<?>> futures = new LinkedList<>();
+        for (GatewayVerticle gatewayVerticle : gatewayDeploy.getGatewayVerticles()) {
+            futures.add(gatewayVerticle.deployRoute(newDeploy));
+        }
+        Future.all(futures).onComplete(ar -> {
+            if (ar.succeeded()) {
+                if (oldDeploy != null) {
+                    oldDeploy.destroy();
+                }
+                LOG.info("update route success : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
+                message.reply(true);
+            } else {
+                gatewayDeploy.removeRoute(newDeploy);
+                if (oldDeploy != null) {
+                    gatewayDeploy.registryRoute(oldDeploy);
+                }
+                LOG.warn("update route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
                 message.fail(500, ar.cause().getMessage());
             }
         });
@@ -284,24 +318,24 @@ public class DeployVerticle extends AbstractVerticle {
             message.fail(503, "gateway is not start");
             return;
         }
-        if (!gatewayDeploy.containRoute(routeOptions.getRoute())) {
+        if (!gatewayDeploy.hasRoute(routeOptions.getRoute())) {
             message.reply(false);
             return;
         }
 
-        RouteDeploy routeDeploy = gatewayDeploy.searchRoute(routeOptions.getRoute());
+        RouteDeploy routeDeploy = gatewayDeploy.getRoute(routeOptions.getRoute());
         List<Future<?>> futures = new LinkedList<>();
         for (GatewayVerticle gatewayVerticle : gatewayDeploy.getGatewayVerticles()) {
             futures.add(gatewayVerticle.removeRoute(routeDeploy));
         }
         Future.all(futures).onComplete(ar -> {
-            gatewayDeploy.removeRouteDeploy(routeDeploy);
+            gatewayDeploy.removeRoute(routeDeploy);
             routeDeploy.destroy();
             if (ar.succeeded()) {
                 LOG.info("remove route success : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
                 message.reply(true);
             } else {
-                LOG.info("remove route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
+                LOG.warn("remove route failure : {} / {}", routeOptions.getGateway(), routeOptions.getRoute());
                 message.fail(500, ar.cause().getMessage());
             }
         });

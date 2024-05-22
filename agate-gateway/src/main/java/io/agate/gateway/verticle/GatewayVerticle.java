@@ -210,11 +210,11 @@ public class GatewayVerticle extends AbstractVerticle {
     }
 
     private void registerDeployer() {
-        applicationContext.getClusterDeploy().get(gatewayName).registry(this);
+        applicationContext.getClusterDeploy().get(gatewayName).registryVerticle(this);
     }
 
     private void removeDeployer() {
-        applicationContext.getClusterDeploy().get(gatewayName).remove(this);
+        applicationContext.getClusterDeploy().get(gatewayName).removeVerticle(this);
     }
 
     @SuppressWarnings("unused")
@@ -269,5 +269,4 @@ public class GatewayVerticle extends AbstractVerticle {
 
         return mainRouter;
     }
-
 }
