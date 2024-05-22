@@ -15,70 +15,18 @@
  */
 package io.agate.gateway.plugin.internal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.handler.internal.CircuitBreakerHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
 import io.agate.gateway.plugin.RouteHandlerPlugin;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.Vertx;
 
 public class CircuitBreakerPlugin extends RouteHandlerPlugin {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerPlugin.class);
-
-    private CircuitBreaker circuitBreaker;
-
-    public CircuitBreakerPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        super(routeOptions, pluginOptions);
-    }
-
     @Override
-    public RouteHandler createHandler(Vertx vertx) {
-        CircuitBreaker circuitBreaker = createCircuitBreaker(vertx);
-        return new CircuitBreakerHandler(routeOptions, circuitBreaker);
+    public RouteHandler createHandler(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
+        return new CircuitBreakerHandler(vertx, routeOptions, pluginOptions);
     }
 
-    @Override
-    public void destroy() {
-        synchronized (this) {
-            if (circuitBreaker != null) {
-                circuitBreaker.close();
-            }
-        }
-    }
-
-    private CircuitBreaker createCircuitBreaker(Vertx vertx) {
-        synchronized (this) {
-            if (circuitBreaker == null) {
-                CircuitBreakerOptions cbOptions;
-                if (pluginOptions.getOptions() != null) {
-                    cbOptions = new CircuitBreakerOptions(pluginOptions.getOptions());
-                } else {
-                    cbOptions = new CircuitBreakerOptions();
-                    // cbOptions.setFailuresRollingWindow(10000);
-                    cbOptions.setMaxFailures(10);
-                    // If an action is not completed before this timeout, the action is considered as a failure.
-                    cbOptions.setTimeout(3000);
-                    // does not succeed in time
-                    cbOptions.setFallbackOnFailure(false);
-                    // time spent in open state before attempting to re-try
-                    cbOptions.setResetTimeout(5000);
-                }
-                this.circuitBreaker = CircuitBreaker.create(routeOptions.getRoute(), vertx, cbOptions)
-                        .openHandler(v -> {
-                            LOG.debug("circuit breaker {} open", circuitBreaker.name());
-                        }).closeHandler(v -> {
-                            LOG.debug("circuit breaker {} close", circuitBreaker.name());
-                        }).halfOpenHandler(v -> {
-                            LOG.debug("circuit breaker {} half", circuitBreaker.name());
-                        });
-            }
-            return circuitBreaker;
-        }
-    }
 }

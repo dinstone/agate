@@ -15,13 +15,15 @@
  */
 package io.agate.gateway.handler.internal;
 
-import io.agate.gateway.handler.OrderedHandler;
-import io.agate.gateway.options.RouteOptions;
-import io.agate.gateway.plugin.internal.RedisRateLimiter;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.agate.gateway.handler.OrderedHandler;
+import io.agate.gateway.options.RouteOptions;
+import io.agate.gateway.plugin.PluginOptions;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.HttpException;
 
 /**
  * rate limit handler.
@@ -32,15 +34,19 @@ public class RateLimitHandler extends OrderedHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RateLimitHandler.class);
 
-    private RouteOptions routeOptions;
+    private final RedisRateLimiter rateLimiter;
 
-    private RedisRateLimiter rateLimiter;
-
-    public RateLimitHandler(RouteOptions routeOptions, RedisRateLimiter rateLimiter) {
+    public RateLimitHandler(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
         super(400);
 
-        this.routeOptions = routeOptions;
-        this.rateLimiter = rateLimiter;
+        this.rateLimiter = new RedisRateLimiter(vertx, routeOptions.getRoute(), pluginOptions.getOptions());
+    }
+
+    @Override
+    public void destroy() {
+        if (rateLimiter != null) {
+            rateLimiter.destroy();
+        }
     }
 
     @Override
@@ -52,6 +58,7 @@ public class RateLimitHandler extends OrderedHandler {
                 rc.fail(new HttpException(429, "too many requests, rate limit " + rateLimiter.getCount() + "/" + rateLimiter.getPeriod()));
             }
         }).onFailure(e -> {
+            LOG.warn(rateLimiter.getLimitName() + " rate limit error", e);
             rc.fail(new HttpException(429, "rate limit error: " + e.getMessage()));
         });
     }

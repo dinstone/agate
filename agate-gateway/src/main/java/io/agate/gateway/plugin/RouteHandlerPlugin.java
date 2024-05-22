@@ -19,23 +19,17 @@ import io.agate.gateway.handler.RouteHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.vertx.core.Vertx;
 
+/**
+ * The RouteHandlerPlugin is responsible for creating a RouteHandler.
+ */
 public abstract class RouteHandlerPlugin {
 
-	protected RouteOptions routeOptions;
+    public abstract RouteHandler createHandler(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions);
 
-	protected PluginOptions pluginOptions;
+    public boolean failure() {
+        return false;
+    }
 
-	public RouteHandlerPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-		this.routeOptions = routeOptions;
-		this.pluginOptions = pluginOptions;
-	}
-
-	public abstract RouteHandler createHandler(Vertx vertx);
-
-	public boolean failure() {
-		return false;
-	}
-
-	public void destroy() {
-	}
+    public void destroy() {
+    }
 }

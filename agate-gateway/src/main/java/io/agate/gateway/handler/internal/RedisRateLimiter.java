@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agate.gateway.plugin.internal;
+package io.agate.gateway.handler.internal;
 
-import io.agate.gateway.options.RouteOptions;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.redis.client.*;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.vertx.redis.client.Command;
+import io.vertx.redis.client.Redis;
+import io.vertx.redis.client.RedisConnection;
+import io.vertx.redis.client.RedisOptions;
+import io.vertx.redis.client.Request;
 
 public class RedisRateLimiter {
     private final Vertx vertx;
-    private final JsonObject pluginOptions;
 
     private static final int MAX_RECONNECT_RETRIES = 16;
 
@@ -37,14 +39,13 @@ public class RedisRateLimiter {
     private final int limitCount;
     private final String limitLock;
 
-    public RedisRateLimiter(Vertx vertx, RouteOptions routeOptions, JsonObject pluginOptions) {
+    public RedisRateLimiter(Vertx vertx, String routeName, JsonObject pluginOptions) {
         this.vertx = vertx;
-        this.pluginOptions = pluginOptions;
 
         this.limitScript = buildLuaScript();
         this.redisClient = Redis.createClient(vertx, getRedisOptions(pluginOptions));
 
-        this.limitLock = "limiter:" + routeOptions.getRoute();
+        this.limitLock = "limiter:" + routeName;
 
         JsonObject limitOptions = getLimitOptions(pluginOptions);
         this.limitCount = limitOptions.getInteger("count", 5);
@@ -139,6 +140,10 @@ public class RedisRateLimiter {
                         .onFailure(t -> attemptReconnect(retry + 1));
             });
         }
+    }
+
+    public String getLimitName() {
+        return limitLock;
     }
 
     public int getCount() {

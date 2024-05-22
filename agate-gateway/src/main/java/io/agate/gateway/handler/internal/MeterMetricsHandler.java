@@ -26,6 +26,7 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Timer.Sample;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.micrometer.backends.BackendRegistries;
 
 public class MeterMetricsHandler extends OrderedHandler {
 
@@ -35,9 +36,11 @@ public class MeterMetricsHandler extends OrderedHandler {
 
     private Timer timer;
 
-    public MeterMetricsHandler(RouteOptions routeOptions, MeterRegistry meterRegistry) {
-    	super(100);
-    	
+    public MeterMetricsHandler(RouteOptions routeOptions) {
+        super(100);
+
+        MeterRegistry meterRegistry = BackendRegistries.getDefaultNow();
+
         List<Tag> tags = Arrays.asList(Tag.of("gateway", routeOptions.getGateway()));
         this.count = meterRegistry.counter(routeOptions.getRoute() + "_count", tags);
         this.error = meterRegistry.counter(routeOptions.getRoute() + "_error", tags);

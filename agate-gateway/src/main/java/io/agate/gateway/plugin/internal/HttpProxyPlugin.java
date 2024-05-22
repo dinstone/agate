@@ -20,84 +20,15 @@ import io.agate.gateway.handler.internal.HttpProxyHandler;
 import io.agate.gateway.options.RouteOptions;
 import io.agate.gateway.plugin.PluginOptions;
 import io.agate.gateway.plugin.RouteHandlerPlugin;
-import io.agate.gateway.service.ConsulServiceAddressSupplier;
-import io.agate.gateway.service.FixedServiceAddressSupplier;
 import io.agate.gateway.service.Loadbalancer;
-import io.agate.gateway.service.RoundRobinLoadBalancer;
 import io.agate.gateway.service.ServiceAddressSupplier;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.json.JsonObject;
 
 public class HttpProxyPlugin extends RouteHandlerPlugin {
 
-	private HttpClient httpClient;
-
-	private Loadbalancer loadBalancer;
-
-	private ServiceAddressSupplier serviceSupplier;
-
-	public HttpProxyPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-		super(routeOptions, pluginOptions);
-	}
-
-	@Override
-	public void destroy() {
-		synchronized (this) {
-			if (httpClient != null) {
-				httpClient.close();
-			}
-			if (serviceSupplier != null) {
-				serviceSupplier.close();
-			}
-		}
-	}
-
-	@Override
-	public RouteHandler createHandler(Vertx vertx) {
-		HttpClient httpClient = createHttpClient(vertx, routeOptions);
-		Loadbalancer loadbalancer = createLoadbalancer(vertx, routeOptions);
-		return new HttpProxyHandler(routeOptions, httpClient, loadbalancer);
-	}
-
-	public Loadbalancer createLoadbalancer(Vertx vertx, RouteOptions routeOptions) {
-		synchronized (this) {
-			if (loadBalancer == null) {
-				// service discovery
-				if (routeOptions.getBackend().getType() == 1) {
-					serviceSupplier = new ConsulServiceAddressSupplier(vertx, routeOptions);
-					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
-				} else {
-					serviceSupplier = new FixedServiceAddressSupplier(vertx, routeOptions);
-					loadBalancer = new RoundRobinLoadBalancer(routeOptions, serviceSupplier);
-				}
-			}
-
-			return loadBalancer;
-		}
-	}
-
-	public HttpClient createHttpClient(Vertx vertx, RouteOptions routeOptions) {
-		synchronized (this) {
-			if (httpClient == null) {
-				HttpClientOptions clientOptions;
-				JsonObject config = routeOptions.getBackend().getConnection();
-				if (config != null) {
-					clientOptions = new HttpClientOptions(config);
-				} else {
-					clientOptions = new HttpClientOptions();
-					clientOptions.setKeepAlive(true);
-					clientOptions.setConnectTimeout(2000);
-					// clientOptions.setMaxWaitQueueSize(1000);
-					clientOptions.setIdleTimeout(10);
-					clientOptions.setMaxPoolSize(100);
-					// clientOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-				}
-				httpClient = vertx.createHttpClient(clientOptions);
-			}
-			return httpClient;
-		}
-	}
-
+    @Override
+    public RouteHandler createHandler(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
+        return new HttpProxyHandler(vertx, routeOptions, pluginOptions);
+    }
 }

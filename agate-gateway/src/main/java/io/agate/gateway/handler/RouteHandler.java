@@ -18,6 +18,13 @@ package io.agate.gateway.handler;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * The RouteHandler is responsible for processing requests.
+ * A route holds multiple RouteHandler, which are shared by multiple route processing threads.
+ * When a route is removed, the RouteHandler needs to destroy and release resources.
+ */
 public interface RouteHandler extends Handler<RoutingContext> {
 
+    default void destroy() {
+    }
 }

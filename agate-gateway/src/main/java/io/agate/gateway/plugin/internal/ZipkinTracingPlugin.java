@@ -24,12 +24,8 @@ import io.vertx.core.Vertx;
 
 public class ZipkinTracingPlugin extends RouteHandlerPlugin {
 
-    public ZipkinTracingPlugin(RouteOptions routeOptions, PluginOptions pluginOptions) {
-        super(routeOptions, pluginOptions);
-    }
-
     @Override
-    public RouteHandler createHandler(Vertx vertx) {
+    public RouteHandler createHandler(Vertx vertx, RouteOptions routeOptions, PluginOptions pluginOptions) {
         return new ZipkinTracingHandler(routeOptions);
     }
 

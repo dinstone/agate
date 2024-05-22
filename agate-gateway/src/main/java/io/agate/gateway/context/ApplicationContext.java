@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.agate.gateway.deploy.ClusterDeploy;
-import io.agate.gateway.plugin.PluginFactory;
+import io.agate.gateway.plugin.PluginManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.consul.ConsulClient;
@@ -39,7 +39,7 @@ public class ApplicationContext {
 
 	private ConsulClient consulClient;
 
-	private PluginFactory pluginFactory;
+	private PluginManager pluginManager;
 
 	public ApplicationContext(JsonObject config) {
 		this.config = config;
@@ -77,7 +77,7 @@ public class ApplicationContext {
 		// deployment
 		clusterDeploy = new ClusterDeploy(clusterCode);
 
-		pluginFactory = new PluginFactory();
+		pluginManager = new PluginManager();
 
 		LOG.debug("init application context ended");
 	}
@@ -111,8 +111,8 @@ public class ApplicationContext {
 		return consulClient;
 	}
 
-	public PluginFactory getPluginFactory() {
-		return pluginFactory;
+	public PluginManager getPluginFactory() {
+		return pluginManager;
 	}
 
 }
