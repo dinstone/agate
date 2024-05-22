@@ -55,7 +55,6 @@ public class ApplicationContext {
 		LOG.debug("init application context start");
 
 		// cluster id
-
 		JsonObject node = config.getJsonObject("gateway");
 		if (node == null) {
 			throw new IllegalArgumentException("gateway is empty");
