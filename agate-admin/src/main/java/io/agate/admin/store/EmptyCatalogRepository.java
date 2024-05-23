@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.agate.admin.business.port.CatalogStore;
+import io.agate.admin.business.port.CatalogRepository;
 
-public class EmptyCatalogStore implements CatalogStore {
+public class EmptyCatalogRepository implements CatalogRepository {
 
 	@Override
 	public void deleteKey(String key) {

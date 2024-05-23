@@ -20,16 +20,16 @@ import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.catalog.CatalogServiceRequest;
 import com.ecwid.consul.v1.catalog.model.CatalogService;
 import com.ecwid.consul.v1.kv.model.GetValue;
-import io.agate.admin.business.port.CatalogStore;
+import io.agate.admin.business.port.CatalogRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ConsulCatalogStore implements CatalogStore {
+public class ConsulCatalogRepository implements CatalogRepository {
 
     private final ConsulClient consulClient;
 
-    public ConsulCatalogStore(ConsulClient consulClient) {
+    public ConsulCatalogRepository(ConsulClient consulClient) {
         this.consulClient = consulClient;
     }
 

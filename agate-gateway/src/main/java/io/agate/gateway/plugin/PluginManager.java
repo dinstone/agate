@@ -53,6 +53,8 @@ public class PluginManager {
         registerPlugin(new ZipkinTracingPlugin());
         registerPlugin(new RateLimitPlugin());
 
+        LOG.info("{}", PLUGIN_MAP.values());
+
         globalPlugins.add(new PluginOptions(HttpProxyPlugin.class.getSimpleName(), null));
         globalPlugins.add(new PluginOptions(ProxyReplyPlugin.class.getSimpleName(), null));
         globalPlugins.add(new PluginOptions(RestfulFailurePlugin.class.getSimpleName(), null));

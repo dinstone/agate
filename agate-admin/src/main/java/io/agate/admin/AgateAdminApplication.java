@@ -16,9 +16,9 @@
 package io.agate.admin;
 
 import com.ecwid.consul.v1.ConsulClient;
-import io.agate.admin.business.port.CatalogStore;
-import io.agate.admin.store.ConsulCatalogStore;
-import io.agate.admin.store.EmptyCatalogStore;
+import io.agate.admin.business.port.CatalogRepository;
+import io.agate.admin.store.ConsulCatalogRepository;
+import io.agate.admin.store.EmptyCatalogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -57,13 +57,13 @@ public class AgateAdminApplication {
     }
 
     @Bean
-    CatalogStore catalogStore() {
+    CatalogRepository catalogStore() {
         try {
-            return new ConsulCatalogStore(consul());
+            return new ConsulCatalogRepository(consul());
         } catch (Exception e) {
             LOG.warn("create consul catalog store error [{}], will use empty catalog store.", e.getMessage());
         }
-        return new EmptyCatalogStore();
+        return new EmptyCatalogRepository();
     }
 
     @Bean

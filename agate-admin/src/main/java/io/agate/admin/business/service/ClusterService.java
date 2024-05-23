@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 import io.agate.admin.business.BusinessException;
 import io.agate.admin.business.model.ClusterDefinition;
 import io.agate.admin.business.model.InstanceDefinition;
-import io.agate.admin.business.port.CatalogStore;
+import io.agate.admin.business.port.CatalogRepository;
 import io.agate.admin.business.port.ClusterRepository;
 import io.agate.admin.business.port.GatewayRepository;
 
@@ -37,7 +37,7 @@ public class ClusterService {
 	private List<InstanceDefinition> clusterInstances = new CopyOnWriteArrayList<>();
 
 	@Autowired
-	private CatalogStore catalogStore;
+	private CatalogRepository catalogRepository;
 
 	@Autowired
 	private ClusterRepository clusterRepository;
@@ -61,7 +61,7 @@ public class ClusterService {
 	}
 
 	public void clusterRefresh() {
-		List<Map<String, String>> metas = catalogStore.getMetas("agate-gateway");
+		List<Map<String, String>> metas = catalogRepository.getMetas("agate-gateway");
 		if (metas == null) {
 			return;
 		}

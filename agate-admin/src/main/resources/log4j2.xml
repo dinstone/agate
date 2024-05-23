@@ -4,7 +4,6 @@
 		<Property name="LOG_DIR">logs</Property>
 		<Property name="ALL_FILE">detail.log</Property>
 		<Property name="ERROR_FILE">error.log</Property>
-		<Property name="ACCESS_FILE">access.log</Property>
 	</Properties>
 	<Appenders>
 		<Console name="console-appender" target="SYSTEM_OUT">
@@ -26,10 +25,6 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<Logger name="io.agate.gateway.handler.AccessLogHandler" level="info" additivity="false">
-			<AppenderRef ref="access-appender" />
-		</Logger>
-
 		<Root level="info">
 			<AppenderRef ref="console-appender" />
 			<AppenderRef ref="all-appender" />
